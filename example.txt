@@ -2,7 +2,7 @@
 
 class Something {};
 
-class Main inherits Something {
+class Main {
     x: Int <- 1;
     main(): Void { self };
 };
