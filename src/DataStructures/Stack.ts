@@ -7,8 +7,8 @@ interface IStack<T> {
 
 export class Stack<T> implements IStack<T> {
   private readonly items: T[] = [];
-  push(item: T): void {
-    this.items.push(item);
+  push(...item: T[]): void {
+    this.items.push(...item);
   }
   pop(): T | undefined {
     return this.items.pop();
@@ -18,5 +18,13 @@ export class Stack<T> implements IStack<T> {
   }
   size(): number {
     return this.items.length;
+  }
+
+  isEmpty(): boolean {
+    return this.items.length === 0;
+  }
+
+  getItem(index: number): T {
+    return this.items[index];
   }
 }

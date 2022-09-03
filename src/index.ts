@@ -15,6 +15,8 @@ async function main(input: string) {
 
   const visitor = new YaplVisitor();
   const result = visitor.visit(tree);
+  const errors = visitor.errors;
+  console.log(errors.toString());
 }
 
 const pathToFileURL = path.join(__dirname, "..", "example.txt");

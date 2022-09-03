@@ -1,6 +1,11 @@
+class Something {
+    x: SomethingElse <- new SomethingElse;
+};
 
 
-class Something {};
+class SomethingElse {
+    x: SomethingElse <- new SomethingElse;
+};
 
 class Main {
     x: Int <- 1;
