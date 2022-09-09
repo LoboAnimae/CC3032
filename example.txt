@@ -1,10 +1,12 @@
 class Something {
-    x: SomethingElse <- new SomethingElse;
+    x: Bool <- true;
 };
 
-
-class SomethingElse {
-    x: SomethingElse <- new SomethingElse;
+class SomethingElse inherits Something {
+    x: Bool <- true;
+    x(): Bool {{
+        true;
+    }};
 };
 
 class Main {

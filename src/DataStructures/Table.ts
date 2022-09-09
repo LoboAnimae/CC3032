@@ -9,7 +9,7 @@ export interface Parameter {
 }
 export enum IDataStructureType {
   Method,
-  Symbol
+  Symbol,
 }
 export interface ITableElement {
   name: string;
@@ -19,17 +19,20 @@ export interface ITableElement {
   dataStructureType: IDataStructureType;
 }
 
-
-
 // Builder pattern may help with better understanding
 export class TableElement {
-  public _name?: string;
-  public _type?: string;
-  public _line?: number = 0;
-  public _column?: IPositioning = { start: 0, end: 0 };
-  public _dataStructureType?: IDataStructureType;
+  protected _name?: string;
+  protected _type?: string;
+  protected _line?: number = 0;
+  protected _column?: IPositioning = { start: 0, end: 0 };
+  protected _dataStructureType?: IDataStructureType;
+  protected _scope?: string;
 
-  constructor() {
+  constructor() {}
+
+  public setScope(scope: string) {
+    this._scope = scope;
+    return this;
   }
 
   public setName(name: string) {
@@ -53,7 +56,6 @@ export class TableElement {
   }
 
   public setStartColumn(start: number) {
-
     this._column!.start = start;
     return this;
   }
@@ -68,46 +70,38 @@ export class TableElement {
     return this;
   }
 
+  public getScope = () => this._scope;
 
-  public getName() {
-    return this._name;
-  }
+  public getName = () => this._name;
 
-  public getType() {
-    return this._type;
-  }
+  public getType = () => this._type;
 
-  public getLine() {
-    return this._line;
-  }
+  public getLine = () => this._line;
 
-  public getColumn() {
-    return this._column;
-  }
+  public getColumn = () => this._column;
 
-  public getStartColumn() {
-    return this._column?.start;
-  }
+  public getStartColumn = () => this._column?.start;
 
-  public getEndColumn() {
-    return this._column?.end;
-  }
+  public getEndColumn = () => this._column?.end;
 
-  public getDataStructureType() {
-    return this._dataStructureType;
-  }
+  public getDataStructureType = () => this._dataStructureType;
 
-
-  public isSameName(name: string) {
-    return this._name === name;
-  }
+  public isSameName = (name: string) => this._name === name;
   public toString(): string {
-    if (!(this._name || this._type || this._line || this._column || this._dataStructureType)) {
-      throw new Error("TableElement is not initialized");
-    }
-    return `[${this._dataStructureType}] ${this._name} (${this._type})`;
+    return `[${this._dataStructureType ?? "Unknown Data Type"}] ${
+      this._name ?? "Unknown Name"
+    } (${this._type ?? "Unknown Type"})`;
   }
 
+  public copy(): TableElement {
+    return new TableElement()
+      .setName(this._name!)
+      .setType(this._type!)
+      .setLine(this._line!)
+      .setColumn(this._column!)
+      .setDataStructureType(this._dataStructureType!)
+      .setScope(this._scope!);
+  }
 }
 
 export class MethodElement extends TableElement {
@@ -179,9 +173,10 @@ export class Table {
    */
   find = (name?: string): SymbolElement | MethodElement | undefined => {
     if (name) {
-      const foundElement = this.symbols.find((symbol: TableElement) => symbol.isSameName(name));
-      if (foundElement) return foundElement;
-      if (this.parentTable) return this.parentTable.find(name);
+      const foundElement = this.symbols.find((symbol: TableElement) =>
+        symbol.isSameName(name)
+      );
+      return foundElement ?? this.parentTable?.find(name);
     }
     return undefined;
   };
@@ -190,13 +185,21 @@ export class Table {
     return this.find(name) !== undefined;
   };
 
+  findInCurrentClosedScope = (
+    name: string
+  ): SymbolElement | MethodElement | undefined => {
+    const foundElement = this.symbols.find((symbol: TableElement) =>
+      symbol.isSameName(name)
+    );
+    if (foundElement) return foundElement;
+    return undefined;
+  };
+  existsInCurrentClosedScope = (name: string): boolean => {
+    return this.findInCurrentClosedScope(name) !== undefined;
+  };
+
   addElement = (...newElements: TableElement[]) => {
-    newElements.forEach(newElement => {
-      const foundElement = this.find(newElement.getName());
-      // Elements and methods can´t have the same name.
-      if (foundElement) {
-        throw new Error(`Symbol ${newElement.getName() || 'Unknown'} already exists in scope ${this.scope} as ${foundElement.getType() || 'Unknown'} type. (Defined in line ${foundElement.getLine() || 'Unknown'}, column ${foundElement.getStartColumn() || 'Unknown'} - ${foundElement.getEndColumn() || 'Unknown'})`);
-      }
+    newElements.forEach((newElement) => {
       this.symbols.push(newElement);
     });
     return this;
@@ -208,7 +211,6 @@ export interface IError {
   line: number;
   column: IPositioning;
 }
-
 
 export class ErrorsTable {
   public readonly errors: IError[];
@@ -233,13 +235,15 @@ export class ErrorsTable {
     this.errors.push(error);
   };
 
-
-
   printError = (error: string, line: number, column: number) => {
     return `\x1b[41m[Error]\x1b[0m\x1b[33m[${line}:${column}]\x1b[0m ${error}`;
   };
   getErrors = () => this.errors;
   toString(): string {
-    return this.errors.map(error => this.printError(error.message, error.line, error.column.start)).join("\n");
-  };
+    return this.errors
+      .map((error) =>
+        this.printError(error.message, error.line, error.column.start)
+      )
+      .join("\n");
+  }
 }
