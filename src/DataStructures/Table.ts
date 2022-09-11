@@ -19,180 +19,35 @@ export interface ITableElement {
   dataStructureType: IDataStructureType;
 }
 
-interface IDefaultExprValues<T> {
-  allowed: boolean;
-  as: T;
-}
+// interface IDefaultExprValues<T> {
+//   allowed: boolean;
+//   as: T;
+// }
 
 interface IExpressionProperties<T> {
-  boolean: IDefaultExprValues<boolean>;
-  integer: IDefaultExprValues<number>;
-  string: IDefaultExprValues<string>;
-  compared: IDefaultExprValues<any>;
-  negated: IDefaultExprValues<any>;
-  equated: IDefaultExprValues<any>;
-  compileTime: IDefaultExprValues<T>;
+  // boolean: IDefaultExprValues<boolean>;
+  // integer: IDefaultExprValues<number>;
+  // string: IDefaultExprValues<string>;
+  // compared: IDefaultExprValues<any>;
+  // negated: IDefaultExprValues<any>;
+  // equated: IDefaultExprValues<any>;
+  // compileTime: IDefaultExprValues<T>;
   type: string[];
 }
 
+/**
+ * Every single expression has a type.
+ */
 export class Properties<T> {
-  private _boolean: IDefaultExprValues<boolean>;
-  private _integer: IDefaultExprValues<number>;
-  private _string: IDefaultExprValues<string>;
-  private _compared: IDefaultExprValues<string[]>;
-  private _negated: IDefaultExprValues<any>;
-  private _equated: IDefaultExprValues<string[]>;
-  private _compileTime: IDefaultExprValues<T>;
-  private _type: string[];
+  private _type: Table<any>;
   private _assignmentFunction: (input: any) => boolean;
 
-  constructor(options: { type: string[] }) {
-    this._boolean = { allowed: false, as: false };
-    this._integer = { allowed: false, as: 0 };
-    this._string = { allowed: false, as: "" };
-    this._compared = { allowed: false, as: [] };
-    this._negated = { allowed: false, as: undefined };
-    this._equated = { allowed: false, as: [] };
-    this._compileTime = { allowed: false, as: undefined as T };
+  constructor(options: { type: Table<any> }) {
     this._type = options.type;
-    this._assignmentFunction = (_input) => false;
+    this._assignmentFunction = () => false;
   }
 
-  //#region Getters
-  get canBeBoolean(): boolean {
-    return this._boolean.allowed;
-  }
-  get asBoolean(): boolean {
-    if (!this._boolean.allowed) {
-      throw new Error("Cannot convert property to boolean");
-    }
-    return this._boolean.as;
-  }
-  get canBeInteger(): boolean {
-    return this._integer.allowed;
-  }
-  get asInteger(): number {
-    if (!this._integer.allowed) {
-      throw new Error("Cannot convert property to integer");
-    }
-    return this._integer.as;
-  }
-
-  get canBeString(): boolean {
-    return this._string.allowed;
-  }
-  get asString(): string {
-    if (!this._string.allowed) {
-      throw new Error("Cannot convert property to string");
-    }
-    return this._string.as;
-  }
-  get canBeNegated(): boolean {
-    return this._negated.allowed;
-  }
-
-  canBeEquatedTo(to: string): boolean {
-    return this._equated.allowed && this._equated.as.includes(to);
-  }
-
-  get resolvedAtCompileTime(): boolean {
-    return this._compileTime.allowed;
-  }
-
-  get type(): string[] {
-    return this._type;
-  }
-  //#endregion
-
-  //#region BuilderFunctions
-  allowBoolean = (withCast: boolean): Properties<T> => {
-    const asBool = Boolean(withCast);
-    this._boolean = { allowed: true, as: asBool };
-    return this;
-  };
-
-  allowInteger = (withCast: number): Properties<T> => {
-    const asInt = Number(withCast);
-    this._integer = { allowed: true, as: asInt };
-    return this;
-  };
-
-  allowString = (withCast: string): Properties<T> => {
-    const asString = String(withCast);
-    this._string = { allowed: true, as: asString };
-    return this;
-  };
-
-  allowNegated = (): Properties<T> => {
-    this._negated = { allowed: true, as: undefined };
-    return this;
-  };
-  allowEquated = (to: string[]): Properties<T> => {
-    this._equated = { allowed: true, as: [...to] };
-    return this;
-  };
-
-  allowAssignment = (
-    withAssignmentFunction: (input: any) => boolean
-  ): Properties<T> => {
-    this._assignmentFunction = withAssignmentFunction.bind(this);
-    return this;
-  };
-  allowCompiledTime = (value: T): Properties<T> => {
-    this._compileTime = { allowed: true, as: value };
-    return this;
-  };
-
-  canBeAssignedTo = (input: any): boolean => {
-    if (input instanceof Properties && input.type.some(this._type.includes)) {
-      return true;
-    }
-    return this._assignmentFunction(input);
-  };
-  //#endregion
-
-  //#region Basic
-  getProperties = (): IExpressionProperties<T> => {
-    return {
-      boolean: this._boolean,
-      integer: this._integer,
-      string: this._string,
-      compared: this._compared,
-      negated: this._negated,
-      equated: this._equated,
-      compileTime: this._compileTime,
-      type: this._type,
-    };
-  };
-
-  toString(): string {
-    return `Properties <boolean: ${this._boolean}, integer: ${this._integer}, string: ${this._string}, compared: ${this._compared}, negated: ${this._negated}>`;
-  }
-
-  copy = (): Properties<T> => {
-    const newProperties = new Properties<T>({ type: this.type });
-    if (this._boolean.allowed) {
-      newProperties.allowBoolean(this._boolean.as);
-    }
-    if (this._integer.allowed) {
-      newProperties.allowInteger(this._integer.as);
-    }
-    if (this._string.allowed) {
-      newProperties.allowString(this._string.as);
-    }
-    if (this._negated.allowed) {
-      newProperties.allowNegated();
-    }
-    if (this._equated.allowed) {
-      newProperties.allowEquated(this._equated.as);
-    }
-    if (this._compileTime.allowed) {
-      newProperties.allowCompiledTime(this._compileTime.as);
-    }
-
-    return newProperties;
-  };
-  //#endregion
+  canCompare() {}
 }
 
 // Builder pattern may help with better understanding
@@ -203,7 +58,6 @@ export class TableElement {
   protected _column?: IPositioning = { start: 0, end: 0 };
   protected _dataStructureType?: IDataStructureType;
   protected _scope?: string;
-  protected _caster?: any;
   protected _size?: number;
 
   constructor() {}
@@ -257,11 +111,6 @@ export class TableElement {
     return this;
   }
 
-  public setCaster(casterProperties: Properties<any>) {
-    this._caster = casterProperties;
-    return this;
-  }
-
   public setSize(newSize: number) {
     this._size = newSize;
     return this;
@@ -284,7 +133,6 @@ export class TableElement {
   public getDataStructureType = () => this._dataStructureType;
   public getSize = () => this._size;
 
-  public getCaster = () => this._caster;
   public isSameName = (name: string) => this._name === name;
   public toString(): string {
     return `[${this._dataStructureType ?? "Unknown Data Type"}] ${
@@ -341,6 +189,11 @@ interface ISymbolsTableParams<T> {
   canBeComparedTo?: string[];
   defaultValue: T;
   canBeAssigned?: string[];
+  allowNegation?: boolean;
+  assigmentFunction?: () => (input: any, using?: any) => [boolean, string?];
+  comparisonFunction?: () => (input: any, using?: any) => [boolean, string?];
+  errors?: ErrorsTable;
+  warnings?: ErrorsTable;
 }
 
 export class Table<T> {
@@ -353,9 +206,17 @@ export class Table<T> {
   public readonly canBeType: boolean;
   public readonly canBeInherited: boolean;
   public readonly isGeneric: boolean = false;
-  public readonly canBeComparedTo: string[] = [];
+  public readonly _canBeComparedTo: string[] = [];
+  public readonly allowsComparisonsTo: (input: any) => [boolean, string?];
   public readonly canBeAssigned: string[] = [];
   public readonly defaultValue: T;
+  public readonly allowsAssignmentOf: (
+    input: any,
+    using?: any
+  ) => [boolean, string?];
+  public readonly allowNegation: boolean;
+  public readonly errors?: ErrorsTable;
+  public readonly warnings?: ErrorsTable;
   constructor(options?: ISymbolsTableParams<T>) {
     this.scope = options?.scope ?? "global";
     this.tableName = options?.scope ?? "global";
@@ -365,13 +226,27 @@ export class Table<T> {
     this.canBeInherited = options?.canBeInherited ?? true;
     this.canBeType = options?.canBeType ?? true;
     this.defaultValue = options?.defaultValue ?? ({} as T);
-    this.canBeComparedTo = [
+    this._canBeComparedTo = [
       this.tableName,
       ...(options?.canBeComparedTo ?? []),
     ];
 
     this.canBeAssigned = [this.tableName, ...(options?.canBeAssigned ?? [])];
+    this.allowsAssignmentOf =
+      options?.assigmentFunction?.().bind(this) ??
+      (() => {
+        throw new Error(`Assignment function not defined in ${this.tableName}`);
+      });
+    this.allowsComparisonsTo =
+      options?.comparisonFunction?.().bind(this) ??
+      (() => {
+        throw new Error(`Comparison not implemented in ${this.tableName}`);
+      });
 
+    this.warnings = options?.warnings;
+    this.errors = options?.errors;
+
+    this.allowNegation = options?.allowNegation ?? false;
     if (options?.isGeneric) {
       this.canBeInherited = false;
       this.canBeType = true;
@@ -395,12 +270,12 @@ export class Table<T> {
   };
 
   equate = (name: string) => {
-    return this.canBeComparedTo.includes(name);
+    return this._canBeComparedTo.includes(name);
   };
 
   possibleTypes = (): string[] => {
     return [
-      ...this.canBeComparedTo,
+      ...this._canBeComparedTo,
       ...this.canBeAssigned,
       ...(this.parentTable?.possibleTypes() ?? []),
     ];
@@ -490,7 +365,11 @@ export interface IError {
 
 export class ErrorsTable {
   public readonly errors: IError[];
-  constructor() {
+  public readonly appender;
+  public readonly color;
+  constructor(appender = "Error", color = "41") {
+    this.appender = appender;
+    this.color = color;
     this.errors = [];
   }
   static errorFormat = (errorMessage: string, ...args: any[]) => {
@@ -508,11 +387,21 @@ export class ErrorsTable {
   };
 
   addError = (error: IError) => {
+    if (this.errorExists(error)) return;
     this.errors.push(error);
   };
 
+  errorExists = (error: IError) =>
+    !!this.errors.find(
+      (err) =>
+        err.message === error.message &&
+        err.line === error.line &&
+        err.column.start === error.column.start &&
+        err.column.end === error.column.end
+    );
+
   printError = (error: string, line: number, column: number) => {
-    return `\x1b[41m[Error]\x1b[0m\x1b[33m[${line}:${column}]\x1b[0m ${error}`;
+    return `\x1b[${this.color}m[${this.appender}]\x1b[0m\x1b[33m[${line}:${column}]\x1b[0m ${error}`;
   };
   getErrors = () => this.errors;
   toString(): string {
