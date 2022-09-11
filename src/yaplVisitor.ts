@@ -61,28 +61,124 @@ export class YaplVisitor
   public mainExists: boolean = false;
   public mainMethodExists: boolean = false;
   public errors: ErrorsTable;
+  public warnings: ErrorsTable;
   constructor() {
     super();
     this.scopeStack = new Stack<Table<any>>(); // Scopes are implemented as a stack.
     this.symbolsTable = []; // Symbols are universal
     this.errors = new ErrorsTable();
-
+    this.warnings = new ErrorsTable("Warning", "33");
     //#region Int
     // Int doesn't depend on any other class, so it's added first to the stack
     const IntType = new Table<number>({
+      errors: this.errors,
+      warnings: this.warnings,
       scope: "Int",
       isGeneric: true,
       canBeComparedTo: ["Bool"],
       defaultValue: 0,
+      assigmentFunction: () =>
+        function (input: any) {
+          if (typeof input === "number") {
+            return [true];
+          } else if (typeof input === "boolean") {
+            const message = ErrorsTable.quotedErrorFormat(
+              "Implicit conversion from {} to {}",
+              "Bool",
+              "Int"
+            );
+            return [true, message];
+          } else if (input instanceof Table) {
+            // @ts-ignore
+            if (input.tableName === "Int") return this.allowsAssignmentOf(1);
+            if (input.tableName === "Bool")
+              // @ts-ignore
+              return this.allowsAssignmentOf(true);
+          }
+          return [false];
+        },
+      comparisonFunction: () =>
+        function (against: any) {
+          if (typeof against === "number") {
+            return [true];
+          } else if (typeof against === "boolean") {
+            return [
+              true,
+              ErrorsTable.quotedErrorFormat(
+                "Implicit conversion from {} to {}",
+                "Boolean",
+                "Int"
+              ),
+            ];
+          } else if (against instanceof Table) {
+            // @ts-ignore
+            if (against.tableName === "Int") return this.allowsComparisonsTo(1);
+            if (against.tableName === "Bool")
+              // @ts-ignore
+              return this.allowsComparisonsTo(true);
+          }
+          return [false];
+        },
     });
     //#endregion
     //#region Bool
     // Bool doesn't depend on any other class, so it's added to the stack with Int
     const BoolType = new Table<boolean>({
+      errors: this.errors,
+      warnings: this.warnings,
       scope: "Bool",
       isGeneric: true,
       canBeComparedTo: ["Int"],
       defaultValue: false,
+      assigmentFunction: () =>
+        function (input: any) {
+          switch (typeof input) {
+            case "boolean":
+              return [true];
+            case "number":
+              if ([0, 1].includes(input)) {
+                return [
+                  true,
+                  ErrorsTable.quotedErrorFormat(
+                    "Implicit conversion from {} to {}",
+                    "Int",
+                    "Bool"
+                  ),
+                ];
+              }
+              return [false];
+          }
+          if (input instanceof Table) {
+            // @ts-ignore
+            if (input.tableName === "Int") return this.allowsAssignmentOf(1);
+            if (input.tableName === "Bool")
+              // @ts-ignore
+              return this.allowsAssignmentOf(true);
+          }
+          return [false];
+        },
+      comparisonFunction: () =>
+        function (against: any) {
+          if (typeof against === "boolean") {
+            return [true];
+          } else if (typeof against === "number") {
+            return [
+              true,
+              ErrorsTable.quotedErrorFormat(
+                "Implicit conversion from {} to {}",
+                "Int",
+                "Bool"
+              ),
+            ];
+          } else if (against instanceof Table) {
+            // @ts-ignore
+            if (against.tableName === "Int") return this.allowsComparisonsTo(1);
+            if (against.tableName === "Bool")
+              // @ts-ignore
+              return this.allowsComparisonsTo(true);
+          }
+          return [false];
+        },
     });
     //#endregion
     //#region String
@@ -91,6 +187,15 @@ export class YaplVisitor
       scope: "String",
       isGeneric: true,
       defaultValue: "",
+      assigmentFunction: () =>
+        function (input: any) {
+          if (typeof input === "string") return [true];
+          if (input instanceof Table) {
+            if (["String"].includes(input.tableName)) return [true];
+          }
+          return [false];
+        },
+      comparisonFunction: () => () => [false],
     });
     const lengthMethod = new MethodElement()
       .setName("length")
@@ -145,7 +250,18 @@ export class YaplVisitor
     //#endregion
     //#region Object
     // Object depends on String, so it's added last
-    const ObjectType = new Table<{}>({ scope: "Object", defaultValue: {} });
+    const ObjectType = new Table<{}>({
+      scope: "Object",
+      defaultValue: {},
+      assigmentFunction: () => (input: any) => {
+        if (input instanceof Table) {
+          // @ts-ignore
+          return [this.tableName === input.tableName];
+        }
+        return [false];
+      },
+      comparisonFunction: () => () => [false],
+    });
 
     const abortMethod = new MethodElement()
       .setReturnType("Object")
@@ -172,8 +288,21 @@ export class YaplVisitor
     return aggregate + nextResult;
   }
 
-  protected findTable(name: string): Table<any> | undefined {
-    return this.symbolsTable.find((table: Table<any>) => table.scope === name);
+  protected findTable(name: string | Table<any> | any): Table<any> | undefined {
+    if (typeof name === "string") {
+      return this.symbolsTable.find(
+        (table: Table<any>) => table.scope === name
+      );
+    } else if (name instanceof Table) {
+      return this.symbolsTable.find(
+        (table: Table<any>) => table.scope === name.scope
+      );
+    } else if (name) {
+      return this.symbolsTable.find(
+        (table: Table<any>) => table.scope === name.toString()
+      );
+    }
+    return undefined;
   }
 
   protected returnToScope(scope: Scope) {
@@ -383,199 +512,109 @@ export class YaplVisitor
     return this.next(ctx);
   };
   visitAdd = (ctx: AddContext): Properties<number> => {
-    const leftExpression: Properties<number> = this.visit(ctx.children?.[0]!);
-    const visitRightExpression: Properties<number> = this.visit(
-      ctx.children?.[2]!
-    );
-    const expr = new Properties<number>({ type: "Int" });
-    const line = ctx.start?.line ?? 0;
-    const column = {
-      start: ctx.start?.charPositionInLine ?? 0,
-      end: ctx.stop?.charPositionInLine ?? 0,
-    };
+    // const leftExpression: Properties<number> = this.visit(ctx.children?.[0]!);
+    // const visitRightExpression: Properties<number> = this.visit(
+    //   ctx.children?.[2]!
+    // );
+    // const expr = new Properties<number>({ type: "Int" });
+    // const line = ctx.start?.line ?? 0;
+    // const column = {
+    //   start: ctx.start?.charPositionInLine ?? 0,
+    //   end: ctx.stop?.charPositionInLine ?? 0,
+    // };
 
-    if (!(leftExpression.canBeInteger && visitRightExpression.canBeInteger)) {
-      let message = "";
-      const leftIsInteger = leftExpression.canBeInteger;
-      const rightIsInteger = visitRightExpression.canBeInteger;
+    // if (!(leftExpression.canBeInteger && visitRightExpression.canBeInteger)) {
+    //   let message = "";
+    //   const leftIsInteger = leftExpression.canBeInteger;
+    //   const rightIsInteger = visitRightExpression.canBeInteger;
 
-      if (!leftIsInteger && !rightIsInteger) {
-        message = ErrorsTable.quotedErrorFormat(
-          "Both operands of '+' must be integers ({} and {} are not integers, and can't be casted)",
-          ctx.children?.[0]!.text,
-          ctx.children?.[2]!.text
-        );
-      } else if (!leftIsInteger) {
-        message = ErrorsTable.quotedErrorFormat(
-          "Left operand of '+' must be an integer ({} is not an integer and can't be casted)",
-          ctx.children?.[0]!.text
-        );
-      } else if (!rightIsInteger) {
-        message = ErrorsTable.quotedErrorFormat(
-          "Right operand of '+' must be an integer ({} is not an integer and can't be casted)",
-          ctx.children?.[2]!.text
-        );
-      } else {
-        message = ErrorsTable.quotedErrorFormat(
-          "Unknown error while evaluating expression {}",
-          ctx.text
-        );
-      }
-      this.errors.addError({ message, line, column });
-    }
+    //   if (!leftIsInteger && !rightIsInteger) {
+    //     message = ErrorsTable.quotedErrorFormat(
+    //       "Both operands of '+' must be integers ({} and {} are not integers, and can't be casted)",
+    //       ctx.children?.[0]!.text,
+    //       ctx.children?.[2]!.text
+    //     );
+    //   } else if (!leftIsInteger) {
+    //     message = ErrorsTable.quotedErrorFormat(
+    //       "Left operand of '+' must be an integer ({} is not an integer and can't be casted)",
+    //       ctx.children?.[0]!.text
+    //     );
+    //   } else if (!rightIsInteger) {
+    //     message = ErrorsTable.quotedErrorFormat(
+    //       "Right operand of '+' must be an integer ({} is not an integer and can't be casted)",
+    //       ctx.children?.[2]!.text
+    //     );
+    //   } else {
+    //     message = ErrorsTable.quotedErrorFormat(
+    //       "Unknown error while evaluating expression {}",
+    //       ctx.text
+    //     );
+    //   }
+    //   this.errors.addError({ message, line, column });
+    // }
 
-    return expr;
+    // return expr;
+    return this.next(ctx);
   };
   visitMinus = (ctx: MinusContext) => {
     return this.next(ctx);
   };
 
   // Less thans return booleans
-  visitLessThan = (ctx: LessThanContext): Properties<any> => {
-    const boolTable = this.findTable("Bool")!;
-    const [leftChild, _, rightChild] = ctx.children!;
-    const visitLeftExpression: Properties<number> = this.visit(leftChild);
-    const visitRightExpression: Properties<number> = this.visit(rightChild);
-    const expr = new Properties({ type: ["Bool"] });
-
-    if (visitLeftExpression.canBeComparedTo(visitRightExpression)) {
-      // Don't assign the properties unless the expressions are comparable
-      expr
-        .allowCompared(boolTable.canBeComparedTo)
-        .allowEquated(boolTable.canBeComparedTo)
-        // Can be either 0 or 1
-        .allowInteger(
-          Number(
-            visitLeftExpression.asInteger && visitRightExpression.asInteger
-          )
-        );
-    } else {
-      const message = ErrorsTable.quotedErrorFormat(
-        "Expression {} can't be compared",
-        ctx.text
-      );
-      this.errors.addError({
-        message,
-        line: ctx.start?.line ?? 0,
-        column: {
-          start: ctx.start?.charPositionInLine ?? 0,
-          end: ctx.start?.charPositionInLine ?? 0 + ctx.text.length,
-        },
-      });
+  visitLessThan = (ctx: LessThanContext) => {
+    const leftExpr: Table<number> = this.visit(ctx.children?.[0]!);
+    const rightExpr: Table<number> = this.visit(ctx.children?.[2]!);
+    const line = ctx.start?.line ?? 0;
+    const column = {
+      start: ctx.start?.charPositionInLine ?? 0,
+      end: ctx.stop?.charPositionInLine ?? 0,
+    };
+    const [allowsComparison, warning] = leftExpr.allowsComparisonsTo(rightExpr);
+    if (warning) {
+      this.warnings.addError({ message: warning, line, column });
     }
-    return expr;
+    if (!allowsComparison) {
+      const message = ErrorsTable.quotedErrorFormat(
+        "Can't compare {} with {} in expression ({})",
+        leftExpr.tableName,
+        rightExpr.tableName,
+        "  " + ctx.text + "  "
+      );
+      this.errors.addError({ message, line, column });
+    }
+
+    if (warning) {
+      this.warnings.addError({ message: warning, line, column });
+    }
+    return this.findTable("Bool")!;
   };
   visitLessEqual = (ctx: LessEqualContext) => {
-    // const visitLeftExpression: Properties<number> = this.visit(
-    //   ctx.children?.[0]!
-    // );
-    // const visitRightExpression: Properties<number> = this.visit(
-    //   ctx.children?.[2]!
-    // );
-    // const expr = new Properties({ type: "Bool" });
-    // if (
-    //   visitLeftExpression.canBeCompared &&
-    //   visitRightExpression.canBeCompared
-    // ) {
-    //   // Don't assign the properties unless the expressions are comparable
-    //   expr
-    //     // Obviously, it can be a boolean
-    //     .allowBoolean(true)
-    //     // A less than can be compared as an integer, since it is a boolean (0 or 1)
-    //     .allowCompared()
-    //     // A true and a false can be compared as an integer, since it is a boolean (0 or 1)
-    //     .allowEquated((input) => false)
-    //     // Can be either 0 or 1
-    //     .allowInteger(
-    //       Number(
-    //         visitLeftExpression.asInteger && visitRightExpression.asInteger
-    //       )
-    //     );
-    //   // First piece of optimization
-    //   if (
-    //     visitLeftExpression.resolvedAtCompileTime &&
-    //     visitRightExpression.resolvedAtCompileTime
-    //   ) {
-    //     const compileTimeExpr =
-    //       visitLeftExpression.asInteger <= visitRightExpression.asInteger;
-    //     expr.allowBoolean(compileTimeExpr).allowCompiledTime(compileTimeExpr);
-    //   }
-    // } else {
-    //   const message = ErrorsTable.quotedErrorFormat(
-    //     "Expression {} can't be compared",
-    //     ctx.text
-    //   );
-    //   this.errors.addError({
-    //     message,
-    //     line: ctx.start?.line ?? 0,
-    //     column: {
-    //       start: ctx.start?.charPositionInLine ?? 0,
-    //       end: ctx.start?.charPositionInLine ?? 0 + ctx.text.length,
-    //     },
-    //   });
-    // }
-    // return expr;
+    const leftExpr: Table<number> = this.visit(ctx.children?.[0]!);
+    const rightExpr: Table<number> = this.visit(ctx.children?.[2]!);
+    const line = ctx.start?.line ?? 0;
+    const column = {
+      start: ctx.start?.charPositionInLine ?? 0,
+      end: ctx.stop?.charPositionInLine ?? 0,
+    };
+    const [allowsComparison, warning] = leftExpr.allowsComparisonsTo(rightExpr);
+    if (warning) {
+      this.warnings.addError({ message: warning, line, column });
+    }
+    if (!allowsComparison) {
+      const message = ErrorsTable.quotedErrorFormat(
+        "Can't compare {} with {} in expression ({})",
+        leftExpr.tableName,
+        rightExpr.tableName,
+        "  " + ctx.text + "  "
+      );
+      this.errors.addError({ message, line, column });
+    }
+    return this.findTable("Bool")!;
   };
   visitEqual = (ctx: EqualContext) => {
-    // const visitLeftExpression: Properties<any> = this.visit(ctx.children?.[0]!);
-    // const visitRightExpression: Properties<any> = this.visit(
-    //   ctx.children?.[2]!
-    // );
-    // const expr = new Properties({ type: "Bool" });
-    // if (visitLeftExpression.canBeEquated && visitRightExpression.canBeEquated) {
-    //   const canBeInteger =
-    //     visitLeftExpression.asInteger && visitRightExpression.asInteger;
-    //   const canBeBoolean =
-    //     visitLeftExpression.asBoolean && visitRightExpression.asBoolean;
-    //   const canBeString =
-    //     visitLeftExpression.asString && visitRightExpression.asString;
-    //   if (canBeInteger || canBeBoolean) {
-    //   }
-    //   if (canBeString) {
-    //   } else {
-    //   }
-    //   // Don't assign the properties unless the expressions are comparable
-    //   expr
-    //     // Obviously, it can be a boolean
-    //     .allowBoolean(true)
-    //     // A less than can be compared as an integer, since it is a boolean (0 or 1)
-    //     // .allowCompared()
-    //     // A true and a false can be compared as an integer, since it is a boolean (0 or 1)
-    //     // .allowEquated((input) => false);
-    // } else {
-    //   const message = ErrorsTable.quotedErrorFormat(
-    //     "Expression {} can't be equated",
-    //     ctx.text
-    //   );
-    //   this.errors.addError({
-    //     message,
-    //     line: ctx.start?.line ?? 0,
-    //     column: {
-    //       start: ctx.start?.charPositionInLine ?? 0,
-    //       end: ctx.start?.charPositionInLine ?? 0 + ctx.text.length,
-    //     },
-    //   });
-    // }
-    // return expr;
+    return this.next(ctx);
   };
   visitBoolNot = (ctx: BoolNotContext) => {
-    const expressionToNegate: Properties<boolean | number> = this.visit(
-      ctx.children?.[1]!
-    );
-    if (!expressionToNegate.canBeNegated) {
-      const message = ErrorsTable.quotedErrorFormat(
-        "Expression {} can't be negated",
-        ctx.text
-      );
-      this.errors.addError({
-        message,
-        line: ctx.start?.line ?? 0,
-        column: {
-          start: ctx.start?.charPositionInLine ?? 0,
-          end: ctx.start?.charPositionInLine ?? 0 + ctx.text.length,
-        },
-      });
-    }
     return this.next(ctx);
   };
   visitParentheses = (ctx: ParenthesesContext) => {
@@ -583,62 +622,35 @@ export class YaplVisitor
   };
   visitId = (ctx: IdContext) => {
     // Find it in the scope
-    const name = ctx.text;
+    const [name] = ctx.children!;
     const currentScope = this.getCurrentClass()!;
-    const foundSymbol = currentScope.find(name);
+    const foundSymbol = currentScope.find(name.text);
     const line = ctx.start?.line ?? 0;
     const column = {
       start: ctx.start?.charPositionInLine ?? 0,
       end: ctx.stop?.charPositionInLine ?? 0,
     };
-    if (foundSymbol) {
-      return foundSymbol.getCaster();
+    if (!foundSymbol) {
+      const message = ErrorsTable.quotedErrorFormat(
+        "Symbol {} not found in scope",
+        name
+      );
+      this.errors.addError({ message, line, column });
     }
-    const message = ErrorsTable.quotedErrorFormat(
-      "Symbol {} not found in scope",
-      name
-    );
-    this.errors.addError({ message, line, column });
-    return this.next(ctx);
+    return this.findTable(foundSymbol?.getType()!);
   };
-  visitInt = (ctx: IntContext): Properties<number> => {
-    const canBeComparedTo = [...this.findTable("Int")!.canBeComparedTo];
-    const currentNumber = Number(ctx.INT());
-    const canBeResolvedToBoolean = [0, 1].includes(currentNumber);
-    const comparisonAndEquatedTo = canBeResolvedToBoolean ? canBeComparedTo : ["Int"]
-    const type = ["Int"];
-    if (canBeResolvedToBoolean) {
-      type.push("Bool");
-    }
-    return new Properties<number>({ type })
-      .allowCompared(comparisonAndEquatedTo)
-      .allowInteger(currentNumber)
-      .allowCompiledTime(currentNumber)
-      .allowEquated(comparisonAndEquatedTo)
-      .allowNegated();
+  visitInt = (ctx: IntContext): Table<number> => {
+    return this.findTable("Int")!;
   };
 
-  visitString = (ctx: StringContext) => {
-    const previousClass = this.findTable("String")!;
-    // Strings can only be compared to other strings
-    const expr = new Properties<string>({ type: ["String"] });
-    const contents = ctx.STRING().text;
-    expr
-      .allowEquated(previousClass.canBeComparedTo)
-      .allowString(contents);
-    return expr;
+  visitString = (ctx: StringContext): Table<string> => {
+    return this.findTable("String")!;
   };
-  visitTrue = (_ctx: TrueContext): Properties<boolean> => {
-    return new Properties<boolean>({ type: ["Bool", "Int"] })
-      .allowBoolean(true)
-      .allowInteger(1)
-      .allowNegated();
+  visitTrue = (_ctx: TrueContext): Table<boolean> => {
+    return this.findTable("Bool")!;
   };
-  visitFalse = (_ctx: FalseContext) => {
-    return new Properties<boolean>({ type: ["Bool", "Int"] })
-      .allowBoolean(true)
-      .allowInteger(1)
-      .allowNegated();
+  visitFalse = (_ctx: FalseContext): Table<boolean> => {
+    return this.findTable("Bool")!;
   };
   visitAssignment = (ctx: AssignmentContext) => {
     return this.next(ctx);
@@ -647,9 +659,10 @@ export class YaplVisitor
     return this.next(ctx);
   };
   visitProperty = (ctx: PropertyContext) => {
-    const variable = new PropertyContextHelper(ctx).getInfo();
     // Previous table
-    const previousClass = this.findTable(variable.type);
+    const [name, _, dataType, __, assignmentExpression] = ctx.children!;
+
+    const previousClass = this.findTable(dataType);
     const line = ctx.start?.line ?? 0;
     const column = {
       start: ctx.start?.charPositionInLine ?? 0,
@@ -658,54 +671,68 @@ export class YaplVisitor
     if (!previousClass) {
       const message = ErrorsTable.quotedErrorFormat(
         "Type {} not found in scope",
-        variable.type
+        dataType.text
       );
-      this.errors.addError({message,line, column});
+      this.errors.addError({ message, line, column });
       return this.next(ctx);
     }
 
-    const expression = ctx.expression();
-    let assignationInformation = new Properties<any>({ type: [variable.type] })
-    .allowCompared(previousClass!.canBeComparedTo);
-    if (expression) {
-      assignationInformation = this.visit(expression);
-
-      if (!assignationInformation.) {
+    if (assignmentExpression) {
+      const resolvesTo: Table<any> = this.visit(assignmentExpression);
+      const [allowedAssigment, warning] =
+        previousClass.allowsAssignmentOf(resolvesTo);
+      if (warning) {
+        this.warnings.addError({ message: warning, line, column });
+      }
+      if (!allowedAssigment) {
         const message = ErrorsTable.quotedErrorFormat(
-          "Expression {} is not being resolved into a boolean expression",
-          variable.name
+          "Expression {} can't be assigned to {} (Assigning {} to {})",
+          assignmentExpression.text,
+          dataType.text,
+          resolvesTo.tableName,
+          previousClass.tableName
         );
         this.errors.addError({ message, line, column });
       }
     }
+    // let assignationInformation = new Properties<any>({ type: [variable.type] })
+    // .allowCompared(previousClass!.canBeComparedTo);
+    // if (expression) {
+    //   assignationInformation = this.visit(expression);
+
+    //   if (!assignationInformation.) {
+    //     const message = ErrorsTable.quotedErrorFormat(
+    //       "Expression {} is not being resolved into a boolean expression",
+    //       variable.name
+    //     );
+    //     this.errors.addError({ message, line, column });
+    //   }
+    // }
     const currentScopeTable = this.getCurrentClass();
 
     // const previousDeclared = currentScopeTable?.find(variableName);
     const newTableElement = new SymbolElement()
-      .setColumn(variable.column)
-      .setLine(variable.line)
-      .setName(variable.name)
-      .setType(variable.type)
-      .setScope(currentScopeTable?.tableName ?? "Global")
-      .setCaster(
-        assignationInformation ?? new Properties({ type: variable.type })
-      );
+      .setColumn(column)
+      .setLine(line)
+      .setName(name.text)
+      .setType(dataType.text)
+      .setScope(currentScopeTable?.tableName ?? "Global");
 
     // If the current scope does not exist, the property is declared outside of a class, which is not allowed
     if (!currentScopeTable) {
       const message = ErrorsTable.quotedErrorFormat(
         "Property {} declared outside of a class",
-        variable.name
+        name.text
       );
       this.errors.addError({
         message,
-        line: variable.line,
-        column: variable.column,
+        line: line,
+        column: column,
       });
       return this.next(ctx);
     }
 
-    const previousDeclared = currentScopeTable.find(variable.name);
+    const previousDeclared = currentScopeTable.find(name.text);
     // Case 1: Overriding (It does nothing)
     if (previousDeclared) {
       // Case 1.1: Redefinition in the same scope (error)
@@ -717,25 +744,25 @@ export class YaplVisitor
         ) {
           const message = ErrorsTable.quotedErrorFormat(
             "Property {} already declared",
-            variable.name
+            name
           );
           this.errors.addError({
             message,
-            line: variable.line,
-            column: variable.column,
+            line: line,
+            column: column,
           });
         }
         // Case 1.1.2: Definition of a property or method with the same name as another one
         else {
           const message = ErrorsTable.quotedErrorFormat(
             "Property {} and method {} have the same name",
-            variable.name,
-            variable.name
+            name,
+            name
           );
           this.errors.addError({
             message,
-            line: variable.line,
-            column: variable.column,
+            line: line,
+            column: column,
           });
         }
       }
@@ -744,15 +771,15 @@ export class YaplVisitor
       else if (previousDeclared.getType() !== newTableElement.getType()) {
         const message = ErrorsTable.quotedErrorFormat(
           "Property {} of type {} was already declared with a different type {} inside the scope {} (NOT PERMISSIVE)",
-          variable.name,
+          name,
           newTableElement.getType(),
           previousDeclared.getType(),
           previousDeclared.getScope()
         );
         this.errors.addError({
           message,
-          line: variable.line,
-          column: variable.column,
+          line: line,
+          column: column,
         });
       }
       return this.next(ctx);
