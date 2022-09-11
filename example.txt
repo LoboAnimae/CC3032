@@ -1,11 +1,16 @@
 class Something {
-    x: Bool <- true;
+    x: Bool <- "Strrring" < 2;
 };
 
 class SomethingElse inherits Something {
-    x: Bool <- true;
+    x: Bool <- 1;
+    y: Int;
+    z: String;
     x(): Bool {{
-        true;
+        WHILE x + 1 < 34 
+        LOOP
+            x = x + 1
+        POOL;
     }};
 };
 

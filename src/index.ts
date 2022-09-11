@@ -15,8 +15,18 @@ async function main(input: string) {
 
   const visitor = new YaplVisitor();
   const result = visitor.visit(tree);
+  const symbolsTable = visitor.symbolsTable;
+  console.log("----------------------BEGIN Sizes----------------------");
+  for (const foundSymbol of symbolsTable) {
+    const str = foundSymbol.toString();
+    if (!str) continue;
+    console.log(foundSymbol.toString());
+  }
+  console.log("-----------------------END Sizes-----------------------\n\n");
   const errors = visitor.errors;
+  console.log("----------------------BEGIN Errors----------------------");
   console.log(errors.toString());
+  console.log("-----------------------END Errors-----------------------");
 }
 
 const pathToFileURL = path.join(__dirname, "..", "example.txt");

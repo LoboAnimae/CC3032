@@ -28,19 +28,27 @@ class ContextHelper<T> implements IBasicInformation, IInfo<T> {
     this._ctx = ctx;
   }
 
-  getName = (): string => this.name?.() ?? "Unknown!";
+  getName(): string {
+    return this.name?.() ?? "Unknown!";
+  }
 
-  getLine = (): number => this._ctx.start?.line ?? -1;
+  getLine(): number {
+    return this._ctx.start?.line ?? -1;
+  }
 
-  getColumn = (): IPositioning => {
+  getColumn(): IPositioning {
     const start = this._ctx.start?.charPositionInLine ?? -1;
     const end = start + this._ctx.text.length;
     return { start, end };
-  };
+  }
 
-  getInfo = (): T => {
-    throw new Error("Method not implemented.");
-  };
+  getInfo(): T {
+    return {
+      name: this.getName(),
+      line: this.getLine(),
+      column: this.getColumn(),
+    } as T;
+  }
 }
 
 export class PropertyContextHelper
@@ -53,4 +61,9 @@ export class PropertyContextHelper
   }
 
   getType = (): string => this._ctx.TYPE().toString();
+  getInfo = (): PropertyContextHelperProperties => {
+    const info = super.getInfo();
+    const type = this.getType();
+    return { ...info, type };
+  };
 }
