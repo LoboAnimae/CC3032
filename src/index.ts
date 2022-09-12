@@ -4,12 +4,21 @@ import { yaplParser } from "./antlr/yaplParser";
 import path from "path";
 import fs from "fs";
 import { YaplVisitor } from "./yaplVisitor";
+import ScreenListener, { lineActions } from "./Misc/Screen";
 
 async function main(input: string) {
+  ScreenListener.emit(lineActions.clear);
+  ScreenListener.emit(lineActions.update, "Initializing...");
+  ScreenListener.emit(lineActions.add, "Starting YAPL compiler...");
+
   let inputStream = new ANTLRInputStream(input);
+  ScreenListener.emit(lineActions.update, "Reading input...");
   let lexer = new yaplLexer(inputStream);
+  ScreenListener.emit(lineActions.update, "Lexing input...");
   let tokenStream = new CommonTokenStream(lexer);
+  ScreenListener.emit(lineActions.update, "Tokenizing input...");
   let parser = new yaplParser(tokenStream);
+  ScreenListener.emit(lineActions.update, "Parsing input...");
 
   let tree = parser.program();
 
@@ -18,15 +27,26 @@ async function main(input: string) {
   const symbolsTable = visitor.symbolsTable;
   const errors = visitor.errors;
   const warnings = visitor.warnings;
-  console.log("----------------------BEGIN Sizes----------------------");
+
+  ScreenListener.emit(lineActions.update, "Writing Symbols Table...");
+  const allSizeTableValues: any[] = [];
   for (const foundSymbol of symbolsTable) {
     const str = foundSymbol.toString();
     if (!str) continue;
-    console.log(foundSymbol.toString());
+    allSizeTableValues.push(foundSymbol.getAllProperties());
   }
-  console.log("-----------------------END Sizes-----------------------\n\n");
-  console.log("----------------------BEGIN Errors----------------------");
-  console.log(errors.toString());
+  ScreenListener.emit(lineActions.add, "Symbols Table");
+  ScreenListener.emit(lineActions.resetLine);
+  console.table(allSizeTableValues, [
+    "Table Name",
+    "Size in Bytes",
+    "Line",
+    "Column",
+    "Inherits From",
+  ]);
+  ScreenListener.emit(lineActions.add, "Errors Table");
+  ScreenListener.emit(lineActions.resetLine);
+  console.table(errors.toTable());
   console.log("-----------------------END Errors-----------------------\n\n");
   console.log("---------------------BEGIN Warnings---------------------");
   console.log(warnings.toString());

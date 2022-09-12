@@ -1,10 +1,11 @@
 class Something {
-    y: Int <- 2;
-    x: Bool <- y;
+    x: Bool <- 2;
 };
 
 class SomethingElse inherits Something {
-
+    a(): Bool {
+            "SomeString"
+    };
 };
 
 class Main {

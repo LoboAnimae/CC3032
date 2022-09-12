@@ -68,8 +68,7 @@ export class YaplVisitor
     this.symbolsTable = []; // Symbols are universal
     this.errors = new ErrorsTable();
     this.warnings = new ErrorsTable("Warning", "33");
-    //#region Int
-    // Int doesn't depend on any other class, so it's added first to the stack
+
     const IntType = new Table<number>({
       errors: this.errors,
       warnings: this.warnings,
@@ -78,51 +77,29 @@ export class YaplVisitor
       canBeComparedTo: ["Bool"],
       defaultValue: 0,
       assigmentFunction: () =>
-        function (input: any) {
-          if (typeof input === "number") {
+        function (input: Table<any>) {
+          if (input.tableName === "Int") {
             return [true];
-          } else if (typeof input === "boolean") {
-            const message = ErrorsTable.quotedErrorFormat(
-              "Implicit conversion from {} to {}",
-              "Bool",
-              "Int"
-            );
-            return [true, message];
-          } else if (input instanceof Table) {
-            // @ts-ignore
-            if (input.tableName === "Int") return this.allowsAssignmentOf(1);
-            if (input.tableName === "Bool")
-              // @ts-ignore
-              return this.allowsAssignmentOf(true);
+          }
+          if (input.tableName === "Bool") {
+            // TODO: Generate a warning here
+            return [true];
           }
           return [false];
         },
       comparisonFunction: () =>
-        function (against: any) {
-          if (typeof against === "number") {
+        function (against: Table<any>) {
+          if (against.tableName === "Int") {
             return [true];
-          } else if (typeof against === "boolean") {
-            return [
-              true,
-              ErrorsTable.quotedErrorFormat(
-                "Implicit conversion from {} to {}",
-                "Boolean",
-                "Int"
-              ),
-            ];
-          } else if (against instanceof Table) {
-            // @ts-ignore
-            if (against.tableName === "Int") return this.allowsComparisonsTo(1);
-            if (against.tableName === "Bool")
-              // @ts-ignore
-              return this.allowsComparisonsTo(true);
+          } else if (against.tableName === "Bool") {
+            // TODO: Add a warning here
+            return [true];
           }
           return [false];
         },
+      typeCohersionFunction: () => (input: any) => Number(input),
     });
-    //#endregion
-    //#region Bool
-    // Bool doesn't depend on any other class, so it's added to the stack with Int
+
     const BoolType = new Table<boolean>({
       errors: this.errors,
       warnings: this.warnings,
@@ -131,92 +108,54 @@ export class YaplVisitor
       canBeComparedTo: ["Int"],
       defaultValue: false,
       assigmentFunction: () =>
-        function (input: any) {
-          switch (typeof input) {
-            case "boolean":
-              return [true];
-            case "number":
-              if ([0, 1].includes(input)) {
-                return [
-                  true,
-                  ErrorsTable.quotedErrorFormat(
-                    "Implicit conversion from {} to {}",
-                    "Int",
-                    "Bool"
-                  ),
-                ];
-              }
-              return [false];
+        function (input: Table<any>) {
+          if (input.tableName === "Bool") {
+            return [true];
           }
-          if (input instanceof Table) {
-            // @ts-ignore
-            if (input.tableName === "Int") return this.allowsAssignmentOf(1);
-            if (input.tableName === "Bool")
-              // @ts-ignore
-              return this.allowsAssignmentOf(true);
+          if (input.tableName === "Int") {
+            // TODO: Generate a warning here
+            return [[0, 1].includes(input.value)];
           }
           return [false];
         },
       comparisonFunction: () =>
-        function (against: any) {
-          if (typeof against === "boolean") {
+        function (against: Table<any>) {
+          if (against.tableName === "Bool") {
             return [true];
-          } else if (typeof against === "number") {
-            return [
-              true,
-              ErrorsTable.quotedErrorFormat(
-                "Implicit conversion from {} to {}",
-                "Int",
-                "Bool"
-              ),
-            ];
-          } else if (against instanceof Table) {
-            // @ts-ignore
-            if (against.tableName === "Int") return this.allowsComparisonsTo(1);
-            if (against.tableName === "Bool")
-              // @ts-ignore
-              return this.allowsComparisonsTo(true);
+          } else if (against.tableName === "Int") {
+            // TODO: Add a warning here
+            return [[0, 1].includes(against.value)];
           }
           return [false];
         },
+      typeCohersionFunction: () => (input: any) => Boolean(input),
     });
-    //#endregion
-    //#region String
-    // String depends on Int, so it's added second to the stack
     const StringType = new Table<string>({
       scope: "String",
       isGeneric: true,
       defaultValue: "",
       assigmentFunction: () =>
-        function (input: any) {
-          if (typeof input === "string") return [true];
-          if (input instanceof Table) {
-            if (["String"].includes(input.tableName)) return [true];
-          }
-          return [false];
+        function (input: Table<any>) {
+          return [input.tableName === "String"];
         },
       comparisonFunction: () => () => [false],
     });
     const lengthMethod = new MethodElement()
       .setName("length")
-      .setReturnType("Int");
+      .setReturnType(IntType);
 
     const concatMethod = new MethodElement()
       .setName("concat")
-      .setReturnType("String")
+      .setReturnType(StringType)
       .addParameter({ name: "s", type: "String" });
 
     const substrMethod = new MethodElement()
       .setName("substr")
-      .setReturnType("String")
+      .setReturnType(StringType)
       .addParameter({ name: "i", type: "Int" })
       .addParameter({ name: "l", type: "Int" });
 
     StringType.symbols.push(lengthMethod, concatMethod, substrMethod);
-    //#endregion
-
-    //#region IO
-    // IO depends on String and Int, so it's added third to the stack
     const IOType = new Table<undefined>({
       scope: "IO",
       isGeneric: true,
@@ -225,21 +164,21 @@ export class YaplVisitor
 
     const outStringMethod = new MethodElement()
       .setName("out_string")
-      .setReturnType("IO")
+      .setReturnType(IOType)
       .addParameter({ name: "x", type: "String" });
 
     const outIntMethod = new MethodElement()
       .setName("out_int")
-      .setReturnType("IO")
+      .setReturnType(IOType)
       .addParameter({ name: "x", type: "Int" });
 
     const inStringMethod = new MethodElement()
       .setName("in_string")
-      .setReturnType("String");
+      .setReturnType(StringType);
 
     const inIntMethod = new MethodElement()
       .setName("in_int")
-      .setReturnType("Int");
+      .setReturnType(IntType);
 
     IOType.addElement(
       outStringMethod,
@@ -247,32 +186,26 @@ export class YaplVisitor
       inStringMethod,
       inIntMethod
     );
-    //#endregion
-    //#region Object
-    // Object depends on String, so it's added last
     const ObjectType = new Table<{}>({
       scope: "Object",
       defaultValue: {},
-      assigmentFunction: () => (input: any) => {
-        if (input instanceof Table) {
-          // @ts-ignore
-          return [this.tableName === input.tableName];
-        }
-        return [false];
+      assigmentFunction: () => (input: Table<any>) => {
+        // @ts-ignore
+        return [this.tableName === input.tableName];
       },
       comparisonFunction: () => () => [false],
     });
 
     const abortMethod = new MethodElement()
-      .setReturnType("Object")
+      .setReturnType(ObjectType)
       .setName("abort");
 
     const typeNameMethod = new MethodElement()
-      .setReturnType("String")
+      .setReturnType(StringType)
       .setName("type_name");
 
     const copyMethod = new MethodElement()
-      .setReturnType("Object")
+      .setReturnType(ObjectType)
       .setName("copy");
 
     ObjectType.addElement(abortMethod, typeNameMethod, copyMethod);
@@ -322,15 +255,9 @@ export class YaplVisitor
     return this.scopeStack.getItem(1);
   }
   visitClassDefine = (ctx: ClassDefineContext): number => {
-    this.returnToGlobalScope(); // Return to the global scope, since classes can only be defined in the global scope.
-    // Case 1: Simple class
-    // Case 2: Class inherits from another class
-    // Case 3: Class inherits from a non-allowed class
-    // const className = ctx.TYPE()[0].toString();
+    this.returnToGlobalScope();
     const [cls, inheritsFrom = "Object"] = ctx.TYPE();
-    // Check if the class already exists
     const classTable = this.findTable(cls);
-
     const start = cls.symbol.startIndex;
     const end = cls.symbol.stopIndex;
     const line = cls.symbol.line;
@@ -339,8 +266,6 @@ export class YaplVisitor
     /*
 
     Circular inheritance is not possible, thanks to the syntax of the language.
-
-
     Not Possible:
       class A inherits B
       class B inherits A
@@ -350,28 +275,14 @@ export class YaplVisitor
       but for B to inherit from A, it must first be defined, which 
       is impossible.
     */
+
+    // ERROR: Class inherits from itself
     if (cls == inheritsFrom) {
-      this.errors.addError({
-        message: ErrorsTable.quotedErrorFormat(
-          "{} Class {} can't inherit from itself",
-          "Recursive Inheritance:",
-          cls.text
-        ),
-        line,
-        column,
-      });
       return this.next(ctx);
     }
 
-    // If the table was previously defined, then it means there is another class with the same name
+    // ERROR: Class already exists
     if (classTable) {
-      const message = classTable.isGeneric
-        ? ErrorsTable.quotedErrorFormat(
-            "Can't redefine generic class {}",
-            cls.text
-          )
-        : ErrorsTable.quotedErrorFormat("Redefinition of class {}", cls.text);
-      this.errors.addError({ message, line, column });
       return this.next(ctx);
     }
 
@@ -384,53 +295,25 @@ export class YaplVisitor
       defaultValue: {},
     });
 
-    // If the parent table doesn't exist, then it means that the class inherits from a non-existing class
+    // ERROR: Trying to inherit from a non-existing class
     if (!parentTable) {
-      const message = ErrorsTable.quotedErrorFormat(
-        `{} attempted to inherit from class {}, but it does not exist.`,
-        cls.text,
-        inheritsFrom
-      );
-      this.errors.addError({ message, line, column });
     }
-    // If the parent table is not allowed to be inherited, then it means that the class inherits from a non-allowed class
+
+    // ERROR: The table can't be inherited
     else if (!parentTable.canBeInherited) {
-      const message = parentTable.isGeneric
-        ? ErrorsTable.quotedErrorFormat(
-            `Class {} can't inherit from generic class {}`,
-            cls.text,
-            inheritsFrom
-          )
-        : ErrorsTable.quotedErrorFormat(
-            `Class {} can't inherit from class {}`,
-            cls.text,
-            inheritsFrom
-          );
-      this.errors.addError({ message, line, column });
     }
 
     if (newTable.tableName === "Main") {
+      // ERROR: Main class is declared more than once
       if (this.mainExists) {
-        const message = ErrorsTable.quotedErrorFormat(
-          "Redefinition of class {}",
-          "Main"
-        );
-        this.errors.addError({ message, line, column });
         return this.next(ctx);
       }
-
       this.mainExists = this.mainExists || cls.text === "Main";
+      // ERROR: Main class is trying to inherit from another class, which is not allowed
       if (parentTable?.tableName !== "Object") {
-        this.errors.addError({
-          message: ErrorsTable.errorFormat(
-            `{} class must not inherit from anywhere.`,
-            "Main"
-          ),
-          line,
-          column,
-        });
       }
     }
+
     // Push the table to the stack and the table to the list of tables
     this.symbolsTable.push(newTable);
     this.scopeStack.push(newTable);
@@ -448,26 +331,45 @@ export class YaplVisitor
   };
   visitWhile = (ctx: WhileContext) => {
     const expressionToCast = ctx.children?.[1];
-    if (!expressionToCast) {
-    }
     const line = ctx.start?.line ?? 0;
     const start = ctx.start?.charPositionInLine ?? 0;
     const end = start + ctx.text.length;
     const column = { start, end };
 
+    // There is no expression inside the while loop
     if (!expressionToCast) {
-      const message = ErrorsTable.errorFormat(
-        "Missing expression in While loop"
-      );
-      this.errors.addError({ message, line, column });
       return this.next(ctx);
-    } else {
-      const foundExpression = this.visit(expressionToCast);
     }
-
+    const foundExpression: Table<boolean> = this.visit(expressionToCast);
+    const boolTable = this.findTable("Bool")!;
+    const [allowsAssignment] = boolTable.allowsAssignmentOf(foundExpression);
+    // ERROR: The expression inside the while loop cannot be set as a boolean expression
+    if (!allowsAssignment) {
+      this.next(ctx);
+    }
     return this.next(ctx);
   };
   visitBlock = (ctx: BlockContext) => {
+    const parentContext = ctx.parent?.children?.[0];
+    // Case 1: The block is inside a while loop
+    if (parentContext?.text?.toLocaleLowerCase() === "while") {
+    }
+    // Case 2: The block is inside an if statement
+    else if (parentContext?.text?.toLocaleLowerCase() === "if") {
+    }
+    // Case 3: The block is inside a method
+    else {
+      // Expect the block to be inside a method
+      // If it is a method, return the last statement's return value
+      const lastChildRaw = ctx.children?.[ctx.children.length - 3];
+      // ERROR: No statements inside the method. Let the method manage the error.
+      if (!lastChildRaw) {
+        return null;
+      }
+      // Allow for a table of the last value to be returned. Let the method manage the table.
+      return this.visit(lastChildRaw);
+    }
+
     return this.next(ctx);
   };
   visitLetIn = (ctx: LetInContext) => {
@@ -484,17 +386,17 @@ export class YaplVisitor
     const line = symbol.line;
     const column = { start, end };
     if (!table) {
-      const message = ErrorsTable.quotedErrorFormat(
-        "Instantiation of class {}, which not exist (yet?)",
-        instantiationOf
-      );
-      this.errors.addError({ message, line, column });
+      // const message = ErrorsTable.quotedErrorFormat(
+      //   "Instantiation of class {}, which not exist (yet?)",
+      //   instantiationOf
+      // );
+      // this.errors.addError({ message, line, column });
     } else if (table.tableName === parentName) {
-      const message = ErrorsTable.quotedErrorFormat(
-        "Instantiation of class {} inside itself",
-        instantiationOf
-      );
-      this.errors.addError({ message, line, column });
+      // const message = ErrorsTable.quotedErrorFormat(
+      //   "Instantiation of class {} inside itself",
+      //   instantiationOf
+      // );
+      // this.errors.addError({ message, line, column });
     }
 
     return this.next(ctx);
@@ -511,50 +413,20 @@ export class YaplVisitor
   visitDivision = (ctx: DivisionContext) => {
     return this.next(ctx);
   };
-  visitAdd = (ctx: AddContext): Properties<number> => {
-    // const leftExpression: Properties<number> = this.visit(ctx.children?.[0]!);
-    // const visitRightExpression: Properties<number> = this.visit(
-    //   ctx.children?.[2]!
-    // );
-    // const expr = new Properties<number>({ type: "Int" });
-    // const line = ctx.start?.line ?? 0;
-    // const column = {
-    //   start: ctx.start?.charPositionInLine ?? 0,
-    //   end: ctx.stop?.charPositionInLine ?? 0,
-    // };
+  visitAdd = (ctx: AddContext) => {
+    const lExpr = this.visit(ctx.children![0]!);
+    const rExpr = this.visit(ctx.children![2]!);
 
-    // if (!(leftExpression.canBeInteger && visitRightExpression.canBeInteger)) {
-    //   let message = "";
-    //   const leftIsInteger = leftExpression.canBeInteger;
-    //   const rightIsInteger = visitRightExpression.canBeInteger;
+    const intTable: Table<number> = this.findTable("Int")!;
 
-    //   if (!leftIsInteger && !rightIsInteger) {
-    //     message = ErrorsTable.quotedErrorFormat(
-    //       "Both operands of '+' must be integers ({} and {} are not integers, and can't be casted)",
-    //       ctx.children?.[0]!.text,
-    //       ctx.children?.[2]!.text
-    //     );
-    //   } else if (!leftIsInteger) {
-    //     message = ErrorsTable.quotedErrorFormat(
-    //       "Left operand of '+' must be an integer ({} is not an integer and can't be casted)",
-    //       ctx.children?.[0]!.text
-    //     );
-    //   } else if (!rightIsInteger) {
-    //     message = ErrorsTable.quotedErrorFormat(
-    //       "Right operand of '+' must be an integer ({} is not an integer and can't be casted)",
-    //       ctx.children?.[2]!.text
-    //     );
-    //   } else {
-    //     message = ErrorsTable.quotedErrorFormat(
-    //       "Unknown error while evaluating expression {}",
-    //       ctx.text
-    //     );
-    //   }
-    //   this.errors.addError({ message, line, column });
-    // }
+    const [lCanBeInt] = intTable.allowsAssignmentOf(lExpr);
+    const [rCanBeInt] = intTable.allowsAssignmentOf(rExpr);
 
-    // return expr;
-    return this.next(ctx);
+    if (lCanBeInt && rCanBeInt) {
+      return intTable;
+    }
+
+    return null;
   };
   visitMinus = (ctx: MinusContext) => {
     return this.next(ctx);
@@ -573,14 +445,15 @@ export class YaplVisitor
     if (warning) {
       this.warnings.addError({ message: warning, line, column });
     }
+    // ERROR: Comparing two types that cannot be compared
     if (!allowsComparison) {
-      const message = ErrorsTable.quotedErrorFormat(
-        "Can't compare {} with {} in expression ({})",
-        leftExpr.tableName,
-        rightExpr.tableName,
-        "  " + ctx.text + "  "
-      );
-      this.errors.addError({ message, line, column });
+      // const message = ErrorsTable.quotedErrorFormat(
+      //   "Can't compare {} with {} in expression ({})",
+      //   leftExpr.tableName,
+      //   rightExpr.tableName,
+      //   "  " + ctx.text + "  "
+      // );
+      // this.errors.addError({ message, line, column });
     }
 
     if (warning) {
@@ -600,14 +473,8 @@ export class YaplVisitor
     if (warning) {
       this.warnings.addError({ message: warning, line, column });
     }
+    // ERROR: Comparison isn't allowed
     if (!allowsComparison) {
-      const message = ErrorsTable.quotedErrorFormat(
-        "Can't compare {} with {} in expression ({})",
-        leftExpr.tableName,
-        rightExpr.tableName,
-        "  " + ctx.text + "  "
-      );
-      this.errors.addError({ message, line, column });
     }
     return this.findTable("Bool")!;
   };
@@ -630,84 +497,79 @@ export class YaplVisitor
       start: ctx.start?.charPositionInLine ?? 0,
       end: ctx.stop?.charPositionInLine ?? 0,
     };
+    // The ID is being used, but it wasn't defined yet
     if (!foundSymbol) {
-      const message = ErrorsTable.quotedErrorFormat(
-        "Symbol {} not found in scope",
-        name
-      );
-      this.errors.addError({ message, line, column });
+      return undefined;
     }
     return this.findTable(foundSymbol?.getType()!);
   };
   visitInt = (ctx: IntContext): Table<number> => {
-    return this.findTable("Int")!;
+    return this.findTable("Int")!.copy().setValue(parseInt(ctx.INT().text));
   };
 
   visitString = (ctx: StringContext): Table<string> => {
-    return this.findTable("String")!;
+    return this.findTable("String")!.copy().setValue(ctx.STRING().text);
   };
   visitTrue = (_ctx: TrueContext): Table<boolean> => {
-    return this.findTable("Bool")!;
+    return this.findTable("Bool")!.copy().setValue(true);
   };
   visitFalse = (_ctx: FalseContext): Table<boolean> => {
-    return this.findTable("Bool")!;
+    return this.findTable("Bool")!.copy().setValue(false);
   };
   visitAssignment = (ctx: AssignmentContext) => {
     return this.next(ctx);
   };
   visitMethod = (ctx: MethodContext) => {
+    const methodFoundType = ctx.TYPE();
+    if (!methodFoundType) {
+      return this.next(ctx);
+    }
+
+    const methodType = this.findTable(methodFoundType.text!);
+    // ERROR: The method type is not yet defined (if ever)
+    if (!methodType) {
+      return this.next(ctx);
+    }
+
+    const expressionRaw = ctx.expression()!; // If it doesn't exist, it is a syntax error
+    const expressionType: Table<any> | null = this.visit(expressionRaw);
+    // ERROR: If the expression is not valid, it will be null
+    if (!expressionType) {
+      return this.next(ctx);
+    }
+    const [expressionAllowsAssignment] =
+      expressionType?.allowsAssignmentOf(methodType);
+    // ERROR: The expression type is not the same as the method type and can't be casted
+    if (!expressionAllowsAssignment) {
+    }
+
     return this.next(ctx);
   };
   visitProperty = (ctx: PropertyContext) => {
     // Previous table
-    const [name, _, dataType, __, assignmentExpression] = ctx.children!;
+    const name = ctx.IDENTIFIER();
+    const dataType = ctx.TYPE();
+    const assignmentExpression = ctx.expression();
 
-    const previousClass = this.findTable(dataType);
+    const previousClass: Table<any> | undefined = this.findTable(dataType);
     const line = ctx.start?.line ?? 0;
     const column = {
       start: ctx.start?.charPositionInLine ?? 0,
       end: ctx.start?.charPositionInLine ?? 0 + ctx.text.length,
     };
+
+    // ERROR: The type is not yet defined
     if (!previousClass) {
-      const message = ErrorsTable.quotedErrorFormat(
-        "Type {} not found in scope",
-        dataType.text
-      );
-      this.errors.addError({ message, line, column });
       return this.next(ctx);
     }
 
     if (assignmentExpression) {
       const resolvesTo: Table<any> = this.visit(assignmentExpression);
-      const [allowedAssigment, warning] =
-        previousClass.allowsAssignmentOf(resolvesTo);
-      if (warning) {
-        this.warnings.addError({ message: warning, line, column });
-      }
+      const [allowedAssigment] = previousClass.allowsAssignmentOf(resolvesTo);
+      // ERROR: Not allowed an assignment
       if (!allowedAssigment) {
-        const message = ErrorsTable.quotedErrorFormat(
-          "Expression {} can't be assigned to {} (Assigning {} to {})",
-          assignmentExpression.text,
-          dataType.text,
-          resolvesTo.tableName,
-          previousClass.tableName
-        );
-        this.errors.addError({ message, line, column });
       }
     }
-    // let assignationInformation = new Properties<any>({ type: [variable.type] })
-    // .allowCompared(previousClass!.canBeComparedTo);
-    // if (expression) {
-    //   assignationInformation = this.visit(expression);
-
-    //   if (!assignationInformation.) {
-    //     const message = ErrorsTable.quotedErrorFormat(
-    //       "Expression {} is not being resolved into a boolean expression",
-    //       variable.name
-    //     );
-    //     this.errors.addError({ message, line, column });
-    //   }
-    // }
     const currentScopeTable = this.getCurrentClass();
 
     // const previousDeclared = currentScopeTable?.find(variableName);
@@ -715,72 +577,32 @@ export class YaplVisitor
       .setColumn(column)
       .setLine(line)
       .setName(name.text)
-      .setType(dataType.text)
-      .setScope(currentScopeTable?.tableName ?? "Global");
-
-    // If the current scope does not exist, the property is declared outside of a class, which is not allowed
-    if (!currentScopeTable) {
-      const message = ErrorsTable.quotedErrorFormat(
-        "Property {} declared outside of a class",
-        name.text
+      .setType(previousClass)
+      .setScope(currentScopeTable?.tableName ?? "Global")
+      .setValue(
+        previousClass.convertToType(assignmentExpression?.text) ??
+          previousClass.defaultValue ??
+          undefined
       );
-      this.errors.addError({
-        message,
-        line: line,
-        column: column,
-      });
-      return this.next(ctx);
-    }
 
     const previousDeclared = currentScopeTable.find(name.text);
     // Case 1: Overriding (It does nothing)
     if (previousDeclared) {
-      // Case 1.1: Redefinition in the same scope (error)
+      // ERROR: This name was previously defined
       if (previousDeclared.getScope() === newTableElement.getScope()) {
-        // Case 1.1.1: Redefinition of two properties
+        // ERROR: Redefinition of a variable in the same scope
         if (
           previousDeclared.getDataStructureType() ===
           newTableElement.getDataStructureType()
         ) {
-          const message = ErrorsTable.quotedErrorFormat(
-            "Property {} already declared",
-            name
-          );
-          this.errors.addError({
-            message,
-            line: line,
-            column: column,
-          });
         }
-        // Case 1.1.2: Definition of a property or method with the same name as another one
+        // ERROR: Definition of a variable with the name of a method, or viseversa
         else {
-          const message = ErrorsTable.quotedErrorFormat(
-            "Property {} and method {} have the same name",
-            name,
-            name
-          );
-          this.errors.addError({
-            message,
-            line: line,
-            column: column,
-          });
         }
       }
-      // Case 1.2: Redefinition in a parent scope (OK)
-      // Case 1.2.1: Wrongful redefinition of a property (different type)
+
+      // ERROR: The variable was defined in a parent scope, but the definition type is not the same
       else if (previousDeclared.getType() !== newTableElement.getType()) {
-        const message = ErrorsTable.quotedErrorFormat(
-          "Property {} of type {} was already declared with a different type {} inside the scope {} (NOT PERMISSIVE)",
-          name,
-          newTableElement.getType(),
-          previousDeclared.getType(),
-          previousDeclared.getScope()
-        );
-        this.errors.addError({
-          message,
-          line: line,
-          column: column,
-        });
       }
       return this.next(ctx);
     }
