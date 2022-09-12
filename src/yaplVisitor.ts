@@ -299,7 +299,7 @@ export class YaplVisitor
       );
     } else if (name) {
       return this.symbolsTable.find(
-        (table: Table<any>) => table.scope === name.toString()
+        (table: Table<any>) => table.scope === name.text ?? name.toString()
       );
     }
     return undefined;
@@ -326,16 +326,15 @@ export class YaplVisitor
     // Case 1: Simple class
     // Case 2: Class inherits from another class
     // Case 3: Class inherits from a non-allowed class
-    const className = ctx.TYPE()[0].toString();
+    // const className = ctx.TYPE()[0].toString();
+    const [cls, inheritsFrom = "Object"] = ctx.TYPE();
     // Check if the class already exists
-    const classTable = this.findTable(className);
-    const { symbol } = ctx.TYPE()[0];
+    const classTable = this.findTable(cls);
 
-    const start = symbol.startIndex;
-    const end = symbol.stopIndex;
-    const line = symbol.line;
+    const start = cls.symbol.startIndex;
+    const end = cls.symbol.stopIndex;
+    const line = cls.symbol.line;
     const column = { start, end };
-    const inheritsFrom = ctx.TYPE().at(1)?.toString() || "Object";
 
     /*
 
@@ -351,12 +350,12 @@ export class YaplVisitor
       but for B to inherit from A, it must first be defined, which 
       is impossible.
     */
-    if (className === inheritsFrom) {
+    if (cls == inheritsFrom) {
       this.errors.addError({
         message: ErrorsTable.quotedErrorFormat(
           "{} Class {} can't inherit from itself",
           "Recursive Inheritance:",
-          className
+          cls.text
         ),
         line,
         column,
@@ -369,16 +368,16 @@ export class YaplVisitor
       const message = classTable.isGeneric
         ? ErrorsTable.quotedErrorFormat(
             "Can't redefine generic class {}",
-            className
+            cls.text
           )
-        : ErrorsTable.quotedErrorFormat("Redefinition of class {}", className);
+        : ErrorsTable.quotedErrorFormat("Redefinition of class {}", cls.text);
       this.errors.addError({ message, line, column });
       return this.next(ctx);
     }
 
     const parentTable = this.findTable(inheritsFrom);
     const newTable = new Table({
-      scope: className,
+      scope: cls.text,
       parentTable,
       line,
       column,
@@ -389,7 +388,7 @@ export class YaplVisitor
     if (!parentTable) {
       const message = ErrorsTable.quotedErrorFormat(
         `{} attempted to inherit from class {}, but it does not exist.`,
-        className,
+        cls.text,
         inheritsFrom
       );
       this.errors.addError({ message, line, column });
@@ -399,39 +398,38 @@ export class YaplVisitor
       const message = parentTable.isGeneric
         ? ErrorsTable.quotedErrorFormat(
             `Class {} can't inherit from generic class {}`,
-            className,
+            cls.text,
             inheritsFrom
           )
         : ErrorsTable.quotedErrorFormat(
             `Class {} can't inherit from class {}`,
-            className,
+            cls.text,
             inheritsFrom
           );
       this.errors.addError({ message, line, column });
     }
 
-    // If main exists and this class is Main, then it means that there are two main classes
-    if (className === "Main" && this.mainExists) {
-      const message = ErrorsTable.quotedErrorFormat(
-        "Redefinition of class {}",
-        "Main"
-      );
-      this.errors.addError({ message, line, column });
-      return this.next(ctx);
-    }
-    this.mainExists = this.mainExists || className === "Main";
-
-    // Class "Main" must inherit from "Object"
-    if (newTable.tableName === "Main" && parentTable?.tableName !== "Object") {
-      this.errors.addError({
-        message: ErrorsTable.errorFormat(
-          `{} class must not inherit from anywhere.`,
+    if (newTable.tableName === "Main") {
+      if (this.mainExists) {
+        const message = ErrorsTable.quotedErrorFormat(
+          "Redefinition of class {}",
           "Main"
-        ),
-        line,
-        column,
-      });
-      return this.next(ctx);
+        );
+        this.errors.addError({ message, line, column });
+        return this.next(ctx);
+      }
+
+      this.mainExists = this.mainExists || cls.text === "Main";
+      if (parentTable?.tableName !== "Object") {
+        this.errors.addError({
+          message: ErrorsTable.errorFormat(
+            `{} class must not inherit from anywhere.`,
+            "Main"
+          ),
+          line,
+          column,
+        });
+      }
     }
     // Push the table to the stack and the table to the list of tables
     this.symbolsTable.push(newTable);
@@ -450,6 +448,8 @@ export class YaplVisitor
   };
   visitWhile = (ctx: WhileContext) => {
     const expressionToCast = ctx.children?.[1];
+    if (!expressionToCast) {
+    }
     const line = ctx.start?.line ?? 0;
     const start = ctx.start?.charPositionInLine ?? 0;
     const end = start + ctx.text.length;
