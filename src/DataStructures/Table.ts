@@ -363,7 +363,63 @@ export interface IError {
   column: IPositioning;
 }
 
+export enum ErrorType {
+  REDEFINITION,
+  UNDEFINED,
+  UNEXPECTED,
+  INHERITANCE_LOOP_DETECTED,
+  SELF_INHERITANCE,
+  INHERITANCE_NOT_FOUND,
+  FORBIDDEN_INHERITANCE,
+  VARIABLE_NOT_FOUND,
+  METHOD_NOT_FOUND,
+  INVALID_TYPE,
+  INVALID_ARGUMENTS,
+  INVALID_ASSIGNMENT,
+  INVALID_COMPARISON,
+  INVALID_OPERATION,
+  INVALID_RETURN,
+  INVALID_CONDITION,
+  INVALID_LOOP,
+  INVALID_BREAK,
+  INVALID_CONTINUE,
+  INVALID_NEGATION,
+  INVALID_CAST,
+}
+
+const errors = [
+  "Redefinition of symbol {} inside scope {}",
+  "Symbol {} is not defined in scope {}",
+  "Unexpected {}",
+  "Loop detected in inheritance of {}",
+  "Self inheritance detected in {}",
+  "Inheritance of {} not found",
+  "Inheritance of {} is forbidden in {}",
+  "Variable {} not found",
+  "Method {} not found",
+  "Invalid type {}",
+  "Invalid arguments {}",
+  "Invalid assignment {}",
+  "Invalid comparison {}",
+  "Invalid operation {}",
+  "Invalid return {}",
+  "Invalid condition {}",
+  "Invalid loop {}",
+  "Invalid break {}",
+  "Invalid continue {}",
+  "Invalid negation {}",
+  "Invalid cast {}",
+];
+
 export class ErrorsTable {
+  static getError(errorType: ErrorType, ...args: any[]) {
+    const error = errors[errorType];
+    if (error) {
+      return this.quotedErrorFormat(error, ...args);
+    }
+    throw new Error("Unrecognized error type");
+  }
+
   public readonly errors: IError[];
   public readonly appender;
   public readonly color;
