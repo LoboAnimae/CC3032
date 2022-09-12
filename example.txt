@@ -1,5 +1,6 @@
 class Something {
-    x: Bool <- 2;
+    y: Bool;
+    x: Bool <- y < 1;
 };
 
 class SomethingElse inherits Something {

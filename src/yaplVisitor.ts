@@ -124,7 +124,7 @@ export class YaplVisitor
             return [true];
           } else if (against.tableName === "Int") {
             // TODO: Add a warning here
-            return [[0, 1].includes(against.value)];
+            return [true];
           }
           return [false];
         },
@@ -221,6 +221,14 @@ export class YaplVisitor
     return aggregate + nextResult;
   }
 
+  lineAndColumn = (ctx: any) => ({
+    line: ctx.start?.line ?? 0,
+    column: {
+      start: ctx.start?.charPositionInLine ?? 0,
+      end: ctx.start?.charPositionInLine ?? 0 + ctx.text.length,
+    },
+  });
+
   protected findTable(name: string | Table<any> | any): Table<any> | undefined {
     if (typeof name === "string") {
       return this.symbolsTable.find(
@@ -258,10 +266,7 @@ export class YaplVisitor
     this.returnToGlobalScope();
     const [cls, inheritsFrom = "Object"] = ctx.TYPE();
     const classTable = this.findTable(cls);
-    const start = cls.symbol.startIndex;
-    const end = cls.symbol.stopIndex;
-    const line = cls.symbol.line;
-    const column = { start, end };
+    const { line, column } = this.lineAndColumn(ctx);
 
     /*
 
@@ -331,10 +336,7 @@ export class YaplVisitor
   };
   visitWhile = (ctx: WhileContext) => {
     const expressionToCast = ctx.children?.[1];
-    const line = ctx.start?.line ?? 0;
-    const start = ctx.start?.charPositionInLine ?? 0;
-    const end = start + ctx.text.length;
-    const column = { start, end };
+    const { line, column } = this.lineAndColumn(ctx);
 
     // There is no expression inside the while loop
     if (!expressionToCast) {
@@ -380,25 +382,16 @@ export class YaplVisitor
     // Find a table with the same name as the type of the instantiation
     const table = this.findTable(instantiationOf);
     const parentName = this.getCurrentClass()?.tableName;
-    const { symbol } = ctx.TYPE();
-    const start = symbol.charPositionInLine;
-    const end = start + (symbol.text?.length ?? 0);
-    const line = symbol.line;
-    const column = { start, end };
-    if (!table) {
-      // const message = ErrorsTable.quotedErrorFormat(
-      //   "Instantiation of class {}, which not exist (yet?)",
-      //   instantiationOf
-      // );
-      // this.errors.addError({ message, line, column });
-    } else if (table.tableName === parentName) {
-      // const message = ErrorsTable.quotedErrorFormat(
-      //   "Instantiation of class {} inside itself",
-      //   instantiationOf
-      // );
-      // this.errors.addError({ message, line, column });
-    }
+    const { line, column } = this.lineAndColumn(ctx);
 
+    // ERROR: Trying to instantiate a non-existing class
+    if (!table) {
+      return this.next(ctx);
+    }
+    // ERROR: Trying to instantiate the class we're currently in
+    else if (table.tableName === parentName) {
+      return this.next(ctx);
+    }
     return this.next(ctx);
   };
   visitNegative = (ctx: NegativeContext) => {
@@ -414,69 +407,74 @@ export class YaplVisitor
     return this.next(ctx);
   };
   visitAdd = (ctx: AddContext) => {
-    const lExpr = this.visit(ctx.children![0]!);
-    const rExpr = this.visit(ctx.children![2]!);
+    const lExpr: Table<any> = this.visit(ctx.children![0]!);
+    const rExpr: Table<any> = this.visit(ctx.children![2]!);
 
-    const intTable: Table<number> = this.findTable("Int")!;
+    const intTable: Table<number> = this.findTable("Int")!.copy();
 
     const [lCanBeInt] = intTable.allowsAssignmentOf(lExpr);
     const [rCanBeInt] = intTable.allowsAssignmentOf(rExpr);
 
-    if (lCanBeInt && rCanBeInt) {
-      return intTable;
+    // ERROR: One of the expressions cannot be set as an integer
+    if (!lCanBeInt || !rCanBeInt) {
+      return undefined;
     }
-
-    return null;
+    return intTable.setValue(lExpr.value + rExpr.value);
   };
   visitMinus = (ctx: MinusContext) => {
-    return this.next(ctx);
+    const lExpr: Table<any> = this.visit(ctx.children![0]!);
+    const rExpr: Table<any> = this.visit(ctx.children![2]!);
+
+    const intTable: Table<number> = this.findTable("Int")!.copy();
+
+    const [lCanBeInt] = intTable.allowsAssignmentOf(lExpr);
+    const [rCanBeInt] = intTable.allowsAssignmentOf(rExpr);
+
+    // ERROR: One of the expressions cannot be set as an integer
+    if (!lCanBeInt || !rCanBeInt) {
+      return undefined;
+    }
+    return intTable.setValue(lExpr.value - rExpr.value);
   };
 
   // Less thans return booleans
   visitLessThan = (ctx: LessThanContext) => {
-    const leftExpr: Table<number> = this.visit(ctx.children?.[0]!);
-    const rightExpr: Table<number> = this.visit(ctx.children?.[2]!);
-    const line = ctx.start?.line ?? 0;
-    const column = {
-      start: ctx.start?.charPositionInLine ?? 0,
-      end: ctx.stop?.charPositionInLine ?? 0,
-    };
-    const [allowsComparison, warning] = leftExpr.allowsComparisonsTo(rightExpr);
-    if (warning) {
-      this.warnings.addError({ message: warning, line, column });
-    }
-    // ERROR: Comparing two types that cannot be compared
-    if (!allowsComparison) {
-      // const message = ErrorsTable.quotedErrorFormat(
-      //   "Can't compare {} with {} in expression ({})",
-      //   leftExpr.tableName,
-      //   rightExpr.tableName,
-      //   "  " + ctx.text + "  "
-      // );
-      // this.errors.addError({ message, line, column });
-    }
+    // Must be done between two possible integers
+    const lExpr: Table<number> = this.visit(ctx.children?.[0]!);
+    const rExpr: Table<number> = this.visit(ctx.children?.[2]!);
+    const { line, column } = this.lineAndColumn(ctx);
 
-    if (warning) {
-      this.warnings.addError({ message: warning, line, column });
+    const intTable = this.findTable("Int")!.copy();
+
+    const [lCanBeInt] = intTable.allowsAssignmentOf(lExpr);
+    const [rCanBeInt] = intTable.allowsAssignmentOf(rExpr);
+
+    // ERROR: One of the expressions cannot be set as an integer
+    if (!lCanBeInt || !rCanBeInt) {
+      return undefined;
     }
-    return this.findTable("Bool")!;
+    return this.findTable("Bool")!
+      .copy()
+      .setValue(lExpr.value < rExpr.value);
   };
   visitLessEqual = (ctx: LessEqualContext) => {
-    const leftExpr: Table<number> = this.visit(ctx.children?.[0]!);
-    const rightExpr: Table<number> = this.visit(ctx.children?.[2]!);
-    const line = ctx.start?.line ?? 0;
-    const column = {
-      start: ctx.start?.charPositionInLine ?? 0,
-      end: ctx.stop?.charPositionInLine ?? 0,
-    };
-    const [allowsComparison, warning] = leftExpr.allowsComparisonsTo(rightExpr);
-    if (warning) {
-      this.warnings.addError({ message: warning, line, column });
+    // Must be done between two possible integers
+    const lExpr: Table<number> = this.visit(ctx.children?.[0]!);
+    const rExpr: Table<number> = this.visit(ctx.children?.[2]!);
+    const { line, column } = this.lineAndColumn(ctx);
+
+    const intTable = this.findTable("Int")!.copy();
+
+    const [lCanBeInt] = intTable.allowsAssignmentOf(lExpr);
+    const [rCanBeInt] = intTable.allowsAssignmentOf(rExpr);
+
+    // ERROR: One of the expressions cannot be set as an integer
+    if (!lCanBeInt || !rCanBeInt) {
+      return undefined;
     }
-    // ERROR: Comparison isn't allowed
-    if (!allowsComparison) {
-    }
-    return this.findTable("Bool")!;
+    return this.findTable("Bool")!
+      .copy()
+      .setValue(lExpr.value <= rExpr.value);
   };
   visitEqual = (ctx: EqualContext) => {
     return this.next(ctx);
@@ -485,7 +483,7 @@ export class YaplVisitor
     return this.next(ctx);
   };
   visitParentheses = (ctx: ParenthesesContext) => {
-    return this.next(ctx);
+    return this.visit(ctx.expression());
   };
   visitId = (ctx: IdContext) => {
     // Find it in the scope
@@ -552,6 +550,7 @@ export class YaplVisitor
     const assignmentExpression = ctx.expression();
 
     const previousClass: Table<any> | undefined = this.findTable(dataType);
+    const previousClassCopy = previousClass?.copy(); // Create a copy that can go out of scope
     const line = ctx.start?.line ?? 0;
     const column = {
       start: ctx.start?.charPositionInLine ?? 0,
@@ -569,6 +568,7 @@ export class YaplVisitor
       // ERROR: Not allowed an assignment
       if (!allowedAssigment) {
       }
+      previousClassCopy!.setValue(resolvesTo.value);
     }
     const currentScopeTable = this.getCurrentClass();
 
@@ -580,7 +580,8 @@ export class YaplVisitor
       .setType(previousClass)
       .setScope(currentScopeTable?.tableName ?? "Global")
       .setValue(
-        previousClass.convertToType(assignmentExpression?.text) ??
+        previousClassCopy?.value ??
+          previousClass.convertToType(assignmentExpression?.text) ??
           previousClass.defaultValue ??
           undefined
       );
