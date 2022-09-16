@@ -1,14 +1,15 @@
 class Something {
-    a(x: Int): Something { self };
+    a(): Something { self };
 };
 
 class SomethingElse inherits Something {
-    a(x: Bool): SELF_TYPE { self };
+    a(x: Int): SELF_TYPE { self };
+    b(): SELF_TYPE {{
+        self.a(1);
+    };};
 };
 
 class Main {
     x: SomethingElse <- new SomethingElse;
-    main(): SomethingElse { {
-        x.a(x);
-    } };
+    main(): SomethingElse { x };
 };

@@ -328,8 +328,10 @@ export class YaplVisitor
       this.visit(p)
     );
     const methodHoldingClass: Table<any> | undefined =
-      this.findTable(ctx.TYPE()) ??
-      this.getCurrentClass().find(methodName.text)?.getType();
+      methodName.text.toLocaleLowerCase() === "self"
+        ? this.getCurrentClass()
+        : this.findTable(ctx.TYPE()) ??
+          this.getCurrentClass().find(methodName.text)?.getType();
     const calledMethod = ctx.IDENTIFIER();
 
     // ERROR: The method holding the class does not exist
@@ -366,10 +368,46 @@ export class YaplVisitor
         console.error();
       }
     }
-    return this.next(ctx);
+    return referencedMethod.getType();
   };
   visitOwnMethodCall = (ctx: OwnMethodCallContext) => {
-    return this.next(ctx);
+    const calledMethod = ctx.IDENTIFIER();
+    const [...methodParametersRaw] = ctx.expression();
+    const methodParameters: Table<any>[] = methodParametersRaw.map((p) =>
+      this.visit(p)
+    );
+    const methodHoldingClass = this.getCurrentClass();
+
+    const referencedMethod = methodHoldingClass.find(
+      calledMethod.text
+    ) as MethodElement;
+
+    // ERROR: The method does not exist in the class (self or not)
+    if (!referencedMethod) {
+      return this.next(ctx);
+    }
+
+    const requiredMethodParameters: SymbolElement[] =
+      referencedMethod.getParameters() ?? [];
+    const sameNumberOfParameters =
+      requiredMethodParameters.length === methodParameters.length;
+
+    // ERROR: The method is called with a different number of parameters than it requires
+    if (!sameNumberOfParameters) {
+      return this.next(ctx);
+    }
+
+    for (let i = 0; i < requiredMethodParameters.length; i++) {
+      const requiredParameterType = requiredMethodParameters[i].getType();
+      const methodParameterType = methodParameters[i];
+      const [allowed] =
+        requiredParameterType.allowsAssignmentOf(methodParameterType);
+      // ERROR: The parameter required is not the same as the one passed
+      if (!allowed) {
+        console.error();
+      }
+    }
+    return referencedMethod.getType();
   };
 
   // The first if (the one on top of the stack) defines the type, the others follow it
