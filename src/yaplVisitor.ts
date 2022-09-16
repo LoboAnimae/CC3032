@@ -143,13 +143,13 @@ export class YaplVisitor
     const concatMethod = new MethodElement()
       .setName("concat")
       .setReturnType(StringType)
-      .addParameter({ name: "s", type: "String" });
+      .addParameter(new SymbolElement({ name: "s", type: StringType }));
 
     const substrMethod = new MethodElement()
       .setName("substr")
       .setReturnType(StringType)
-      .addParameter({ name: "i", type: "Int" })
-      .addParameter({ name: "l", type: "Int" });
+      .addParameter(new SymbolElement({ name: "i", type: IntType }))
+      .addParameter(new SymbolElement({ name: "l", type: IntType }));
 
     StringType.symbols.push(lengthMethod, concatMethod, substrMethod);
     const IOType = new Table<undefined>({
@@ -161,12 +161,12 @@ export class YaplVisitor
     const outStringMethod = new MethodElement()
       .setName("out_string")
       .setReturnType(IOType)
-      .addParameter({ name: "x", type: "String" });
+      .addParameter(new SymbolElement({ name: "x", type: StringType }));
 
     const outIntMethod = new MethodElement()
       .setName("out_int")
       .setReturnType(IOType)
-      .addParameter({ name: "x", type: "Int" });
+      .addParameter(new SymbolElement({ name: "x", type: IntType }));
 
     const inStringMethod = new MethodElement()
       .setName("in_string")
@@ -323,6 +323,49 @@ export class YaplVisitor
   };
 
   visitMethodCall = (ctx: MethodCallContext) => {
+    const [methodName, ...methodParametersRaw] = ctx.expression();
+    const methodParameters: Table<any>[] = methodParametersRaw.map((p) =>
+      this.visit(p)
+    );
+    const methodHoldingClass: Table<any> | undefined =
+      this.findTable(ctx.TYPE()) ??
+      this.getCurrentClass().find(methodName.text)?.getType();
+    const calledMethod = ctx.IDENTIFIER();
+
+    // ERROR: The method holding the class does not exist
+    if (!methodHoldingClass) {
+      return this.next(ctx);
+    }
+
+    const referencedMethod = methodHoldingClass.find(
+      calledMethod.text
+    ) as MethodElement;
+
+    // ERROR: The method does not exist in the class (self or not)
+    if (!referencedMethod) {
+      return this.next(ctx);
+    }
+
+    const requiredMethodParameters: SymbolElement[] =
+      referencedMethod.getParameters() ?? [];
+    const sameNumberOfParameters =
+      requiredMethodParameters.length === methodParameters.length;
+
+    // ERROR: The method is called with a different number of parameters than it requires
+    if (!sameNumberOfParameters) {
+      return this.next(ctx);
+    }
+
+    for (let i = 0; i < requiredMethodParameters.length; i++) {
+      const requiredParameterType = requiredMethodParameters[i].getType();
+      const methodParameterType = methodParameters[i];
+      const [allowed] =
+        requiredParameterType.allowsAssignmentOf(methodParameterType);
+      // ERROR: The parameter required is not the same as the one passed
+      if (!allowed) {
+        console.error();
+      }
+    }
     return this.next(ctx);
   };
   visitOwnMethodCall = (ctx: OwnMethodCallContext) => {
@@ -571,6 +614,10 @@ export class YaplVisitor
     if (!methodFoundType) {
       return this.next(ctx);
     }
+    const formalParameters = ctx.formal();
+    const allParameters: SymbolElement[] = formalParameters.map((param) =>
+      this.visit(param)
+    );
 
     const methodType =
       methodFoundType.text === "SELF_TYPE"
@@ -593,6 +640,20 @@ export class YaplVisitor
     // ERROR: Last child and return type do not match or can't be assigned
     if (!canBeAssigned && !isAncestor) {
     }
+
+    const currentTable = this.getCurrentClass()!;
+    const { line, column } = this.lineAndColumn(ctx);
+    const newMethod = new MethodElement()
+      .setColumn(column)
+      .setLine(line)
+      .setName(ctx.IDENTIFIER().text)
+      .setType(methodType)
+      .setScope(this.getCurrentClass()!.tableName ?? "Global");
+    for (const param of allParameters) {
+      newMethod.addParameter(param);
+    }
+
+    currentTable.addElement(newMethod);
 
     return methodType;
   };
@@ -683,7 +744,22 @@ export class YaplVisitor
     return this.next(ctx);
   };
   visitFormal = (ctx: FormalContext) => {
-    return this.next(ctx);
+    const name = ctx.IDENTIFIER();
+    const datatype = ctx.TYPE();
+    const foundTable = this.findTable(datatype);
+
+    // ERROR: The type is not yet defined
+    if (!foundTable) {
+      return undefined;
+    }
+
+    const { line, column } = this.lineAndColumn(ctx);
+    const newSymbol = new SymbolElement()
+      .setColumn(column)
+      .setLine(line)
+      .setName(name.text)
+      .setType(foundTable);
+    return newSymbol;
   };
   visitExpression = (ctx: ExpressionContext) => {
     return this.next(ctx);

@@ -1,10 +1,6 @@
 import { IPositioning } from "../Misc/Errors";
 import colors from "colors";
 
-export interface Parameter {
-  name: string;
-  type: string;
-}
 export enum IDataStructureType {
   Method,
   Symbol,
@@ -48,17 +44,38 @@ export class Properties<T> {
   canCompare() {}
 }
 
-// Builder pattern may help with better understanding
-export class TableElement {
-  protected _name?: string;
-  protected _type?: Table<any>;
-  protected _line?: number = 0;
-  protected _column?: IPositioning = { start: 0, end: 0 };
-  protected _dataStructureType?: IDataStructureType;
-  protected _scope?: string;
-  protected _size?: number;
+interface ITableElementProperties {
+  name: string;
+  type: Table<any>;
+  line: number;
+  column: IPositioning;
+  dataStructureType: IDataStructureType;
+  scope: string;
+  size: number;
+}
 
-  constructor() {}
+interface ITableElementOptions extends Partial<ITableElementProperties> {}
+
+// Builder pattern may help with better understanding
+export class TableElement implements ITableElementProperties {
+  name: string;
+  type: Table<any>;
+  line: number = 0;
+  column: IPositioning = { start: 0, end: 0 };
+  dataStructureType: IDataStructureType;
+  scope: string;
+  size: number;
+
+  constructor(options?: ITableElementOptions) {
+    this.name = options?.name ?? "";
+    this.type = options?.type!;
+    this.line = options?.line ?? 0;
+    this.column = options?.column ?? { start: -1, end: -1 };
+    this.dataStructureType =
+      options?.dataStructureType ?? IDataStructureType.Method;
+    this.scope = options?.scope ?? "";
+    this.size = options?.size ?? 0;
+  }
 
   public _givenValue?: any;
   get givenValue() {
@@ -74,94 +91,100 @@ export class TableElement {
   }
 
   public setScope(scope: string) {
-    this._scope = scope;
+    this.scope = scope;
     return this;
   }
 
   public setName(name: string) {
-    this._name = name;
+    this.name = name;
     return this;
   }
 
   public setType(type: Table<any>) {
-    this._type = type;
-    this._size = type.size;
+    this.type = type;
+    this.size = type.size;
     return this;
   }
 
   public setLine(line: number) {
-    this._line = line;
+    this.line = line;
     return this;
   }
 
   public setColumn(column: IPositioning) {
-    this._column = column;
+    this.column = column;
     return this;
   }
 
   public setStartColumn(start: number) {
-    this._column!.start = start;
+    this.column!.start = start;
     return this;
   }
 
   public setEndColumn(end: number) {
-    this._column!.end = end;
+    this.column!.end = end;
     return this;
   }
 
   public setDataStructureType(dataStructureType: IDataStructureType) {
-    this._dataStructureType = dataStructureType;
+    this.dataStructureType = dataStructureType;
     return this;
   }
 
   public setSize(newSize: number) {
-    this._size = newSize;
+    this.size = newSize;
     return this;
   }
 
-  public getScope = () => this._scope;
+  public getScope = () => this.scope;
 
-  public getName = () => this._name;
+  public getName = () => this.name;
 
-  public getType = () => this._type;
+  public getType = () => this.type;
 
-  public getLine = () => this._line;
+  public getLine = () => this.line;
 
-  public getColumn = () => this._column;
+  public getColumn = () => this.column;
 
-  public getStartColumn = () => this._column?.start;
+  public getStartColumn = () => this.column?.start;
 
-  public getEndColumn = () => this._column?.end;
+  public getEndColumn = () => this.column?.end;
 
-  public getDataStructureType = () => this._dataStructureType;
-  public getSize = () => this._size;
+  public getDataStructureType = () => this.dataStructureType;
+  public getSize = () => this.size;
 
-  public isSameName = (name: string) => this._name === name;
+  public isSameName = (name: string) => this.name === name;
   public toString(): string {
-    return `[${this._dataStructureType ?? "Unknown Data Type"}] ${
-      this._name ?? "Unknown Name"
-    } (${this._type ?? "Unknown Type"})`;
+    return `[${this.dataStructureType ?? "Unknown Data Type"}] ${
+      this.name ?? "Unknown Name"
+    } (${this.type ?? "Unknown Type"})`;
   }
 
   public copy(): TableElement {
     return new TableElement()
-      .setName(this._name!)
-      .setType(this._type!)
-      .setLine(this._line!)
-      .setColumn(this._column!)
-      .setDataStructureType(this._dataStructureType!)
-      .setScope(this._scope!);
+      .setName(this.name!)
+      .setType(this.type!)
+      .setLine(this.line!)
+      .setColumn(this.column!)
+      .setDataStructureType(this.dataStructureType!)
+      .setScope(this.scope!);
+  }
+}
+export class SymbolElement extends TableElement {
+  constructor(options?: ITableElementOptions) {
+    super(options);
+    this.dataStructureType = IDataStructureType.Symbol;
   }
 }
 
 export class MethodElement extends TableElement {
-  public _parameters: Parameter[] = [];
-  constructor() {
-    super();
-    this._dataStructureType = IDataStructureType.Method;
+  public _parameters: SymbolElement[] = [];
+  constructor(options?: ITableElementOptions) {
+    super(options);
+    this.dataStructureType = IDataStructureType.Method;
   }
 
-  public addParameter(...parameter: Parameter[]) {
+  public addParameter(...parameter: SymbolElement[]) {
     this._parameters.push(...parameter);
     return this;
   }
@@ -171,13 +194,6 @@ export class MethodElement extends TableElement {
 
   public setReturnType(type: Table<any>) {
     return this.setType(type);
-  }
-}
-
-export class SymbolElement extends TableElement {
-  constructor() {
-    super();
-    this._dataStructureType = IDataStructureType.Symbol;
   }
 }
 
