@@ -26,7 +26,6 @@ async function main(input: string) {
   const result = visitor.visit(tree);
   const symbolsTable = visitor.symbolsTable;
   const errors = visitor.errors;
-  const warnings = visitor.warnings;
 
   ScreenListener.emit(lineActions.update, "Writing Symbols Table...");
   const allSizeTableValues: any[] = [];
@@ -48,9 +47,6 @@ async function main(input: string) {
   ScreenListener.emit(lineActions.resetLine);
   console.table(errors.toTable());
   console.log("-----------------------END Errors-----------------------\n\n");
-  console.log("---------------------BEGIN Warnings---------------------");
-  console.log(warnings.toString());
-  console.log("----------------------END Warnings----------------------\n\n");
 }
 
 const pathToFileURL = path.join(__dirname, "..", "example.txt");

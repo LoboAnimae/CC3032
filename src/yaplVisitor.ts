@@ -61,27 +61,24 @@ export class YaplVisitor
   public mainExists: boolean = false;
   public mainMethodExists: boolean = false;
   public errors: ErrorsTable;
-  public warnings: ErrorsTable;
   constructor() {
     super();
     this.scopeStack = new Stack<Table<any>>(); // Scopes are implemented as a stack.
     this.symbolsTable = []; // Symbols are universal
     this.errors = new ErrorsTable();
-    this.warnings = new ErrorsTable("Warning", "33");
 
     const IntType = new Table<number>({
       errors: this.errors,
-      warnings: this.warnings,
       scope: "Int",
       isGeneric: true,
       canBeComparedTo: ["Bool"],
       defaultValue: 0,
       assigmentFunction: () =>
         function (input: Table<any>) {
-          if (input.tableName === "Int") {
+          if (input?.tableName === "Int") {
             return [true];
           }
-          if (input.tableName === "Bool") {
+          if (input?.tableName === "Bool") {
             // TODO: Generate a warning here
             return [true];
           }
@@ -102,19 +99,18 @@ export class YaplVisitor
 
     const BoolType = new Table<boolean>({
       errors: this.errors,
-      warnings: this.warnings,
       scope: "Bool",
       isGeneric: true,
       canBeComparedTo: ["Int"],
       defaultValue: false,
       assigmentFunction: () =>
         function (input: Table<any>) {
-          if (input.tableName === "Bool") {
+          if (input?.tableName === "Bool") {
             return [true];
           }
-          if (input.tableName === "Int") {
+          if (input?.tableName === "Int") {
             // TODO: Generate a warning here
-            return [[0, 1].includes(input.value)];
+            return [true];
           }
           return [false];
         },
@@ -188,12 +184,26 @@ export class YaplVisitor
     );
     const ObjectType = new Table<{}>({
       scope: "Object",
-      defaultValue: {},
-      assigmentFunction: () => (input: Table<any>) => {
-        // @ts-ignore
-        return [this.tableName === input.tableName];
-      },
-      comparisonFunction: () => () => [false],
+      defaultValue: "void",
+      assigmentFunction: () =>
+        function (input: Table<any>) {
+          if (!input) {
+            return [false];
+          }
+          // @ts-ignore
+          const entireHerarchy: Table<any>[] = this.getHeritanceChain().map(
+            (t: Table<any>) => t.tableName
+          );
+          return [
+            entireHerarchy
+              .map((t: Table<any>) => t.tableName)
+              .includes(input.tableName),
+          ];
+        },
+      comparisonFunction: () =>
+        function () {
+          return [false];
+        },
     });
 
     const abortMethod = new MethodElement()
@@ -213,12 +223,15 @@ export class YaplVisitor
     this.scopeStack.push(ObjectType);
     this.symbolsTable.push(IntType, BoolType, StringType, IOType, ObjectType);
   }
-  defaultResult(): number {
-    return 0;
+  defaultResult(): any {
+    return [];
   }
 
-  aggregateResult(aggregate: number, nextResult: number): number {
-    return aggregate + nextResult;
+  protected aggregateResult(aggregate: any, nextResult: any) {
+    if (Array.isArray(nextResult)) {
+      return [...(aggregate ?? []), ...(nextResult ?? [])];
+    }
+    return [...aggregate, nextResult];
   }
 
   lineAndColumn = (ctx: any) => ({
@@ -252,7 +265,7 @@ export class YaplVisitor
     }
   }
 
-  next = (ctx: any) => 1 + super.visitChildren(ctx);
+  next = (ctx: any) => super.visitChildren(ctx);
 
   private returnToGlobalScope() {
     this.returnToScope(Scope.Global);
@@ -267,20 +280,6 @@ export class YaplVisitor
     const [cls, inheritsFrom = "Object"] = ctx.TYPE();
     const classTable = this.findTable(cls);
     const { line, column } = this.lineAndColumn(ctx);
-
-    /*
-
-    Circular inheritance is not possible, thanks to the syntax of the language.
-    Not Possible:
-      class A inherits B
-      class B inherits A
-
-    Why:
-      For the class A to inherit from B, it must first be defined, 
-      but for B to inherit from A, it must first be defined, which 
-      is impossible.
-    */
-
     // ERROR: Class inherits from itself
     if (cls == inheritsFrom) {
       return this.next(ctx);
@@ -292,21 +291,19 @@ export class YaplVisitor
     }
 
     const parentTable = this.findTable(inheritsFrom);
+
+    // ERROR: Trying to inherit from a non-existing class
+    if (!parentTable) {
+    }
+    // ERROR: The table can't be inherited
+    else if (!parentTable.canBeInherited) {
+    }
     const newTable = new Table({
       scope: cls.text,
       parentTable,
       line,
       column,
-      defaultValue: {},
     });
-
-    // ERROR: Trying to inherit from a non-existing class
-    if (!parentTable) {
-    }
-
-    // ERROR: The table can't be inherited
-    else if (!parentTable.canBeInherited) {
-    }
 
     if (newTable.tableName === "Main") {
       // ERROR: Main class is declared more than once
@@ -331,8 +328,25 @@ export class YaplVisitor
   visitOwnMethodCall = (ctx: OwnMethodCallContext) => {
     return this.next(ctx);
   };
+
+  // The first if (the one on top of the stack) defines the type, the others follow it
   visitIf = (ctx: IfContext) => {
-    return this.next(ctx);
+    // Empty bodies are disallowed by the parser in itself
+    const [condition, body, elses] = ctx.expression();
+    const conditionType = this.visit(condition);
+    const boolTable: Table<boolean> = this.findTable("Bool")!;
+
+    // ERROR: Condition can't be resolved to boolean
+    if (!boolTable.allowsAssignmentOf(conditionType)) {
+    }
+    const thisIfType = this.visit(body);
+    const elseBodiesType = this.visit(elses);
+    // ERROR: If and else bodies don't have the same type
+    const [allowsAssignment] = thisIfType.allowsAssignmentOf(elseBodiesType);
+    const isAncestor = thisIfType.isAncestorOf(elseBodiesType);
+    if (!allowsAssignment && !isAncestor) {
+    }
+    return thisIfType;
   };
   visitWhile = (ctx: WhileContext) => {
     const expressionToCast = ctx.children?.[1];
@@ -349,50 +363,61 @@ export class YaplVisitor
     if (!allowsAssignment) {
       this.next(ctx);
     }
-    return this.next(ctx);
+    return this.findTable("Object")!;
   };
   visitBlock = (ctx: BlockContext) => {
-    const parentContext = ctx.parent?.children?.[0];
-    // Case 1: The block is inside a while loop
-    if (parentContext?.text?.toLocaleLowerCase() === "while") {
+    // Return only the last thing in the block
+    const resultingExpression = this.visitChildren(ctx);
+    if (!resultingExpression) {
+      return undefined;
     }
-    // Case 2: The block is inside an if statement
-    else if (parentContext?.text?.toLocaleLowerCase() === "if") {
-    }
-    // Case 3: The block is inside a method
-    else {
-      // Expect the block to be inside a method
-      // If it is a method, return the last statement's return value
-      const lastChildRaw = ctx.children?.[ctx.children.length - 3];
-      // ERROR: No statements inside the method. Let the method manage the error.
-      if (!lastChildRaw) {
-        return null;
-      }
-      // Allow for a table of the last value to be returned. Let the method manage the table.
-      return this.visit(lastChildRaw);
-    }
+    const lastChild = Array.isArray(resultingExpression)
+      ? resultingExpression.at(-1)
+      : resultingExpression;
+    return lastChild;
+    // const parentContext = ctx.parent?.children?.[0];
+    // // Case 1: The block is inside a while loop
+    // if (parentContext?.text?.toLocaleLowerCase() === "while") {
+    // }
+    // // Case 2: The block is inside an if statement
+    // else if (parentContext?.text?.toLocaleLowerCase() === "if") {
+    // }
+    // // Case 3: The block is inside a method
+    // else {
+    //   // Expect the block to be inside a method
+    //   // If it is a method, return the last statement's return value
+    //   const lastChildRaw = this.visit(ctx.getChild(-1));
+    //   // ERROR: No statements inside the method. Let the method manage the error.
+    //   if (!lastChildRaw) {
+    //     return null;
+    //   }
+    //   // Allow for a table of the last value to be returned. Let the method manage the table.
+    //   return this.visit(lastChildRaw);
+    // }
 
-    return this.next(ctx);
+    // return this.next(ctx);
   };
   visitLetIn = (ctx: LetInContext) => {
     return this.next(ctx);
   };
   visitNew = (ctx: NewContext) => {
-    const instantiationOf = ctx.TYPE().toString();
+    const instantiationOf = ctx.TYPE();
     // Find a table with the same name as the type of the instantiation
-    const table = this.findTable(instantiationOf);
-    const parentName = this.getCurrentClass()?.tableName;
+    const instantiationOfTable = this.findTable(instantiationOf);
+
+    const currentClass = this.getCurrentClass();
     const { line, column } = this.lineAndColumn(ctx);
 
     // ERROR: Trying to instantiate a non-existing class
-    if (!table) {
-      return this.next(ctx);
+    if (!instantiationOfTable) {
+      return undefined;
     }
     // ERROR: Trying to instantiate the class we're currently in
-    else if (table.tableName === parentName) {
-      return this.next(ctx);
+    else if (instantiationOfTable.tableName === currentClass.tableName) {
+      return undefined;
     }
-    return this.next(ctx);
+
+    return instantiationOfTable;
   };
   visitNegative = (ctx: NegativeContext) => {
     return this.next(ctx);
@@ -488,6 +513,9 @@ export class YaplVisitor
   visitId = (ctx: IdContext) => {
     // Find it in the scope
     const [name] = ctx.children!;
+    if (name.text.toLocaleLowerCase() === "self") {
+      return this.getCurrentClass();
+    }
     const currentScope = this.getCurrentClass()!;
     const foundSymbol = currentScope.find(name.text);
     const line = ctx.start?.line ?? 0;
@@ -515,7 +543,28 @@ export class YaplVisitor
     return this.findTable("Bool")!.copy().setValue(false);
   };
   visitAssignment = (ctx: AssignmentContext) => {
-    return this.next(ctx);
+    const assignmentTo = ctx.IDENTIFIER();
+    const assignmentValue: Table<any> = this.visit(ctx.expression());
+    const currentScope = this.getCurrentClass()!;
+    const foundSymbolType: Table<any> | undefined = currentScope
+      .find(assignmentTo.text)
+      ?.getType();
+
+    // ERROR: The variable does not exist yet
+    if (!foundSymbolType) {
+      return undefined;
+    }
+
+    const [canBeAssigned] = foundSymbolType.allowsAssignmentOf(assignmentValue);
+
+    const isAncestor = foundSymbolType.isAncestorOf(assignmentValue);
+
+    // ERROR: Value is not assignable to the variable
+    if (!canBeAssigned && !isAncestor) {
+      return undefined;
+    }
+
+    return foundSymbolType;
   };
   visitMethod = (ctx: MethodContext) => {
     const methodFoundType = ctx.TYPE();
@@ -523,25 +572,29 @@ export class YaplVisitor
       return this.next(ctx);
     }
 
-    const methodType = this.findTable(methodFoundType.text!);
+    const methodType =
+      methodFoundType.text === "SELF_TYPE"
+        ? this.getCurrentClass()
+        : this.findTable(methodFoundType);
     // ERROR: The method type is not yet defined (if ever)
     if (!methodType) {
       return this.next(ctx);
     }
 
     const expressionRaw = ctx.expression()!; // If it doesn't exist, it is a syntax error
-    const expressionType: Table<any> | null = this.visit(expressionRaw);
+    const expressionType: Table<any> | undefined = this.visit(expressionRaw);
     // ERROR: If the expression is not valid, it will be null
     if (!expressionType) {
-      return this.next(ctx);
-    }
-    const [expressionAllowsAssignment] =
-      expressionType?.allowsAssignmentOf(methodType);
-    // ERROR: The expression type is not the same as the method type and can't be casted
-    if (!expressionAllowsAssignment) {
     }
 
-    return this.next(ctx);
+    const [canBeAssigned] = methodType.allowsAssignmentOf(expressionType);
+    const isAncestor = methodType.isAncestorOf(expressionType);
+
+    // ERROR: Last child and return type do not match or can't be assigned
+    if (!canBeAssigned && !isAncestor) {
+    }
+
+    return methodType;
   };
   visitProperty = (ctx: PropertyContext) => {
     // Previous table
@@ -564,11 +617,13 @@ export class YaplVisitor
 
     if (assignmentExpression) {
       const resolvesTo: Table<any> = this.visit(assignmentExpression);
-      const [allowedAssigment] = previousClass.allowsAssignmentOf(resolvesTo);
-      // ERROR: Not allowed an assignment
-      if (!allowedAssigment) {
+
+      const [allowedAssigmentTo] = previousClass.allowsAssignmentOf(resolvesTo);
+      // ERROR: Not allowed an assignment and the assignment is not to an ancestor
+      if (!allowedAssigmentTo && !previousClass?.isAncestorOf(resolvesTo)) {
+        console.error();
       }
-      previousClassCopy!.setValue(resolvesTo.value);
+      previousClassCopy!.setValue(resolvesTo?.value);
     }
     const currentScopeTable = this.getCurrentClass();
 

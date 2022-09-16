@@ -1,12 +1,5 @@
-class Something {
-    y: Bool;
-    x: Bool <- y < 1;
-};
-
-class SomethingElse inherits Something {
-    a(): Bool {
-            "SomeString"
-    };
+class SomethingElse {
+    a(): Bool { self };
 };
 
 class Main {

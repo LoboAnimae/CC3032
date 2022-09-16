@@ -190,7 +190,7 @@ interface ISymbolsTableParams<T> {
   canBeInherited?: boolean;
   isGeneric?: boolean;
   canBeComparedTo?: string[];
-  defaultValue: T;
+  defaultValue?: T;
   canBeAssigned?: string[];
   allowNegation?: boolean;
   assigmentFunction?: () => (input: Table<any>) => [boolean, string?];
@@ -209,7 +209,7 @@ interface ISymbolsTableCloneParams<T> {
   canBeInherited: boolean;
   isGeneric: boolean;
   canBeComparedTo: string[];
-  defaultValue: T;
+  defaultValue?: T;
   canBeAssigned: string[];
   allowNegation: boolean;
   assigmentFunction: () => (input: Table<any>) => [boolean, string?];
@@ -234,9 +234,11 @@ export class Table<T> {
     input: Table<any>
   ) => [boolean, string?];
   public readonly canBeAssigned: string[] = [];
-  public readonly defaultValue: T;
+  public readonly defaultValue?: T;
   public readonly convertToType: (input: any) => any;
-  public readonly allowsAssignmentOf: (input: Table<any>) => [boolean, string?];
+  public readonly allowsAssignmentOfFunction: (
+    input: Table<any>
+  ) => [boolean, string?];
   public readonly allowNegation: boolean;
   public readonly errors?: ErrorsTable;
   public readonly warnings?: ErrorsTable;
@@ -248,18 +250,15 @@ export class Table<T> {
     this.column = options?.column || { start: 0, end: 0 };
     this.canBeInherited = options?.canBeInherited ?? true;
     this.canBeType = options?.canBeType ?? true;
-    this.defaultValue = options?.defaultValue ?? ({} as T);
+    this.defaultValue = options?.defaultValue;
     this._canBeComparedTo = [
       this.tableName,
       ...(options?.canBeComparedTo ?? []),
     ];
 
     this.canBeAssigned = [this.tableName, ...(options?.canBeAssigned ?? [])];
-    this.allowsAssignmentOf =
-      options?.assigmentFunction?.().bind(this) ??
-      (() => {
-        throw new Error(`Assignment function not defined in ${this.tableName}`);
-      });
+    this.allowsAssignmentOfFunction =
+      options?.assigmentFunction?.().bind(this) ?? (() => [false]);
     this.allowsComparisonsTo =
       options?.comparisonFunction?.().bind(this) ??
       (() => {
@@ -277,6 +276,35 @@ export class Table<T> {
       this.canBeType = true;
       this.isGeneric = true;
     }
+  }
+
+  hasAsAncestor(ancestor: Table<any>): boolean {
+    return (
+      this.tableName === ancestor.tableName ||
+      this.parentTable?.hasAsAncestor(ancestor) ||
+      false
+    );
+  }
+
+  isAncestorOf(child?: Table<any>): boolean {
+    if (!child) return false;
+    return child?.hasAsAncestor(this) ?? false;
+  }
+  allowsAssignmentOf(input?: Table<any>): [boolean, string?] {
+    if (!input) return [false];
+    if (this?.tableName === input?.tableName) {
+      return [true];
+    }
+    const allowedHere = this.allowsAssignmentOfFunction?.(input);
+    if (allowedHere && allowedHere[0]) {
+      return allowedHere;
+    }
+
+    // const allowedInParent = this.parentTable?.allowsAssignmentOf(input);
+    // if (allowedInParent && allowedInParent[0]) {
+    //   return allowedInParent;
+    // }
+    return allowedHere;
   }
 
   /**
@@ -315,6 +343,10 @@ export class Table<T> {
 
   existsInScope = (name: string): boolean => {
     return this.find(name) !== undefined;
+  };
+
+  getHeritanceChain = (): Table<any>[] => {
+    return [...(this.parentTable?.getHeritanceChain() ?? []), this];
   };
 
   findInCurrentClosedScope = (
@@ -378,11 +410,7 @@ export class Table<T> {
 
   public toString = (): string => {
     if (this.isGeneric || this.tableName === "Object") return "";
-    return ErrorsTable.quotedErrorFormat(
-      "Table: {} of size {}",
-      this.scope,
-      this.size
-    );
+    return this.scope;
   };
 
   public getAllProperties = (): { [key: string]: any } => {
@@ -433,7 +461,7 @@ export class Table<T> {
       canBeComparedTo: this._canBeComparedTo.slice(1),
       comparisonFunction: () => this.allowsComparisonsTo,
       typeCohersionFunction: () => this.convertToType,
-      assigmentFunction: () => this.allowsAssignmentOf,
+      assigmentFunction: () => this.allowsAssignmentOfFunction,
     };
     return new Table<T>(creationObj);
   }
@@ -494,20 +522,8 @@ export class IError {
 }
 
 export class ErrorsTable {
-  // static getError(errorType: ErrorType, ...args: any[]) {
-  //   const error = errors[errorType];
-  //   if (error) {
-  //     return this.quotedErrorFormat(error, ...args);
-  //   }
-  //   throw new Error("Unrecognized error type");
-  // }
-
   public readonly errors: IError[];
-  public readonly appender;
-  public readonly color;
-  constructor(appender = "Error", color = "41") {
-    this.appender = appender;
-    this.color = color;
+  constructor() {
     this.errors = [];
   }
   static errorFormat = (errorMessage: string, ...args: any[]) => {
@@ -542,18 +558,7 @@ export class ErrorsTable {
         err.column.end === error.column.end
     );
   };
-
-  printError = (error: string, line: number, column: number) => {
-    return `[${this.appender}]`.red, `[${line}:${column}]`.yellow, `${error}`;
-  };
-  getErrors = () => this.errors;
-  toString(): string {
-    return this.errors
-      .map((error) =>
-        this.printError(error.message, error.line, error.column.start)
-      )
-      .join("\n");
-  }
+  getErrors = (): IError[] => this.errors;
   toTable = () => {
     return this.errors.map((error) => error.getAllProperties());
   };
