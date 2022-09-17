@@ -32,7 +32,7 @@ async function main(input: string) {
   for (const foundSymbol of symbolsTable) {
     const str = foundSymbol.toString();
     if (!str) continue;
-    allSizeTableValues.push(foundSymbol.getAllProperties());
+    allSizeTableValues.push(foundSymbol);
   }
   ScreenListener.emit(lineActions.add, "Symbols Table");
   ScreenListener.emit(lineActions.resetLine);
@@ -45,7 +45,7 @@ async function main(input: string) {
   ]);
   ScreenListener.emit(lineActions.add, "Errors Table");
   ScreenListener.emit(lineActions.resetLine);
-  console.table(errors.toTable());
+  console.table(errors);
   console.log("-----------------------END Errors-----------------------\n\n");
 }
 

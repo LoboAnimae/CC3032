@@ -178,19 +178,41 @@ export class SymbolElement extends TableElement {
 }
 
 export class MethodElement extends TableElement {
-  public _parameters: SymbolElement[] = [];
-  constructor(options?: ITableElementOptions) {
+  public symbols: SymbolElement[] = [];
+  public parentTable?: Table<any>;
+  constructor(options?: ITableElementOptions & { parentTable: Table<any> }) {
     super(options);
     this.dataStructureType = IDataStructureType.Method;
+    this.parentTable = options?.parentTable;
   }
 
   public addParameter(...parameter: SymbolElement[]) {
-    this._parameters.push(...parameter);
+    this.symbols.push(...parameter);
     return this;
   }
   public getParameters() {
-    return this._parameters;
+    return this.symbols;
   }
+
+  public setParentTable(table: Table<any>) {
+    this.parentTable = table;
+    return this;
+  }
+
+  /**
+   * Looks up a symbol in the current scope and all parent scopes.
+   * @param name The name of the symbol to look up.
+   * @returns The symbol if found, otherwise undefined.
+   */
+  find = (name?: string): SymbolElement | MethodElement | undefined => {
+    if (name) {
+      const foundElement = this.symbols.find((symbol: TableElement) =>
+        symbol.isSameName(name)
+      );
+      return foundElement ?? this.parentTable?.find(name);
+    }
+    return undefined;
+  };
 
   public setReturnType(type: Table<any>) {
     return this.setType(type);

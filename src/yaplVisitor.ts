@@ -56,7 +56,7 @@ export class YaplVisitor
   extends AbstractParseTreeVisitor<Properties<any> | any>
   implements yaplVisitor<Properties<any> | any>
 {
-  public scopeStack: Stack<Table<any>>;
+  public scopeStack: Stack<Table<any> | MethodElement>;
   public symbolsTable: Table<any>[];
   public mainExists: boolean = false;
   public mainMethodExists: boolean = false;
@@ -73,6 +73,7 @@ export class YaplVisitor
       isGeneric: true,
       canBeComparedTo: ["Bool"],
       defaultValue: 0,
+      allowNegation: true,
       assigmentFunction: () =>
         function (input: Table<any>) {
           if (input?.tableName === "Int") {
@@ -103,6 +104,7 @@ export class YaplVisitor
       isGeneric: true,
       canBeComparedTo: ["Int"],
       defaultValue: false,
+      allowNegation: true,
       assigmentFunction: () =>
         function (input: Table<any>) {
           if (input?.tableName === "Bool") {
@@ -272,8 +274,8 @@ export class YaplVisitor
   }
 
   // The second scope in the stack is always a class
-  private getCurrentClass(): Table<any> {
-    return this.scopeStack.getItem(1);
+  private getCurrentScope<T = Table<any>>(): T {
+    return this.scopeStack.getItem(1) as T;
   }
   visitClassDefine = (ctx: ClassDefineContext): number => {
     this.returnToGlobalScope();
@@ -329,9 +331,9 @@ export class YaplVisitor
     );
     const methodHoldingClass: Table<any> | undefined =
       methodName.text.toLocaleLowerCase() === "self"
-        ? this.getCurrentClass()
+        ? this.getCurrentScope()
         : this.findTable(ctx.TYPE()) ??
-          this.getCurrentClass().find(methodName.text)?.getType();
+          this.getCurrentScope().find(methodName.text)?.getType();
     const calledMethod = ctx.IDENTIFIER();
 
     // ERROR: The method holding the class does not exist
@@ -370,13 +372,14 @@ export class YaplVisitor
     }
     return referencedMethod.getType();
   };
+
   visitOwnMethodCall = (ctx: OwnMethodCallContext) => {
     const calledMethod = ctx.IDENTIFIER();
     const [...methodParametersRaw] = ctx.expression();
     const methodParameters: Table<any>[] = methodParametersRaw.map((p) =>
       this.visit(p)
     );
-    const methodHoldingClass = this.getCurrentClass();
+    const methodHoldingClass = this.getCurrentScope();
 
     const referencedMethod = methodHoldingClass.find(
       calledMethod.text
@@ -429,6 +432,7 @@ export class YaplVisitor
     }
     return thisIfType;
   };
+
   visitWhile = (ctx: WhileContext) => {
     const expressionToCast = ctx.children?.[1];
     const { line, column } = this.lineAndColumn(ctx);
@@ -446,6 +450,7 @@ export class YaplVisitor
     }
     return this.findTable("Object")!;
   };
+
   visitBlock = (ctx: BlockContext) => {
     // Return only the last thing in the block
     const resultingExpression = this.visitChildren(ctx);
@@ -456,37 +461,18 @@ export class YaplVisitor
       ? resultingExpression.at(-1)
       : resultingExpression;
     return lastChild;
-    // const parentContext = ctx.parent?.children?.[0];
-    // // Case 1: The block is inside a while loop
-    // if (parentContext?.text?.toLocaleLowerCase() === "while") {
-    // }
-    // // Case 2: The block is inside an if statement
-    // else if (parentContext?.text?.toLocaleLowerCase() === "if") {
-    // }
-    // // Case 3: The block is inside a method
-    // else {
-    //   // Expect the block to be inside a method
-    //   // If it is a method, return the last statement's return value
-    //   const lastChildRaw = this.visit(ctx.getChild(-1));
-    //   // ERROR: No statements inside the method. Let the method manage the error.
-    //   if (!lastChildRaw) {
-    //     return null;
-    //   }
-    //   // Allow for a table of the last value to be returned. Let the method manage the table.
-    //   return this.visit(lastChildRaw);
-    // }
-
-    // return this.next(ctx);
   };
+
   visitLetIn = (ctx: LetInContext) => {
     return this.next(ctx);
   };
+
   visitNew = (ctx: NewContext) => {
     const instantiationOf = ctx.TYPE();
     // Find a table with the same name as the type of the instantiation
     const instantiationOfTable = this.findTable(instantiationOf);
 
-    const currentClass = this.getCurrentClass();
+    const currentClass = this.getCurrentScope();
     const { line, column } = this.lineAndColumn(ctx);
 
     // ERROR: Trying to instantiate a non-existing class
@@ -500,17 +486,56 @@ export class YaplVisitor
 
     return instantiationOfTable;
   };
+
   visitNegative = (ctx: NegativeContext) => {
+    const expressionRaw = ctx.expression();
+    const expressionType: Table<any> = this.visit(expressionRaw);
+
+    // ERROR: Expression can't be negated
+    if (!expressionType.allowNegation) {
+    }
     return this.next(ctx);
   };
   visitIsvoid = (ctx: IsvoidContext) => {
-    return this.next(ctx);
+    const expressionRaw = ctx.expression();
+    const expressionType = this.visit(expressionRaw);
+    const cantBeInstantiated = ["Int", "Bool", "String", "IO"];
+    const { line, column } = this.lineAndColumn(ctx);
+
+    // ERROR: Something that can't be instantiated can't be void
+    if (cantBeInstantiated.includes(expressionType.tableName)) {
+    }
+    return expressionType;
   };
   visitMultiply = (ctx: MultiplyContext) => {
-    return this.next(ctx);
+    const lExpr: Table<any> = this.visit(ctx.children![0]!);
+    const rExpr: Table<any> = this.visit(ctx.children![2]!);
+
+    const intTable: Table<number> = this.findTable("Int")!.copy();
+
+    const [lCanBeInt] = intTable.allowsAssignmentOf(lExpr);
+    const [rCanBeInt] = intTable.allowsAssignmentOf(rExpr);
+
+    // ERROR: One of the expressions cannot be set as an integer
+    if (!lCanBeInt || !rCanBeInt) {
+      return undefined;
+    }
+    return intTable.setValue(lExpr.value * rExpr.value);
   };
   visitDivision = (ctx: DivisionContext) => {
-    return this.next(ctx);
+    const lExpr: Table<any> = this.visit(ctx.children![0]!);
+    const rExpr: Table<any> = this.visit(ctx.children![2]!);
+
+    const intTable: Table<number> = this.findTable("Int")!.copy();
+
+    const [lCanBeInt] = intTable.allowsAssignmentOf(lExpr);
+    const [rCanBeInt] = intTable.allowsAssignmentOf(rExpr);
+
+    // ERROR: One of the expressions cannot be set as an integer
+    if (!lCanBeInt || !rCanBeInt) {
+      return undefined;
+    }
+    return intTable.setValue(lExpr.value / rExpr.value);
   };
   visitAdd = (ctx: AddContext) => {
     const lExpr: Table<any> = this.visit(ctx.children![0]!);
@@ -543,11 +568,11 @@ export class YaplVisitor
     return intTable.setValue(lExpr.value - rExpr.value);
   };
 
-  // Less thans return booleans
+  // Less thans return booleans.
   visitLessThan = (ctx: LessThanContext) => {
-    // Must be done between two possible integers
-    const lExpr: Table<number> = this.visit(ctx.children?.[0]!);
-    const rExpr: Table<number> = this.visit(ctx.children?.[2]!);
+    const [leftChild, rightChild] = ctx.expression();
+    const lExpr: Table<number> = this.visit(leftChild);
+    const rExpr: Table<number> = this.visit(rightChild);
     const { line, column } = this.lineAndColumn(ctx);
 
     const intTable = this.findTable("Int")!.copy();
@@ -565,8 +590,9 @@ export class YaplVisitor
   };
   visitLessEqual = (ctx: LessEqualContext) => {
     // Must be done between two possible integers
-    const lExpr: Table<number> = this.visit(ctx.children?.[0]!);
-    const rExpr: Table<number> = this.visit(ctx.children?.[2]!);
+    const [leftChild, rightChild] = ctx.expression();
+    const lExpr: Table<number> = this.visit(leftChild);
+    const rExpr: Table<number> = this.visit(rightChild);
     const { line, column } = this.lineAndColumn(ctx);
 
     const intTable = this.findTable("Int")!.copy();
@@ -583,10 +609,21 @@ export class YaplVisitor
       .setValue(lExpr.value <= rExpr.value);
   };
   visitEqual = (ctx: EqualContext) => {
-    return this.next(ctx);
-  };
-  visitBoolNot = (ctx: BoolNotContext) => {
-    return this.next(ctx);
+    // Must be done between two possible integers
+    const [leftChild, rightChild] = ctx.expression();
+    const lExpr: Table<number> = this.visit(leftChild);
+    const rExpr: Table<number> = this.visit(rightChild);
+    const { line, column } = this.lineAndColumn(ctx);
+
+    const [allowed] = lExpr.allowsAssignmentOf(rExpr);
+    const lAncestorOf = lExpr.isAncestorOf(rExpr);
+    const rAncestorOf = rExpr.isAncestorOf(lExpr);
+
+    // ERROR: If one of them is an ancestor of the other, they can be compared
+    if (!allowed && !lAncestorOf && !rAncestorOf) {
+      return undefined;
+    }
+    return this.findTable("Bool")!.copy();
   };
   visitParentheses = (ctx: ParenthesesContext) => {
     return this.visit(ctx.expression());
@@ -595,9 +632,9 @@ export class YaplVisitor
     // Find it in the scope
     const [name] = ctx.children!;
     if (name.text.toLocaleLowerCase() === "self") {
-      return this.getCurrentClass();
+      return this.getCurrentScope();
     }
-    const currentScope = this.getCurrentClass()!;
+    const currentScope = this.getCurrentScope()!;
     const foundSymbol = currentScope.find(name.text);
     const line = ctx.start?.line ?? 0;
     const column = {
@@ -626,7 +663,7 @@ export class YaplVisitor
   visitAssignment = (ctx: AssignmentContext) => {
     const assignmentTo = ctx.IDENTIFIER();
     const assignmentValue: Table<any> = this.visit(ctx.expression());
-    const currentScope = this.getCurrentClass()!;
+    const currentScope = this.getCurrentScope()!;
     const foundSymbolType: Table<any> | undefined = currentScope
       .find(assignmentTo.text)
       ?.getType();
@@ -652,14 +689,10 @@ export class YaplVisitor
     if (!methodFoundType) {
       return this.next(ctx);
     }
-    const formalParameters = ctx.formal();
-    const allParameters: SymbolElement[] = formalParameters.map((param) =>
-      this.visit(param)
-    );
 
     const methodType =
       methodFoundType.text === "SELF_TYPE"
-        ? this.getCurrentClass()
+        ? this.getCurrentScope()
         : this.findTable(methodFoundType);
     // ERROR: The method type is not yet defined (if ever)
     if (!methodType) {
@@ -679,18 +712,23 @@ export class YaplVisitor
     if (!canBeAssigned && !isAncestor) {
     }
 
-    const currentTable = this.getCurrentClass()!;
+    const currentTable = this.getCurrentScope()!;
     const { line, column } = this.lineAndColumn(ctx);
     const newMethod = new MethodElement()
       .setColumn(column)
       .setLine(line)
       .setName(ctx.IDENTIFIER().text)
       .setType(methodType)
-      .setScope(this.getCurrentClass()!.tableName ?? "Global");
-    for (const param of allParameters) {
-      newMethod.addParameter(param);
-    }
+      .setScope(this.getCurrentScope()!.tableName ?? "Global")
+      .setParentTable(methodType);
 
+    const formalParameters = ctx.formal();
+    this.scopeStack.push(newMethod);
+    for (const param of formalParameters) {
+      const newParam = this.visit(param);
+      newMethod.addParameter(newParam);
+    }
+    this.scopeStack.pop();
     currentTable.addElement(newMethod);
 
     return methodType;
@@ -724,7 +762,7 @@ export class YaplVisitor
       }
       previousClassCopy!.setValue(resolvesTo?.value);
     }
-    const currentScopeTable = this.getCurrentClass();
+    const currentScopeTable = this.getCurrentScope();
 
     // const previousDeclared = currentScopeTable?.find(variableName);
     const newTableElement = new SymbolElement()
