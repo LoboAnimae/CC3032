@@ -244,6 +244,11 @@ export class YaplVisitor
     },
   });
 
+  addError(ctx: any, errorMessage: string) {
+    const { line, column } = this.lineAndColumn(ctx);
+    this.errors.addError({ line, column, message: errorMessage });
+  }
+
   protected findTable(name: string | Table<any> | any): Table<any> | undefined {
     if (typeof name === "string") {
       return this.symbolsTable.find(
@@ -289,6 +294,7 @@ export class YaplVisitor
 
     // ERROR: Class already exists
     if (classTable) {
+      this.addError(ctx, `Redefinition of class ${cls}`);
       return this.next(ctx);
     }
 
@@ -296,9 +302,14 @@ export class YaplVisitor
 
     // ERROR: Trying to inherit from a non-existing class
     if (!parentTable) {
+      this.addError(
+        ctx,
+        `Class ${cls} is trying to inherit from class ${inheritsFrom}, which does not exist`
+      );
     }
     // ERROR: The table can't be inherited
     else if (!parentTable.canBeInherited) {
+      this.addError(ctx, `Class ${inheritsFrom} can't be inherited`);
     }
     const newTable = new Table({
       scope: cls.text,
@@ -310,11 +321,16 @@ export class YaplVisitor
     if (newTable.tableName === "Main") {
       // ERROR: Main class is declared more than once
       if (this.mainExists) {
+        this.addError(ctx, "Main class is declared more than once");
         return this.next(ctx);
       }
       this.mainExists = this.mainExists || cls.text === "Main";
       // ERROR: Main class is trying to inherit from another class, which is not allowed
       if (parentTable?.tableName !== "Object") {
+        this.addError(
+          ctx,
+          `Main class can't inherit from ${inheritsFrom} (Main class can only inherit from Object)`
+        );
       }
     }
 
@@ -325,28 +341,52 @@ export class YaplVisitor
   };
 
   visitMethodCall = (ctx: MethodCallContext) => {
-    const [methodName, ...methodParametersRaw] = ctx.expression();
+    const [variableName, ...methodParametersRaw] = ctx.expression();
     const methodParameters: Table<any>[] = methodParametersRaw.map((p) =>
       this.visit(p)
     );
-    const methodHoldingClass: Table<any> | undefined =
-      methodName.text.toLocaleLowerCase() === "self"
-        ? this.getCurrentScope()
-        : this.findTable(ctx.TYPE()) ??
-          this.getCurrentScope().find(methodName.text)?.getType();
-    const calledMethod = ctx.IDENTIFIER();
+    const variable = this.visit(variableName);
 
-    // ERROR: The method holding the class does not exist
-    if (!methodHoldingClass) {
+    // ERROR: Variable is not defined
+    if (!variable) {
       return this.next(ctx);
     }
 
+    const methodHoldingClass: Table<any> | undefined =
+      variableName.text.toLocaleLowerCase() === "self"
+        ? this.getCurrentScope()
+        : this.findTable(ctx.TYPE()) ??
+          this.getCurrentScope().find(variableName.text)?.getType();
+
+    // ERROR: The method holding the class does not exist
+    if (!methodHoldingClass) {
+      this.addError(
+        ctx,
+        `Attempting to call method from non-existing class (class ${ctx.TYPE()} does not exist or is not yet defined)`
+      );
+      return this.next(ctx);
+    }
+    const isAncestor = methodHoldingClass.isAncestorOf(variable);
+
+    // ERROR: A class is able to call only its own methods or it's parents methods
+    if (!isAncestor) {
+      this.addError(
+        ctx,
+        `Attempting to call method from class ${methodHoldingClass.tableName} from class ${variable.tableName}, but ${variable.tableName} is not a child of ${methodHoldingClass.tableName}`
+      );
+    }
+
+    const calledMethod = ctx.IDENTIFIER();
     const referencedMethod = methodHoldingClass.find(
       calledMethod.text
     ) as MethodElement;
 
     // ERROR: The method does not exist in the class (self or not)
     if (!referencedMethod) {
+      this.addError(
+        ctx,
+        `Attempting to call non-existing method ${calledMethod.text} from class ${methodHoldingClass.tableName}`
+      );
       return this.next(ctx);
     }
 
@@ -357,6 +397,10 @@ export class YaplVisitor
 
     // ERROR: The method is called with a different number of parameters than it requires
     if (!sameNumberOfParameters) {
+      this.addError(
+        ctx,
+        `Incorrect number of parameters for method ${calledMethod.text} from class ${methodHoldingClass.tableName} (expected ${requiredMethodParameters.length}, got ${methodParameters.length})`
+      );
       return this.next(ctx);
     }
 
@@ -367,7 +411,10 @@ export class YaplVisitor
         requiredParameterType.allowsAssignmentOf(methodParameterType);
       // ERROR: The parameter required is not the same as the one passed
       if (!allowed) {
-        console.error();
+        this.addError(
+          ctx,
+          `Incorrect type of parameter ${requiredMethodParameters[i].name} for method ${calledMethod.text} from class ${methodHoldingClass.tableName} (expected ${requiredParameterType.tableName}, got ${methodParameterType.tableName})`
+        );
       }
     }
     return referencedMethod.getType();
@@ -387,6 +434,10 @@ export class YaplVisitor
 
     // ERROR: The method does not exist in the class (self or not)
     if (!referencedMethod) {
+      this.addError(
+        ctx,
+        `Attempting to call non-existing method ${calledMethod.text} from class ${methodHoldingClass.tableName}`
+      );
       return this.next(ctx);
     }
 
@@ -397,6 +448,10 @@ export class YaplVisitor
 
     // ERROR: The method is called with a different number of parameters than it requires
     if (!sameNumberOfParameters) {
+      this.addError(
+        ctx,
+        `Incorrect number of parameters for method ${calledMethod.text} from class ${methodHoldingClass.tableName} (expected ${requiredMethodParameters.length}, got ${methodParameters.length})`
+      );
       return this.next(ctx);
     }
 
@@ -407,7 +462,10 @@ export class YaplVisitor
         requiredParameterType.allowsAssignmentOf(methodParameterType);
       // ERROR: The parameter required is not the same as the one passed
       if (!allowed) {
-        console.error();
+        this.addError(
+          ctx,
+          `Incorrect type of parameter ${requiredMethodParameters[i].name} for method ${calledMethod.text} from class ${methodHoldingClass.tableName} (expected ${requiredParameterType.tableName}, got ${methodParameterType.tableName})`
+        );
       }
     }
     return referencedMethod.getType();
@@ -422,6 +480,10 @@ export class YaplVisitor
 
     // ERROR: Condition can't be resolved to boolean
     if (!boolTable.allowsAssignmentOf(conditionType)) {
+      this.addError(
+        ctx,
+        `Condition in if statement can't be resolved to boolean (got ${conditionType.tableName})`
+      );
     }
     const thisIfType = this.visit(body);
     const elseBodiesType = this.visit(elses);
@@ -429,13 +491,16 @@ export class YaplVisitor
     const [allowsAssignment] = thisIfType.allowsAssignmentOf(elseBodiesType);
     const isAncestor = thisIfType.isAncestorOf(elseBodiesType);
     if (!allowsAssignment && !isAncestor) {
+      this.addError(
+        ctx,
+        `If and else bodies don't have the same type (got ${thisIfType.tableName} and ${elseBodiesType.tableName})`
+      );
     }
     return thisIfType;
   };
 
   visitWhile = (ctx: WhileContext) => {
     const expressionToCast = ctx.children?.[1];
-    const { line, column } = this.lineAndColumn(ctx);
 
     // There is no expression inside the while loop
     if (!expressionToCast) {
@@ -446,6 +511,10 @@ export class YaplVisitor
     const [allowsAssignment] = boolTable.allowsAssignmentOf(foundExpression);
     // ERROR: The expression inside the while loop cannot be set as a boolean expression
     if (!allowsAssignment) {
+      this.addError(
+        ctx,
+        `Expression inside while loop cannot be set as a boolean expression (got ${foundExpression.tableName})`
+      );
       this.next(ctx);
     }
     return this.findTable("Object")!;
@@ -455,6 +524,7 @@ export class YaplVisitor
     // Return only the last thing in the block
     const resultingExpression = this.visitChildren(ctx);
     if (!resultingExpression) {
+      this.addError(ctx, "Empty code block");
       return undefined;
     }
     const lastChild = Array.isArray(resultingExpression)
@@ -473,14 +543,21 @@ export class YaplVisitor
     const instantiationOfTable = this.findTable(instantiationOf);
 
     const currentClass = this.getCurrentScope();
-    const { line, column } = this.lineAndColumn(ctx);
 
     // ERROR: Trying to instantiate a non-existing class
     if (!instantiationOfTable) {
+      this.addError(
+        ctx,
+        `Trying to instantiate a non-existing class ${instantiationOf.text}`
+      );
       return undefined;
     }
     // ERROR: Trying to instantiate the class we're currently in
     else if (instantiationOfTable.tableName === currentClass.tableName) {
+      this.addError(
+        ctx,
+        `Attempting to instantiate class ${currentClass.tableName} inside itself`
+      );
       return undefined;
     }
 
@@ -493,6 +570,10 @@ export class YaplVisitor
 
     // ERROR: Expression can't be negated
     if (!expressionType.allowNegation) {
+      this.addError(
+        ctx,
+        `Expression of type ${expressionType.tableName} can't be negated`
+      );
     }
     return this.next(ctx);
   };
@@ -500,10 +581,13 @@ export class YaplVisitor
     const expressionRaw = ctx.expression();
     const expressionType = this.visit(expressionRaw);
     const cantBeInstantiated = ["Int", "Bool", "String", "IO"];
-    const { line, column } = this.lineAndColumn(ctx);
 
     // ERROR: Something that can't be instantiated can't be void
     if (cantBeInstantiated.includes(expressionType.tableName)) {
+      this.addError(
+        ctx,
+        `Something of type ${expressionType.tableName} can't be void (Make sure it can be instantiated with 'new')`
+      );
     }
     return expressionType;
   };
@@ -518,6 +602,10 @@ export class YaplVisitor
 
     // ERROR: One of the expressions cannot be set as an integer
     if (!lCanBeInt || !rCanBeInt) {
+      this.addError(
+        ctx,
+        `One of the expressions cannot be set as an integer (got ${lExpr.tableName} and ${rExpr.tableName})`
+      );
       return undefined;
     }
     return intTable.setValue(lExpr.value * rExpr.value);
@@ -533,6 +621,10 @@ export class YaplVisitor
 
     // ERROR: One of the expressions cannot be set as an integer
     if (!lCanBeInt || !rCanBeInt) {
+      this.addError(
+        ctx,
+        `One of the expressions cannot be set as an integer (got ${lExpr.tableName} and ${rExpr.tableName})`
+      );
       return undefined;
     }
     return intTable.setValue(lExpr.value / rExpr.value);
@@ -548,6 +640,10 @@ export class YaplVisitor
 
     // ERROR: One of the expressions cannot be set as an integer
     if (!lCanBeInt || !rCanBeInt) {
+      this.addError(
+        ctx,
+        `One of the expressions cannot be set as an integer (got ${lExpr.tableName} and ${rExpr.tableName})`
+      );
       return undefined;
     }
     return intTable.setValue(lExpr.value + rExpr.value);
@@ -563,6 +659,10 @@ export class YaplVisitor
 
     // ERROR: One of the expressions cannot be set as an integer
     if (!lCanBeInt || !rCanBeInt) {
+      this.addError(
+        ctx,
+        `One of the expressions cannot be set as an integer (got ${lExpr.tableName} and ${rExpr.tableName})`
+      );
       return undefined;
     }
     return intTable.setValue(lExpr.value - rExpr.value);
@@ -573,7 +673,6 @@ export class YaplVisitor
     const [leftChild, rightChild] = ctx.expression();
     const lExpr: Table<number> = this.visit(leftChild);
     const rExpr: Table<number> = this.visit(rightChild);
-    const { line, column } = this.lineAndColumn(ctx);
 
     const intTable = this.findTable("Int")!.copy();
 
@@ -582,12 +681,18 @@ export class YaplVisitor
 
     // ERROR: One of the expressions cannot be set as an integer
     if (!lCanBeInt || !rCanBeInt) {
+      this.addError(
+        ctx,
+        `One of the expressions cannot be set as an integer (got ${lExpr.tableName} and ${rExpr.tableName})`
+      );
+
       return undefined;
     }
     return this.findTable("Bool")!
       .copy()
       .setValue(lExpr.value < rExpr.value);
   };
+
   visitLessEqual = (ctx: LessEqualContext) => {
     // Must be done between two possible integers
     const [leftChild, rightChild] = ctx.expression();
@@ -602,6 +707,10 @@ export class YaplVisitor
 
     // ERROR: One of the expressions cannot be set as an integer
     if (!lCanBeInt || !rCanBeInt) {
+      this.addError(
+        ctx,
+        `One of the expressions cannot be set as an integer (got ${lExpr.tableName} and ${rExpr.tableName})`
+      );
       return undefined;
     }
     return this.findTable("Bool")!
@@ -621,6 +730,10 @@ export class YaplVisitor
 
     // ERROR: If one of them is an ancestor of the other, they can be compared
     if (!allowed && !lAncestorOf && !rAncestorOf) {
+      this.addError(
+        ctx,
+        `Cannot compare ${lExpr.tableName} and ${rExpr.tableName}`
+      );
       return undefined;
     }
     return this.findTable("Bool")!.copy();
@@ -634,15 +747,14 @@ export class YaplVisitor
     if (name.text.toLocaleLowerCase() === "self") {
       return this.getCurrentScope();
     }
-    const currentScope = this.getCurrentScope()!;
+    const currentScope = this.getCurrentScope<Table<any> | MethodElement>()!;
     const foundSymbol = currentScope.find(name.text);
-    const line = ctx.start?.line ?? 0;
-    const column = {
-      start: ctx.start?.charPositionInLine ?? 0,
-      end: ctx.stop?.charPositionInLine ?? 0,
-    };
     // The ID is being used, but it wasn't defined yet
     if (!foundSymbol) {
+      this.addError(
+        ctx,
+        `Symbol ${name.text} is not defined in scope ${currentScope.scope}`
+      );
       return undefined;
     }
     return this.findTable(foundSymbol?.getType()!);
@@ -670,6 +782,10 @@ export class YaplVisitor
 
     // ERROR: The variable does not exist yet
     if (!foundSymbolType) {
+      this.addError(
+        ctx,
+        `Symbol ${assignmentTo.text} is not defined in scope ${currentScope.scope}`
+      );
       return undefined;
     }
 
@@ -679,6 +795,10 @@ export class YaplVisitor
 
     // ERROR: Value is not assignable to the variable
     if (!canBeAssigned && !isAncestor) {
+      this.addError(
+        ctx,
+        `Cannot assign ${assignmentValue.tableName} to ${foundSymbolType.tableName} (Can't assign type ${assignmentValue.tableName} to ${foundSymbolType.tableName})`
+      );
       return undefined;
     }
 
@@ -686,16 +806,13 @@ export class YaplVisitor
   };
   visitMethod = (ctx: MethodContext) => {
     const methodFoundType = ctx.TYPE();
-    if (!methodFoundType) {
-      return this.next(ctx);
-    }
-
     const methodType =
       methodFoundType.text === "SELF_TYPE"
         ? this.getCurrentScope()
         : this.findTable(methodFoundType);
     // ERROR: The method type is not yet defined (if ever)
     if (!methodType) {
+      this.addError(ctx, `Method type ${methodFoundType.text} is not defined`);
       return this.next(ctx);
     }
 
@@ -703,6 +820,8 @@ export class YaplVisitor
     const expressionType: Table<any> | undefined = this.visit(expressionRaw);
     // ERROR: If the expression is not valid, it will be null
     if (!expressionType) {
+      this.addError(ctx, `Invalid expression (Can't determine type)`);
+      return this.next(ctx);
     }
 
     const [canBeAssigned] = methodType.allowsAssignmentOf(expressionType);
@@ -710,6 +829,11 @@ export class YaplVisitor
 
     // ERROR: Last child and return type do not match or can't be assigned
     if (!canBeAssigned && !isAncestor) {
+      this.addError(
+        ctx,
+        `Cannot assign ${expressionType.tableName} to ${methodType.tableName} (Can't assign type ${expressionType.tableName} to ${methodType.tableName})`
+      );
+      return this.next(ctx);
     }
 
     const currentTable = this.getCurrentScope()!;
@@ -741,14 +865,11 @@ export class YaplVisitor
 
     const previousClass: Table<any> | undefined = this.findTable(dataType);
     const previousClassCopy = previousClass?.copy(); // Create a copy that can go out of scope
-    const line = ctx.start?.line ?? 0;
-    const column = {
-      start: ctx.start?.charPositionInLine ?? 0,
-      end: ctx.start?.charPositionInLine ?? 0 + ctx.text.length,
-    };
+    const { line, column } = this.lineAndColumn(ctx);
 
     // ERROR: The type is not yet defined
     if (!previousClass) {
+      this.addError(ctx, `Type ${dataType.text} is not (yet?) defined`);
       return this.next(ctx);
     }
 
@@ -758,7 +879,15 @@ export class YaplVisitor
       const [allowedAssigmentTo] = previousClass.allowsAssignmentOf(resolvesTo);
       // ERROR: Not allowed an assignment and the assignment is not to an ancestor
       if (!allowedAssigmentTo && !previousClass?.isAncestorOf(resolvesTo)) {
-        console.error();
+        this.addError(
+          ctx,
+          `Cannot assign ${resolvesTo?.tableName ?? "erroneous class"} to ${
+            previousClass.tableName
+          } (Can't assign type ${resolvesTo?.tableName ?? ""} to ${
+            previousClass.tableName
+          })`
+        );
+        return this.next(ctx);
       }
       previousClassCopy!.setValue(resolvesTo?.value);
     }
@@ -788,16 +917,23 @@ export class YaplVisitor
           previousDeclared.getDataStructureType() ===
           newTableElement.getDataStructureType()
         ) {
+          this.addError(ctx, `Redefinition of ${name.text} in the same scope`);
+          return this.next(ctx);
         }
         // ERROR: Definition of a variable with the name of a method, or viseversa
         else {
+          this.addError(
+            ctx,
+            `Redefinition of ${name.text} in the same scope as a method and a variable`
+          );
+          return this.next(ctx);
         }
       }
 
       // ERROR: The variable was defined in a parent scope, but the definition type is not the same
-      else if (previousDeclared.getType() !== newTableElement.getType()) {
-      }
-      return this.next(ctx);
+      // else if (previousDeclared.getType() !== newTableElement.getType()) {
+
+      // }
     }
 
     // Case 2: Declaration of a new property
@@ -826,6 +962,7 @@ export class YaplVisitor
 
     // ERROR: The type is not yet defined
     if (!foundTable) {
+      this.addError(ctx, `Type ${datatype.text} is not (yet?) defined`);
       return undefined;
     }
 

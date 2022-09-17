@@ -560,6 +560,13 @@ export class IError {
 }
 
 export class ErrorsTable {
+  unwrap() {
+    return this.errors.map((error: IError) => ({
+      line: error.line,
+      column: error.column,
+      message: error.message,
+    }));
+  }
   public readonly errors: IError[];
   constructor() {
     this.errors = [];

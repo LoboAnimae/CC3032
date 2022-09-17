@@ -25,7 +25,7 @@ async function main(input: string) {
   const visitor = new YaplVisitor();
   const result = visitor.visit(tree);
   const symbolsTable = visitor.symbolsTable;
-  const errors = visitor.errors;
+  const errors = visitor.errors.unwrap();
 
   ScreenListener.emit(lineActions.update, "Writing Symbols Table...");
   const allSizeTableValues: any[] = [];
