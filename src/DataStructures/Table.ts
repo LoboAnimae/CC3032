@@ -29,21 +29,6 @@ interface IExpressionProperties<T> {
   type: string[];
 }
 
-/**
- * Every single expression has a type.
- */
-export class Properties<T> {
-  private _type: Table<any>;
-  private _assignmentFunction: (input: any) => boolean;
-
-  constructor(options: { type: Table<any> }) {
-    this._type = options.type;
-    this._assignmentFunction = () => false;
-  }
-
-  canCompare() {}
-}
-
 interface ITableElementProperties {
   name: string;
   type: Table<any>;
