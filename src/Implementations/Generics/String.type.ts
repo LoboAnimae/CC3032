@@ -1,11 +1,10 @@
-import { BasicInfo, Table, Type, ValueHolder } from "../Components";
+import { BasicInfoComponent, TableImpl, TypeImpl, ValueHolderComponent } from "../Components";
 import { MethodElement } from "../SymbolsTable";
 
 export class String
-  extends Type.Component
-  implements ValueHolder.Support, Table.Support
-{
-  components: { valueHolder: ValueHolder.Component; table: Table.Component };
+  extends TypeImpl.Component
+  implements ValueHolderComponent.Support, TableComponent.Support {
+  components: { valueHolder: ValueHolder.Component; table: Table.Component; };
   constructor() {
     super({
       name: "String",
@@ -14,13 +13,13 @@ export class String
       isGeneric: true,
     });
     this.components = {
-      valueHolder: new ValueHolder.Component(),
-      table: new Table.Component(),
+      valueHolder: new ValueHolderComponent.Component(),
+      table: new TableImpl.Component(),
     };
 
     const lengthMethod = new MethodElement();
     const lengthInfoComponent = lengthMethod.getInfoComponent();
-    lengthInfoComponent.name = "length";
+    lengthInfoComponent.componentName = "length";
   }
   getTableComponent(): Table.Component {
     return this.components.table;

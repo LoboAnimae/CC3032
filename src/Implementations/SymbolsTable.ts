@@ -2,7 +2,7 @@
 // import { IType } from "./Type";
 // import { IValueHolder, IValueHolderParams } from "./ValueHolder";
 
-import { BasicInfo, Positioning, Table, Type, ValueHolder } from "./Components";
+import { BasicInfoComponent, PositioningImpl, TableImpl, TypeImpl, ValueHolderComponent } from "./Components";
 
 /**
  * A symbol in memory. The most basic information that isn't (necessarily) generic.
@@ -13,11 +13,10 @@ import { BasicInfo, Positioning, Table, Type, ValueHolder } from "./Components";
  */
 export class SymbolElement
   implements
-    BasicInfo.Support,
-    Positioning.Support,
-    ValueHolder.Support,
-    Type.Support
-{
+  BasicInfoComponent.Support,
+  PositioningComponent.Support,
+  ValueHolderComponent.Support,
+  TypeComponent.Support {
   components: {
     basicInfo: BasicInfo.Component;
     valueHolder: ValueHolder.Component;
@@ -27,10 +26,10 @@ export class SymbolElement
 
   constructor() {
     this.components = {
-      basicInfo: new BasicInfo.Component(),
-      valueHolder: new ValueHolder.Component(),
-      position: new Positioning.Component(),
-      type: new Type.Component(),
+      basicInfo: new BasicInfoComponent.Component(),
+      valueHolder: new ValueHolderComponent.Component(),
+      position: new PositioningImpl.Component(),
+      type: new TypeImpl.Component(),
     };
   }
   getInfoComponent(): BasicInfo.Component {
@@ -60,12 +59,12 @@ export class SymbolElement
 }
 /**
  * A Method.
- * @implements {Table} because parameters are only local to methods
+ * @implements {TableImpl} because parameters are only local to methods
  * @implements {IPositioning} - The position of the method in the source code
  * @implements {IBasicInformation} - The basic information of the method
  * @implements {ITypeComponent} - The type of the method
  */
-export class MethodElement extends SymbolElement implements Table.Support {
+export class MethodElement extends SymbolElement implements TableComponent.Support {
   components: {
     table: Table.Component;
     basicInfo: BasicInfo.Component;
@@ -76,11 +75,11 @@ export class MethodElement extends SymbolElement implements Table.Support {
   constructor() {
     super();
     this.components = {
-      table: new Table.Component(),
-      basicInfo: new BasicInfo.Component(),
-      valueHolder: new ValueHolder.Component(),
-      position: new Positioning.Component({ line: 0, column: 0 }),
-      type: new Type.Component(),
+      table: new TableImpl.Component(),
+      basicInfo: new BasicInfoComponent.Component(),
+      valueHolder: new ValueHolderComponent.Component(),
+      position: new PositioningImpl.Component({ line: 0, column: 0 }),
+      type: new TypeImpl.Component(),
     };
   }
   getTableComponent(): Table.Component {

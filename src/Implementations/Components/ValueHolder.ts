@@ -1,21 +1,31 @@
-export interface Params {
+import Composition from './Composition';
+
+export interface ValueHolderparams {
   value: any;
 }
 
-export class Component {
+export interface ValueHolderComponent {
+  getValue: () => any;
+  setValue: (value: any) => void;
+}
+
+class ValueHolderImpl extends Composition {
   public value?: any;
 
-  constructor(options?: Partial<Params>) {
+  constructor(options?: Partial<ValueHolderparams>) {
+    super({ componentName: 'ValueHolder' });
     this.value = options?.value ?? null;
+  }
+
+
+
+  setMethods(into: any) {
+    into.getValue = () => this.value;
+    into.setValue = (value: any) => {
+      this.value = value;
+    };
   }
 }
 
-export type Type = Component;
 
-export interface Support {
-  components: {
-    valueHolder: Component;
-  };
-  getValueComponent(): Component;
-  setValueComponent(newComponent: Component): void;
-}
+export default ValueHolderImpl;

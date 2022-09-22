@@ -1,57 +1,46 @@
-import { BasicInfo, Table, Type, ValueHolder } from "../Components/index";
-import { MethodElement } from "../SymbolsTable";
+
+import { BasicInfoComponent, TableImpl, TypeImpl, ValueHolderComponent, CompositionComponent } from "../Components/index";
+
 
 export default class Integer
-  extends Type.Component
-  implements ValueHolder.Support, Table.Support
-{
-  public static Type = new Integer();
+  extends CompositionComponent {
+  static IntegerType = new Integer();
 
-  components: { valueHolder: ValueHolder.Component; table: Table.Component };
   constructor() {
-    super({
-      name: "Integer",
-      parent: null,
-      sizeInBytes: 4,
+    super({ componentName: "Integer" });
+    this.addComponent(new BasicInfoComponent({ name: "Integer" }));
+    this.addComponent(new TableImpl());
+    this.addComponent(new TypeImpl({
       isGeneric: true,
-    });
-    this.components = {
-      table: new Table.Component({ parent: null }),
-      valueHolder: new ValueHolder.Component({ value: null }),
+      sizeInBytes: 4,
+    }));
+
+
+    // @ts-ignore 
+    this.allowsAssignmentOf = function (value?: CompositionComponent): boolean { return ["Integer", "Bool"].includes(value?.componentName ?? ""); };
+    // @ts-ignore
+    this.allowsComparisonTo = function (value?: CompositionComponent): boolean { return ["Integer", "Bool"].includes(value?.componentName ?? ""); };
+    // @ts-ignore
+    this.coherseType = function (value?: CompositionComponent): Integer | null {
+      if (value?.componentName === "Integer") {
+        return value as Integer;
+      } else if (value?.componentName === "Bool") {
+        const newInteger = new Integer();
+        const foundValue = value.getComponent<ValueHolderComponent>({ name: "ValueHolder" });
+        if (foundValue !== null) {
+          newInteger.addComponent(new ValueHolderComponent({ value: Number(foundValue.value) }));
+        }
+        return newInteger;
+      }
+      return null;
     };
   }
 
-  getTableComponent(): Table.Component {
-    return this.components.table;
-  }
-  setTableComponent(newComponent: Table.Component): void {
-    this.components.table = newComponent;
-  }
-  isAncestorOf(_incomingType?: Type.Component | undefined): boolean {
-    return false;
-  }
-  hasAsAncestor(_incomingType?: Type.Component | undefined): boolean {
-    return false;
-  }
-  allowsAssignmentOf(incomingType?: Type.Component | undefined): boolean {
-    return incomingType instanceof Integer || incomingType instanceof Boolean;
-  }
-  allowsComparisonTo(incomingType?: Type.Component | undefined): boolean {
-    return incomingType instanceof Integer || incomingType instanceof Boolean;
-  }
-  coherseType(incomingType?: Type.Component, value?: any): any | null {
-    if (incomingType instanceof Integer) {
-      return value;
-    } else if (incomingType instanceof Boolean) {
-      return Number(value);
-    }
-    return null;
+  copy(): Integer {
+    return new Integer();
   }
 
-  getValueComponent(): ValueHolder.Component {
-    return this.components.valueHolder;
-  }
-  setValueComponent(newComponent: ValueHolder.Component): void {
-    this.components.valueHolder = newComponent;
+  setMethods(into: CompositionComponent): void {
+
   }
 }

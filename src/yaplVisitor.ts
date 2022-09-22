@@ -46,28 +46,40 @@ import {
 import { PropertyContextHelper } from "./yaplCheckpoint";
 import { SymbolElement } from "./Implementations/SymbolsTable";
 import { IntegerType } from "./Implementations/Generics";
+import BoolType from "./Implementations/Generics/Boolean.type";
+import Integer from "./Implementations/Generics/Integer.type";
+import { TableComponent, TypeImpl, TableImpl } from "./Implementations/Components/index";
+import { TypeComponent } from "./Implementations/Components/Type";
+import ValueHolderImpl from "./Implementations/Components/ValueHolder";
 
 enum Scope {
   Global = 1,
   General,
 }
 
+function assign<T = any>(thing: any): T | null {
+  return thing as T;
+}
+
+
+
 export class YaplVisitor
   extends AbstractParseTreeVisitor<any>
   implements yaplVisitor<any>
 {
-  public scopeStack: Stack<Table<any> | MethodElement>;
-  public symbolsTable: Table<any>[];
+  public scopeStack: Stack<TableComponent>;
+  public symbolsTable: TableComponent;
   public mainExists: boolean = false;
   public mainMethodExists: boolean = false;
   public errors: ErrorsTable;
   constructor() {
     super();
-    this.scopeStack = new Stack<Table<any>>(); // Scopes are implemented as a stack.
-    this.symbolsTable = []; // Symbols are universal
+    this.scopeStack = new Stack<TableComponent>(); // Scopes are implemented as a stack.
+    this.symbolsTable = new TableImpl(); // Symbols are universal
     this.errors = new ErrorsTable();
 
-    const integer = new IntegerType();
+    const integer = new Integer().as<TypeComponent>()!;
+    const result = integer.coherseType(new BoolType().addComponent(new ValueHolderImpl({ value: false })));
     console.log(integer);
 
     // const IntType = new Table<number>({
