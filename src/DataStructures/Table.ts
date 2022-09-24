@@ -1,4 +1,4 @@
-import { IPositioning } from "../Misc/Errors";
+
 import colors from "colors";
 
 export enum IDataStructureType {
@@ -9,7 +9,7 @@ export interface ITableElement {
   name: string;
   type: string;
   line: number;
-  column: IPositioning;
+  column: number;
   dataStructureType: IDataStructureType;
 }
 
@@ -33,7 +33,7 @@ interface ITableElementProperties {
   name: string;
   type: Table<any>;
   line: number;
-  column: IPositioning;
+  column: number;
   dataStructureType: IDataStructureType;
   scope: string;
   size: number;
@@ -45,8 +45,8 @@ interface ITableElementOptions extends Partial<ITableElementProperties> {}
 export class TableElement implements ITableElementProperties {
   name: string;
   type: Table<any>;
-  line: number = 0;
-  column: IPositioning = { start: 0, end: 0 };
+  line: number = -1;
+  column: number = -1;
   dataStructureType: IDataStructureType;
   scope: string;
   size: number;
@@ -55,7 +55,7 @@ export class TableElement implements ITableElementProperties {
     this.name = options?.name ?? "";
     this.type = options?.type!;
     this.line = options?.line ?? 0;
-    this.column = options?.column ?? { start: -1, end: -1 };
+    this.column = options?.column ?? -1;
     this.dataStructureType =
       options?.dataStructureType ?? IDataStructureType.Method;
     this.scope = options?.scope ?? "";
@@ -96,18 +96,18 @@ export class TableElement implements ITableElementProperties {
     return this;
   }
 
-  public setColumn(column: IPositioning) {
+  public setColumn(column: number) {
     this.column = column;
     return this;
   }
 
   public setStartColumn(start: number) {
-    this.column!.start = start;
+    this.column = start;
     return this;
   }
 
   public setEndColumn(end: number) {
-    this.column!.end = end;
+    this.column = end;
     return this;
   }
 
@@ -131,9 +131,9 @@ export class TableElement implements ITableElementProperties {
 
   public getColumn = () => this.column;
 
-  public getStartColumn = () => this.column?.start;
+  public getStartColumn = () => this.column;
 
-  public getEndColumn = () => this.column?.end;
+  public getEndColumn = () => this.column;
 
   public getDataStructureType = () => this.dataStructureType;
   public getSize = () => this.size;
@@ -208,7 +208,7 @@ interface ISymbolsTableParams<T> {
   scope?: string;
   parentTable?: Table<any>;
   line?: number;
-  column?: IPositioning;
+  column?: number;
   canBeType?: boolean;
   canBeInherited?: boolean;
   isGeneric?: boolean;
@@ -227,7 +227,7 @@ interface ISymbolsTableCloneParams<T> {
   scope: string;
   parentTable?: Table<any>;
   line: number;
-  column: IPositioning;
+  column: number;
   canBeType: boolean;
   canBeInherited: boolean;
   isGeneric: boolean;
@@ -248,7 +248,7 @@ export class Table<T> {
   public readonly tableName: string;
   public readonly parentTable?: Table<any>;
   public readonly line: number;
-  public readonly column: IPositioning;
+  public readonly column: number;
   public readonly canBeType: boolean;
   public readonly canBeInherited: boolean;
   public readonly isGeneric: boolean = false;
@@ -270,7 +270,7 @@ export class Table<T> {
     this.tableName = options?.scope ?? "global";
     this.parentTable = options?.parentTable;
     this.line = options?.line ?? 0;
-    this.column = options?.column || { start: 0, end: 0 };
+    this.column = options?.column ?? -1;
     this.canBeInherited = options?.canBeInherited ?? true;
     this.canBeType = options?.canBeType ?? true;
     this.defaultValue = options?.defaultValue;
@@ -443,7 +443,7 @@ export class Table<T> {
       Scope: this.scope,
       "Inherits From": this.parentTable?.tableName ?? "None",
       Line: this.line,
-      Column: this.column.start,
+      Column: this.column,
       "Can Be Inherited": this.canBeInherited,
       "Can Be Type": this.canBeType,
       "Can Be Compared To": this._canBeComparedTo.join(", "),
@@ -492,17 +492,17 @@ export class Table<T> {
 export interface IErrorOptions {
   message: string;
   line: number;
-  column: { start: number; end: number };
+  column: number;
 }
 
 export class IError {
   _message: string;
   _line: number;
-  _column: IPositioning;
+  _column: number;
   constructor(options?: IErrorOptions) {
     this._message = options?.message ?? "";
     this._line = options?.line ?? -1;
-    this._column = options?.column ?? { start: -1, end: -1 };
+    this._column = options?.column ?? -1;
   }
 
   get message() {
@@ -522,7 +522,7 @@ export class IError {
   get column() {
     return this._column;
   }
-  set column(column: IPositioning) {
+  set column(column: number) {
     this._column = column;
   }
 
@@ -531,7 +531,7 @@ export class IError {
       "Error: {} at line {} column {}",
       this.message,
       this.line,
-      this.column.start
+      this.column
     );
   };
 
@@ -539,7 +539,7 @@ export class IError {
     return {
       Message: this.message,
       Line: this.line,
-      Column: this.column.start,
+      Column: this.column,
     };
   };
 }
@@ -584,8 +584,7 @@ export class ErrorsTable {
       (err) =>
         err.message === error.message &&
         err.line === error.line &&
-        err.column.start === error.column.start &&
-        err.column.end === error.column.end
+        err.column === error.column
     );
   };
   getErrors = (): IError[] => this.errors;

@@ -6,11 +6,6 @@ export const newWarning = "newWarning";
 export const newInfo = "newInfo";
 export const newDebug = "newDebug";
 
-export interface IPositioning {
-  start: number;
-  end: number;
-}
-
 export enum ErrorLevel {
   Fatal, // The program can't continue
   Error, // The program found an error, but it can continue
@@ -33,7 +28,7 @@ class Error {
   private _message?: string;
   private _messageIsSet = false;
   private _line?: number;
-  private _column?: IPositioning;
+  private _column?: number;
   private _entireLine?: string;
   constructor() {}
 
@@ -69,11 +64,11 @@ class Error {
   }
 
   get column() {
-    return this._column ?? { start: -1, end: -1 };
+    return this._column ?? -1;
   }
 
-  set column(newColumn: IPositioning) {
-    this._column = { ...newColumn }; // Deep copy
+  set column(newColumn: number) {
+    this._column = newColumn; // Deep copy
   }
 }
 

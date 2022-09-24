@@ -30,19 +30,13 @@ async function main(input: string) {
   ScreenListener.emit(lineActions.update, "Writing Symbols Table...");
   const allSizeTableValues: any[] = [];
   for (const foundSymbol of symbolsTable) {
-    const str = foundSymbol.toString();
+    const str = foundSymbol?.toString();
     if (!str) continue;
     allSizeTableValues.push(foundSymbol);
   }
   ScreenListener.emit(lineActions.add, "Symbols Table");
   ScreenListener.emit(lineActions.resetLine);
-  console.table(allSizeTableValues, [
-    "Table Name",
-    "Size in Bytes",
-    "Line",
-    "Column",
-    "Inherits From",
-  ]);
+  console.table(allSizeTableValues, ["Table Name", "Size in Bytes", "Line", "Column", "Inherits From"]);
   ScreenListener.emit(lineActions.add, "Errors Table");
   ScreenListener.emit(lineActions.resetLine);
   console.table(errors);

@@ -2,94 +2,46 @@
 // import { IType } from "./Type";
 // import { IValueHolder, IValueHolderParams } from "./ValueHolder";
 
-import { BasicInfoComponent, PositioningImpl, TableImpl, TypeImpl, ValueHolderComponent } from "./Components";
+import {
+  BasicInfoComponent,
+  CompositionComponent,
+  PositioningComponent,
+  TableComponent,
+  TypeComponent,
+  ValueHolderComponent,
+} from "./Components/index";
 
-/**
- * A symbol in memory. The most basic information that isn't (necessarily) generic.
- * @implements {IBasicInformation} - The basic information of the symbol
- * @implements {IPositioning} - The position of the symbol in the source code
- * @implements {IValueHolder} - The value of the symbol
- * @implements {ITypeComponent} - The type of the symbol
- */
-export class SymbolElement
-  implements
-  BasicInfoComponent.Support,
-  PositioningComponent.Support,
-  ValueHolderComponent.Support,
-  TypeComponent.Support {
-  components: {
-    basicInfo: BasicInfo.Component;
-    valueHolder: ValueHolder.Component;
-    position: Positioning.Component;
-    type: Type.Component;
-  };
-
-  constructor() {
-    this.components = {
-      basicInfo: new BasicInfoComponent.Component(),
-      valueHolder: new ValueHolderComponent.Component(),
-      position: new PositioningImpl.Component(),
-      type: new TypeImpl.Component(),
-    };
-  }
-  getInfoComponent(): BasicInfo.Component {
-    return this.components.basicInfo;
-  }
-  setInfoComponent(newComponent: BasicInfo.Component): void {
-    this.components.basicInfo = newComponent;
-  }
-  getPositionComponent(): Positioning.Component {
-    return this.components.position;
-  }
-  setPositionComponent(newComponent: Positioning.Component): void {
-    this.components.position = newComponent;
-  }
-  getValueComponent(): ValueHolder.Component {
-    return this.components.valueHolder;
-  }
-  setValueComponent(newComponent: ValueHolder.Component): void {
-    this.components.valueHolder = newComponent;
-  }
-  getTypeComponent(): Type.Component {
-    return this.components.type;
-  }
-  setTypeComponent(newComponent: Type.Component): void {
-    this.components.type = newComponent;
-  }
-}
-/**
+/*
  * A Method.
- * @implements {TableImpl} because parameters are only local to methods
+ * @implements {TableComponent} because parameters are only local to methods
  * @implements {IPositioning} - The position of the method in the source code
  * @implements {IBasicInformation} - The basic information of the method
  * @implements {ITypeComponent} - The type of the method
  */
-export class MethodElement extends SymbolElement implements TableComponent.Support {
-  components: {
-    table: Table.Component;
-    basicInfo: BasicInfo.Component;
-    valueHolder: ValueHolder.Component;
-    position: Positioning.Component;
-    type: Type.Component;
-  };
+export class SymbolsTable extends TableComponent {
+  elements: CompositionComponent[] = [];
+  configure(into: any): void {}
   constructor() {
     super();
-    this.components = {
-      table: new TableImpl.Component(),
-      basicInfo: new BasicInfoComponent.Component(),
-      valueHolder: new ValueHolderComponent.Component(),
-      position: new PositioningImpl.Component({ line: 0, column: 0 }),
-      type: new TypeImpl.Component(),
-    };
+    this.addComponent(new BasicInfoComponent({ name: "SymbolsTable" }));
+    this.componentName = "SymbolsTable";
   }
-  getTableComponent(): Table.Component {
-    if (!this.components.table) {
-      throw new Error("Table component not found");
+
+  setMethods(into: CompositionComponent): void {}
+
+  add(...values: CompositionComponent[]): void {
+    for (const value of values) {
+      if (!(value instanceof CompositionComponent)) {
+        throw new Error("Attempting to add a non CompositionComponent to a TableComponent");
+      }
+      this.elements.push(value);
     }
-    return this.components.table;
   }
-  setTableComponent(newComponent: Table.Component): void {
-    this.components.table = newComponent;
+
+  copy(): CompositionComponent {
+    const newTable = new SymbolsTable();
+    newTable.addComponent(this.getComponent(BasicInfoComponent)!.copy());
+    return newTable;
   }
 }
 

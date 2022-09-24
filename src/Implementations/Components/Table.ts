@@ -1,43 +1,60 @@
-import * as BasicInfo from "./BasicInformation";
+import BasicInfoComponent from "./BasicInformation";
 import Composition from "./Composition";
+import { CompositionComponent, TypeComponent } from "./index";
 
 export interface TableParams {
-  parent: TableImpl | null;
+  parent: TableComponent | null;
 }
 
-export interface TableComponent {
+export interface TableInstance {
   get: <T>(key: string) => T | null;
-  add: (value: BasicInfo.BasicInfoComponent) => void;
+  add: (value: CompositionComponent) => void;
   [Symbol.iterator]: () => any;
+  createChild: () => TableComponent;
 }
 
-class TableImpl extends Composition {
-  public parent: TableImpl | null;
-  public elements: BasicInfo.BasicInfoComponent[];
+class TableComponent extends Composition {
+  public parent: TableComponent | null;
+  public elements: CompositionComponent[];
   constructor(options?: Partial<TableParams>) {
     super({ componentName: "Table" });
     this.elements = [];
     this.parent = options?.parent ?? null;
   }
-  get<T>(key: string): T | null {
-    return (
-      this.elements.find(
-        (element: BasicInfo.BasicInfoComponent) =>
-          element.getName() === key
-      ) ??
-      this.parent?.get(key) ??
-      null
-    ) as T;
+  get<T>(key: string, options?: {inCurrentScope: boolean}): T | null {
+    const foundComponent = this.elements.find((element: CompositionComponent) => {
+      const basicInfo = element.getComponent(BasicInfoComponent);
+      const typeComponent = element.getComponent(TypeComponent);
+      return basicInfo?.getName() === key || typeComponent?.name === key;
+    });
+    if (options?.inCurrentScope) {
+      return foundComponent as T;
+    }
+    return (foundComponent ?? this.parent?.get<T>(key) ?? null) as T;
   }
-  add(value: BasicInfo.BasicInfoComponent): void {
-    this.elements.push(value);
+  add(...values: (CompositionComponent | undefined)[]): void {
+    for (const value of values) {
+      if (!(value instanceof CompositionComponent)) {
+        throw new Error("Attempting to add a non CompositionComponent to a TableComponent");
+      }
+      this.elements.push(value);
+    }
   }
 
+  createChild(): TableComponent {
+    return new TableComponent({ parent: this });
+  }
   setMethods(into: any): void {
     into.get = <T>(key: string) => this.get<T>(key);
-    into.add = (value: BasicInfo.BasicInfoComponent) => this.add(value);
+    into.add = (value: CompositionComponent) => this.add(value);
+    into.createChild = () => this.createChild();
   }
 
+  copy(): Composition {
+    return new TableComponent({ parent: this.parent });
+  }
+
+  configure(into: any): void {}
 
   [Symbol.iterator]() {
     let index = 0;
@@ -56,12 +73,10 @@ class TableImpl extends Composition {
       },
     };
   }
-
 }
-
 
 export interface TableSupport {
-  components: { table: TableImpl; };
+  components: { table: TableComponent };
 }
 
-export default TableImpl;
+export default TableComponent;

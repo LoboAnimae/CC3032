@@ -37,208 +37,41 @@ import {
   WhileContext,
 } from "./antlr/yaplParser";
 import { Stack } from "./DataStructures/Stack";
-import {
-  ErrorsTable,
-  MethodElement,
-  Table,
-  TableElement,
-} from "./DataStructures/Table";
+import { ErrorsTable, MethodElement, Table, TableElement } from "./DataStructures/Table";
 import { PropertyContextHelper } from "./yaplCheckpoint";
-import { SymbolElement } from "./Implementations/SymbolsTable";
+import { SymbolsTable } from "./Implementations/SymbolsTable";
 import { IntegerType } from "./Implementations/Generics";
 import BoolType from "./Implementations/Generics/Boolean.type";
 import Integer from "./Implementations/Generics/Integer.type";
-import { TableComponent, TypeImpl, TableImpl } from "./Implementations/Components/index";
-import { TypeComponent } from "./Implementations/Components/Type";
-import ValueHolderImpl from "./Implementations/Components/ValueHolder";
+import { BasicInfoComponent, CompositionComponent, EmptyComponent, PositioningComponent, TableComponent, TypeComponent } from "./Implementations/Components/index";
+import ValueHolderComponent from "./Implementations/Components/ValueHolder";
+import { String } from "./Implementations/Generics/String.type";
+import Bool from "./Implementations/Generics/Boolean.type";
+import { ObjectType } from "./Implementations/Generics/Object.type";
+import { IO } from "./Implementations/Generics/IO.type";
+import { ClassType } from "./Implementations/DataStructures/Class.type";
+import { Method, SymbolElement } from "./Implementations/DataStructures/Method.type";
 
 enum Scope {
   Global = 1,
   General,
 }
 
-function assign<T = any>(thing: any): T | null {
-  return thing as T;
-}
-
-
-
-export class YaplVisitor
-  extends AbstractParseTreeVisitor<any>
-  implements yaplVisitor<any>
-{
-  public scopeStack: Stack<TableComponent>;
-  public symbolsTable: TableComponent;
+export class YaplVisitor extends AbstractParseTreeVisitor<any> implements yaplVisitor<any> {
+  public scopeStack: Stack<CompositionComponent>;
+  public symbolsTable: SymbolsTable;
   public mainExists: boolean = false;
   public mainMethodExists: boolean = false;
   public errors: ErrorsTable;
   constructor() {
     super();
     this.scopeStack = new Stack<TableComponent>(); // Scopes are implemented as a stack.
-    this.symbolsTable = new TableImpl(); // Symbols are universal
+    this.symbolsTable = new SymbolsTable(); // Symbols are universal
     this.errors = new ErrorsTable();
 
-    const integer = new Integer().as<TypeComponent>()!;
-    const result = integer.coherseType(new BoolType().addComponent(new ValueHolderImpl({ value: false })));
-    console.log(integer);
 
-    // const IntType = new Table<number>({
-    //   errors: this.errors,
-    //   scope: "Int",
-    //   isGeneric: true,
-    //   canBeComparedTo: ["Bool"],
-    //   defaultValue: 0,
-    //   allowNegation: true,
-    //   assigmentFunction: () =>
-    //     function (input: Table<any>) {
-    //       if (input?.tableName === "Int") {
-    //         return [true];
-    //       }
-    //       if (input?.tableName === "Bool") {
-    //         // TODO: Generate a warning here
-    //         return [true];
-    //       }
-    //       return [false];
-    //     },
-    //   comparisonFunction: () =>
-    //     function (against: Table<any>) {
-    //       if (against.tableName === "Int") {
-    //         return [true];
-    //       } else if (against.tableName === "Bool") {
-    //         // TODO: Add a warning here
-    //         return [true];
-    //       }
-    //       return [false];
-    //     },
-    //   typeCohersionFunction: () => (input: any) => Number(input),
-    // });
-
-    // const BoolType = new Table<boolean>({
-    //   errors: this.errors,
-    //   scope: "Bool",
-    //   isGeneric: true,
-    //   canBeComparedTo: ["Int"],
-    //   defaultValue: false,
-    //   allowNegation: true,
-    //   assigmentFunction: () =>
-    //     function (input: Table<any>) {
-    //       if (input?.tableName === "Bool") {
-    //         return [true];
-    //       }
-    //       if (input?.tableName === "Int") {
-    //         // TODO: Generate a warning here
-    //         return [true];
-    //       }
-    //       return [false];
-    //     },
-    //   comparisonFunction: () =>
-    //     function (against: Table<any>) {
-    //       if (against.tableName === "Bool") {
-    //         return [true];
-    //       } else if (against.tableName === "Int") {
-    //         // TODO: Add a warning here
-    //         return [true];
-    //       }
-    //       return [false];
-    //     },
-    //   typeCohersionFunction: () => (input: any) => Boolean(input),
-    // });
-    // const StringType = new Table<string>({
-    //   scope: "String",
-    //   isGeneric: true,
-    //   defaultValue: "",
-    //   assigmentFunction: () =>
-    //     function (input: Table<any>) {
-    //       return [input.tableName === "String"];
-    //     },
-    //   comparisonFunction: () => () => [false],
-    // });
-    // const lengthMethod = new MethodElement()
-    //   .setName("length")
-    //   .setReturnType(IntType);
-
-    // const concatMethod = new MethodElement()
-    //   .setName("concat")
-    //   .setReturnType(StringType)
-    //   .addParameter(new SymbolElement({ name: "s", type: StringType }));
-
-    // const substrMethod = new MethodElement()
-    //   .setName("substr")
-    //   .setReturnType(StringType)
-    //   .addParameter(new SymbolElement({ name: "i", type: IntType }))
-    //   .addParameter(new SymbolElement({ name: "l", type: IntType }));
-
-    // StringType.symbols.push(lengthMethod, concatMethod, substrMethod);
-    // const IOType = new Table<undefined>({
-    //   scope: "IO",
-    //   isGeneric: true,
-    //   defaultValue: undefined,
-    // });
-
-    // const outStringMethod = new MethodElement()
-    //   .setName("out_string")
-    //   .setReturnType(IOType)
-    //   .addParameter(new SymbolElement({ name: "x", type: StringType }));
-
-    // const outIntMethod = new MethodElement()
-    //   .setName("out_int")
-    //   .setReturnType(IOType)
-    //   .addParameter(new SymbolElement({ name: "x", type: IntType }));
-
-    // const inStringMethod = new MethodElement()
-    //   .setName("in_string")
-    //   .setReturnType(StringType);
-
-    // const inIntMethod = new MethodElement()
-    //   .setName("in_int")
-    //   .setReturnType(IntType);
-
-    // IOType.addElement(
-    //   outStringMethod,
-    //   outIntMethod,
-    //   inStringMethod,
-    //   inIntMethod
-    // );
-    // const ObjectType = new Table<{}>({
-    //   scope: "Object",
-    //   defaultValue: "void",
-    //   assigmentFunction: () =>
-    //     function (input: Table<any>) {
-    //       if (!input) {
-    //         return [false];
-    //       }
-    //       // @ts-ignore
-    //       const entireHerarchy: Table<any>[] = this.getHeritanceChain().map(
-    //         (t: Table<any>) => t.tableName
-    //       );
-    //       return [
-    //         entireHerarchy
-    //           .map((t: Table<any>) => t.tableName)
-    //           .includes(input.tableName),
-    //       ];
-    //     },
-    //   comparisonFunction: () =>
-    //     function () {
-    //       return [false];
-    //     },
-    // });
-
-    // const abortMethod = new MethodElement()
-    //   .setReturnType(ObjectType)
-    //   .setName("abort");
-
-    // const typeNameMethod = new MethodElement()
-    //   .setReturnType(StringType)
-    //   .setName("type_name");
-
-    // const copyMethod = new MethodElement()
-    //   .setReturnType(ObjectType)
-    //   .setName("copy");
-
-    // ObjectType.addElement(abortMethod, typeNameMethod, copyMethod);
-    // //#endregion
-    // this.scopeStack.push(ObjectType);
-    // this.symbolsTable.push(IntType, BoolType, StringType, IOType, ObjectType);
+    this.scopeStack.push(new ObjectType());
+    this.symbolsTable.add(Integer.IntegerType, String.StringType, Bool.BoolType, IO.IOType, ObjectType.ObjectType);
   }
   defaultResult(): any {
     return [];
@@ -251,109 +84,128 @@ export class YaplVisitor
     return [...aggregate, nextResult];
   }
 
-  // lineAndColumn = (ctx: any) => ({
-  //   line: ctx.start?.line ?? 0,
-  //   column: {
-  //     start: ctx.start?.charPositionInLine ?? 0,
-  //     end: ctx.start?.charPositionInLine ?? 0 + ctx.text.length,
-  //   },
-  // });
+  lineAndColumn = (ctx: any): { line: number, column: number } => ({
+    line: ctx.start?.line ?? 0,
+    column: ctx.start?.charPositionInLine ?? 0,
+  });
 
-  // addError(ctx: any, errorMessage: string) {
-  //   const { line, column } = this.lineAndColumn(ctx);
-  //   this.errors.addError({ line, column, message: errorMessage });
-  // }
+  addError(ctx: any, errorMessage: string) {
+    const coloredRedMessage = errorMessage.replace('{{{', '\x1b[31m').replace('}}}', '\x1b[0m');
+    const coloredBlueMessage = coloredRedMessage.replace('{{', '\x1b[34m').replace('}}', '\x1b[0m');
+    const coloredGreenMessage = coloredBlueMessage.replace('{', '\x1b[32m').replace('}', '\x1b[0m');
+    const { line, column } = this.lineAndColumn(ctx);
+    this.errors.addError({ line, column, message: coloredGreenMessage });
+  }
 
-  // protected findTable(name: string | Table<any> | any): Table<any> | undefined {
-  //   if (typeof name === "string") {
-  //     return this.symbolsTable.find(
-  //       (table: Table<any>) => table.scope === name
-  //     );
-  //   } else if (name instanceof Table) {
-  //     return this.symbolsTable.find(
-  //       (table: Table<any>) => table.scope === name.scope
-  //     );
-  //   } else if (name) {
-  //     return this.symbolsTable.find(
-  //       (table: Table<any>) => table.scope === name.text ?? name.toString()
-  //     );
-  //   }
-  //   return undefined;
-  // }
+  protected findTable(name: string | Table<any> | any): CompositionComponent | null {
+    // if (typeof name === "string") {
+    //   return this.symbolsTable.find(
+    //     (table: Table<any>) => table.scope === name
+    //   );
+    // } else if (name instanceof Table) {
+    //   return this.symbolsTable.find(
+    //     (table: Table<any>) => table.scope === name.scope
+    //   );
+    // } else if (name) {
+    //   return this.symbolsTable.find(
+    //     (table: Table<any>) => table.scope === name.text ?? name.toString()
+    //   );
+    // }
+    return this.symbolsTable.get(name.toString())
+  }
 
-  // protected returnToScope(scope: Scope) {
-  //   while (this.scopeStack.size() > scope) {
-  //     this.scopeStack.pop();
-  //   }
-  // }
+  protected returnToScope(scope: Scope) {
+    while (this.scopeStack.size() > scope) {
+      this.scopeStack.pop();
+    }
+  }
 
-  // next = (ctx: any) => super.visitChildren(ctx);
+  next = (ctx: any) => super.visitChildren(ctx);
 
-  // private returnToGlobalScope() {
-  //   this.returnToScope(Scope.Global);
-  // }
+  private returnToGlobalScope() {
+    this.returnToScope(Scope.Global);
+  }
 
   // // The second scope in the stack is always a class
-  // private getCurrentScope<T = Table<any>>(): T {
-  //   return this.scopeStack.getItem(1) as T;
-  // }
-  // visitClassDefine = (ctx: ClassDefineContext): number => {
-  //   this.returnToGlobalScope();
-  //   const [cls, inheritsFrom = "Object"] = ctx.TYPE();
-  //   const classTable = this.findTable(cls);
-  //   const { line, column } = this.lineAndColumn(ctx);
-  //   // ERROR: Class inherits from itself
-  //   if (cls == inheritsFrom) {
-  //     return this.next(ctx);
-  //   }
+  private getCurrentScope<T = CompositionComponent>(): T {
+    return this.scopeStack.getItem(this.scopeStack.size() - 1) as T;
+  }
+  visitClassDefine = (ctx: ClassDefineContext): number => {
+    this.returnToGlobalScope();
+    const [cls, inheritsFrom = "Object"] = ctx.TYPE();
 
-  //   // ERROR: Class already exists
-  //   if (classTable) {
-  //     this.addError(ctx, `Redefinition of class ${cls}`);
-  //     return this.next(ctx);
-  //   }
 
-  //   const parentTable = this.findTable(inheritsFrom);
+    // ERROR: Class inherits from itself
+    if (cls == inheritsFrom) {
+      return this.next(ctx);
+    }
 
-  //   // ERROR: Trying to inherit from a non-existing class
-  //   if (!parentTable) {
-  //     this.addError(
-  //       ctx,
-  //       `Class ${cls} is trying to inherit from class ${inheritsFrom}, which does not exist`
-  //     );
-  //   }
-  //   // ERROR: The table can't be inherited
-  //   else if (!parentTable.canBeInherited) {
-  //     this.addError(ctx, `Class ${inheritsFrom} can't be inherited`);
-  //   }
-  //   const newTable = new Table({
-  //     scope: cls.text,
-  //     parentTable,
-  //     line,
-  //     column,
-  //   });
 
-  //   if (newTable.tableName === "Main") {
-  //     // ERROR: Main class is declared more than once
-  //     if (this.mainExists) {
-  //       this.addError(ctx, "Main class is declared more than once");
-  //       return this.next(ctx);
-  //     }
-  //     this.mainExists = this.mainExists || cls.text === "Main";
-  //     // ERROR: Main class is trying to inherit from another class, which is not allowed
-  //     if (parentTable?.tableName !== "Object") {
-  //       this.addError(
-  //         ctx,
-  //         `Main class can't inherit from ${inheritsFrom} (Main class can only inherit from Object)`
-  //       );
-  //     }
-  //   }
 
-  //   // Push the table to the stack and the table to the list of tables
-  //   this.symbolsTable.push(newTable);
-  //   this.scopeStack.push(newTable);
-  //   return this.next(ctx);
-  // };
+    const classTable = this.findTable(cls);
+    const { line, column } = this.lineAndColumn(ctx);
+
+
+    // ERROR: Class already exists
+    if (classTable) {
+      const typeComponent = classTable.getComponent(TypeComponent)!;
+
+      if (typeComponent.isGeneric) {
+        this.addError(ctx, `Generic class ${cls} can't be redefined`);
+      } else {
+        this.addError(ctx, `Redefinition of class ${cls}`);
+      }
+      return this.next(ctx);
+    }
+
+    const parentTable = this.findTable(inheritsFrom);
+    const typeTableComponent = parentTable?.getComponent(TypeComponent);
+    // ERROR: Trying to inherit from a non-existing class
+    if (!parentTable) {
+      this.addError(
+        ctx,
+        `Class ${cls} is trying to inherit from class ${inheritsFrom}, which does not exist`
+      );
+    }
+    // ERROR: The table can't be inherited
+
+    if (!typeTableComponent) {
+      this.addError(ctx, `Class ${cls} is trying to inherit from class ${inheritsFrom}, which is not a type`);
+      return this.next(ctx)
+    }
+    else if (typeTableComponent.isGeneric) {
+      this.addError(ctx, `Class ${cls} is trying to inherit from generic class ${inheritsFrom}`);
+      return this.next(ctx)
+    }
+
+    const basicComponent = new BasicInfoComponent();
+    const typeComponent = new TypeComponent({ name: cls.toString() });
+    const classType = new ClassType({ basicComponent, typeComponent, name: cls.toString() });
+
+    typeComponent.parent = parentTable?.getComponent(TypeComponent) ?? null;
+    console.log(classType)
+
+    // if (newTable.tableName === "Main") {
+    //   // ERROR: Main class is declared more than once
+    //   if (this.mainExists) {
+    //     this.addError(ctx, "Main class is declared more than once");
+    //     return this.next(ctx);
+    //   }
+    //   this.mainExists = this.mainExists || cls.text === "Main";
+    //   // ERROR: Main class is trying to inherit from another class, which is not allowed
+    //   if (parentTable?.tableName !== "Object") {
+    //     this.addError(
+    //       ctx,
+    //       `Main class can't inherit from ${inheritsFrom} (Main class can only inherit from Object)`
+    //     );
+    //   }
+    // }
+
+    // Push the table to the stack and the table to the list of tables
+    this.symbolsTable.add(classType);
+    this.scopeStack.push(classType);
+    return this.next(ctx);
+  };
 
   // visitMethodCall = (ctx: MethodCallContext) => {
   //   const [variableName, ...methodParametersRaw] = ctx.expression();
@@ -535,49 +387,61 @@ export class YaplVisitor
   //   return this.findTable("Object")!;
   // };
 
-  // visitBlock = (ctx: BlockContext) => {
-  //   // Return only the last thing in the block
-  //   const resultingExpression = this.visitChildren(ctx);
-  //   if (!resultingExpression) {
-  //     this.addError(ctx, "Empty code block");
-  //     return undefined;
-  //   }
-  //   const lastChild = Array.isArray(resultingExpression)
-  //     ? resultingExpression.at(-1)
-  //     : resultingExpression;
-  //   return lastChild;
-  // };
+  visitBlock = (ctx: BlockContext) => {
+    // Return only the last thing in the block
+    const resultingExpression = this.visitChildren(ctx);
+    if (!resultingExpression) {
+      this.addError(ctx, "Empty code block");
+      return new EmptyComponent();
+    }
+    const lastChild = Array.isArray(resultingExpression)
+      ? resultingExpression.at(-1)
+      : resultingExpression;
+    return lastChild;
+  };
 
   // visitLetIn = (ctx: LetInContext) => {
   //   return this.next(ctx);
   // };
 
-  // visitNew = (ctx: NewContext) => {
-  //   const instantiationOf = ctx.TYPE();
-  //   // Find a table with the same name as the type of the instantiation
-  //   const instantiationOfTable = this.findTable(instantiationOf);
+  visitNew = (ctx: NewContext) => {
+    const currentClass: ClassType = this.getCurrentScope();
+    const currentClassType = currentClass.getComponent(TypeComponent)!;
 
-  //   const currentClass = this.getCurrentScope();
 
-  //   // ERROR: Trying to instantiate a non-existing class
-  //   if (!instantiationOfTable) {
-  //     this.addError(
-  //       ctx,
-  //       `Trying to instantiate a non-existing class ${instantiationOf.text}`
-  //     );
-  //     return undefined;
-  //   }
-  //   // ERROR: Trying to instantiate the class we're currently in
-  //   else if (instantiationOfTable.tableName === currentClass.tableName) {
-  //     this.addError(
-  //       ctx,
-  //       `Attempting to instantiate class ${currentClass.tableName} inside itself`
-  //     );
-  //     return undefined;
-  //   }
+    const instantiationOf = ctx.TYPE();
+    // Find a table with the same name as the type of the instantiation
+    const instantiationOfTable = this.findTable(instantiationOf);
+    const typeComponentTable = instantiationOfTable?.getComponent(TypeComponent);
 
-  //   return instantiationOfTable;
-  // };
+
+
+    // ERROR: Trying to instantiate a non-existing class
+    if (!instantiationOfTable) {
+      this.addError(
+        ctx,
+        `Trying to instantiate a non-existing class ${instantiationOf.text}`
+      );
+      return new EmptyComponent();
+    }
+    if (!typeComponentTable) {
+      this.addError(ctx, `Trying to instantiate a non-type ${instantiationOf.text}`);
+    } else if (!typeComponentTable.isGeneric && !(instantiationOfTable instanceof ClassType)) {
+      this.addError(ctx, `Trying to instantiate a non-class ${instantiationOf.text}`);
+    }
+    // ERROR: Trying to instantiate the class we're currently in
+    else if (typeComponentTable.name === currentClassType.name) {
+      this.addError(
+        ctx,
+        `Attempting to instantiate class ${typeComponentTable.name} inside itself`
+      );
+      return new EmptyComponent();
+    }
+
+
+
+    return instantiationOfTable;
+  };
 
   // visitNegative = (ctx: NegativeContext) => {
   //   const expressionRaw = ctx.expression();
@@ -606,25 +470,33 @@ export class YaplVisitor
   //   }
   //   return expressionType;
   // };
-  // visitMultiply = (ctx: MultiplyContext) => {
-  //   const lExpr: Table<any> = this.visit(ctx.children![0]!);
-  //   const rExpr: Table<any> = this.visit(ctx.children![2]!);
+  visitMultiply = (ctx: MultiplyContext) => {
+    const lExpr: CompositionComponent = this.visit(ctx.children![0]!);
+    const rExpr: CompositionComponent = this.visit(ctx.children![2]!);
 
-  //   const intTable: Table<number> = this.findTable("Int")!.copy();
+    const IntegerVal = new Integer();
+    
+    const lCanBeInt = IntegerVal.allowsAssignmentOf(lExpr);
+    const rCanBeInt = IntegerVal.allowsAssignmentOf(rExpr);
 
-  //   const [lCanBeInt] = intTable.allowsAssignmentOf(lExpr);
-  //   const [rCanBeInt] = intTable.allowsAssignmentOf(rExpr);
+    // ERROR: One of the expressions cannot be set as an integer
+    if (!lCanBeInt || !rCanBeInt) {
+      this.addError(
+        ctx,
+        `One of the expressions cannot be set as an integer (got ${lExpr.componentName} and ${rExpr.componentName})`
+      );
+      return undefined;
+    }
 
-  //   // ERROR: One of the expressions cannot be set as an integer
-  //   if (!lCanBeInt || !rCanBeInt) {
-  //     this.addError(
-  //       ctx,
-  //       `One of the expressions cannot be set as an integer (got ${lExpr.tableName} and ${rExpr.tableName})`
-  //     );
-  //     return undefined;
-  //   }
-  //   return intTable.setValue(lExpr.value * rExpr.value);
-  // };
+    const lValue = lExpr.getComponent(ValueHolderComponent);
+    const rValue = rExpr.getComponent(ValueHolderComponent);
+
+    if (lValue && rValue) {
+      const value = lValue.value * rValue.value;
+      IntegerVal.addComponent(new ValueHolderComponent({value}))
+    }
+    return IntegerVal
+  };
   // visitDivision = (ctx: DivisionContext) => {
   //   const lExpr: Table<any> = this.visit(ctx.children![0]!);
   //   const rExpr: Table<any> = this.visit(ctx.children![2]!);
@@ -756,240 +628,233 @@ export class YaplVisitor
   // visitParentheses = (ctx: ParenthesesContext) => {
   //   return this.visit(ctx.expression());
   // };
-  // visitId = (ctx: IdContext) => {
-  //   // Find it in the scope
-  //   const [name] = ctx.children!;
-  //   if (name.text.toLocaleLowerCase() === "self") {
-  //     return this.getCurrentScope();
-  //   }
-  //   const currentScope = this.getCurrentScope<Table<any> | MethodElement>()!;
-  //   const foundSymbol = currentScope.find(name.text);
-  //   // The ID is being used, but it wasn't defined yet
-  //   if (!foundSymbol) {
-  //     this.addError(
-  //       ctx,
-  //       `Symbol ${name.text} is not defined in scope ${currentScope.scope}`
-  //     );
-  //     return undefined;
-  //   }
-  //   return this.findTable(foundSymbol?.getType()!);
-  // };
-  // visitInt = (ctx: IntContext): Table<number> => {
-  //   return this.findTable("Int")!.copy().setValue(parseInt(ctx.INT().text));
-  // };
+  visitId = (ctx: IdContext) => {
+    // Find it in the scope
+    const name = ctx.IDENTIFIER();
+    if (name.text.toLocaleLowerCase() === "self") {
+      return this.getCurrentScope();
+    }
+    const currentScope = this.getCurrentScope<CompositionComponent>()!;
+    const tableComponent = currentScope.getComponent(TableComponent);
+    if (!tableComponent) {
+      return new EmptyComponent();
+    }
+    // const foundSymbol = currentScope.find(name.text);
+    const foundComponent = tableComponent.get(name.text);
+    // The ID is being used, but it wasn't defined yet
+    if (!foundComponent) {
+      this.addError(
+        ctx,
+        `Symbol '${name.text}' is not defined in scope '${currentScope.getComponent(BasicInfoComponent)!.name}'`
+      );
+      return new EmptyComponent();
+    }
+    return foundComponent;
+    // return this.findTable(foundSymbol?.getType()!);
+  };
+  visitInt = (ctx: IntContext): CompositionComponent => {
+    const newInt = new Integer();
+    newInt.addComponent(new ValueHolderComponent({ value: parseInt(ctx.INT().text) }));
+    return newInt;
+  };
 
-  // visitString = (ctx: StringContext): Table<string> => {
-  //   return this.findTable("String")!.copy().setValue(ctx.STRING().text);
-  // };
-  // visitTrue = (_ctx: TrueContext): Table<boolean> => {
-  //   return this.findTable("Bool")!.copy().setValue(true);
-  // };
-  // visitFalse = (_ctx: FalseContext): Table<boolean> => {
-  //   return this.findTable("Bool")!.copy().setValue(false);
-  // };
-  // visitAssignment = (ctx: AssignmentContext) => {
-  //   const assignmentTo = ctx.IDENTIFIER();
-  //   const assignmentValue: Table<any> = this.visit(ctx.expression());
-  //   const currentScope = this.getCurrentScope()!;
-  //   const foundSymbolType: Table<any> | undefined = currentScope
-  //     .find(assignmentTo.text)
-  //     ?.getType();
+  visitString = (ctx: StringContext): CompositionComponent => {
+    const newString = new String();
+    const stringValue = new ValueHolderComponent({ value: ctx.STRING().text });
+    newString.addComponent(stringValue);
+    return newString;
+  };
+  visitTrue = (_ctx: TrueContext): CompositionComponent => {
+    const newBool = new Bool();
+    const boolValue = new ValueHolderComponent({ value: true });
+    newBool.addComponent(boolValue);
+    return newBool;
+  };
+  visitFalse = (_ctx: FalseContext): CompositionComponent => {
+    const newBool = new Bool();
+    const boolValue = new ValueHolderComponent({ value: false });
+    newBool.addComponent(boolValue);
+    return newBool;
+  };
+  visitAssignment = (ctx: AssignmentContext) => {
+    const assignmentTo = ctx.IDENTIFIER();
+    const assignmentValue: CompositionComponent = this.visit(ctx.expression());
+    const currentScope = this.getCurrentScope()!.as(Method)!;
+    const tableComponent = currentScope.getComponent(TableComponent)!;
+    const foundSymbol: CompositionComponent | null = tableComponent.get(assignmentTo.text);
+    // // ERROR: The variable does not exist yet
+    if (!foundSymbol) {
+      this.addError(
+        ctx,
+        `Symbol ${assignmentTo.text} is not defined in scope ${currentScope.as(BasicInfoComponent).getName()}`
+      );
+      return new EmptyComponent();
+    }
+    const allowed = foundSymbol.as(TypeComponent).allowsAssignmentOf(assignmentValue);
+    if (!allowed) {
+      this.addError(
+        ctx,
+        `Cannot assign ${assignmentValue.as(BasicInfoComponent).getName()} to ${foundSymbol.as(BasicInfoComponent).getName()}`
+      )
+    }
+    return new EmptyComponent(); // Assignments don't return anything
+  }
 
-  //   // ERROR: The variable does not exist yet
-  //   if (!foundSymbolType) {
-  //     this.addError(
-  //       ctx,
-  //       `Symbol ${assignmentTo.text} is not defined in scope ${currentScope.scope}`
-  //     );
-  //     return undefined;
-  //   }
+  visitMethod = (ctx: MethodContext) => {
+    const methodName = ctx.IDENTIFIER().text;
+    const methodExpectedType = ctx.TYPE();
+    const methodBody = ctx.expression();
 
-  //   const [canBeAssigned] = foundSymbolType.allowsAssignmentOf(assignmentValue);
 
-  //   const isAncestor = foundSymbolType.isAncestorOf(assignmentValue);
+    const methodTable =
+      methodExpectedType.text === "SELF_TYPE"
+        ? this.getCurrentScope()
+        : this.findTable(methodExpectedType);
 
-  //   // ERROR: Value is not assignable to the variable
-  //   if (!canBeAssigned && !isAncestor) {
-  //     this.addError(
-  //       ctx,
-  //       `Cannot assign ${assignmentValue.tableName} to ${foundSymbolType.tableName} (Can't assign type ${assignmentValue.tableName} to ${foundSymbolType.tableName})`
-  //     );
-  //     return undefined;
-  //   }
+    // ERROR: The method type is not yet defined (if ever)
+    if (!methodTable) {
+      this.addError(ctx, `Method type ${methodExpectedType.text} is not defined`);
+      return this.next(ctx);
+    }
 
-  //   return foundSymbolType;
-  // };
-  // visitMethod = (ctx: MethodContext) => {
-  //   const methodFoundType = ctx.TYPE();
-  //   const methodType =
-  //     methodFoundType.text === "SELF_TYPE"
-  //       ? this.getCurrentScope()
-  //       : this.findTable(methodFoundType);
-  //   // ERROR: The method type is not yet defined (if ever)
-  //   if (!methodType) {
-  //     this.addError(ctx, `Method type ${methodFoundType.text} is not defined`);
-  //     return this.next(ctx);
-  //   }
+    const methodType = methodTable.as(TypeComponent);
+    if (!methodType) {
+      this.addError(ctx, `Method type ${methodExpectedType.text} is not defined`);
+      return this.next(ctx)
+    }
+    const { line, column } = this.lineAndColumn(ctx);
 
-  //   const expressionRaw = ctx.expression()!; // If it doesn't exist, it is a syntax error
-  //   const expressionType: Table<any> | undefined = this.visit(expressionRaw);
-  //   // ERROR: If the expression is not valid, it will be null
-  //   if (!expressionType) {
-  //     this.addError(ctx, `Invalid expression (Can't determine type)`);
-  //     return this.next(ctx);
-  //   }
+    const newMethod = new Method({
+      name: methodName,
+      type: methodType,
+      column,
+      line,
+    })
+    const currentTable: ClassType = this.getCurrentScope()!;
+    const classTableComponent = currentTable.getComponent(TableComponent)!;
 
-  //   const [canBeAssigned] = methodType.allowsAssignmentOf(expressionType);
-  //   const isAncestor = methodType.isAncestorOf(expressionType);
+    const methodTableComponent = newMethod.getComponent(TableComponent)!;
+    methodTableComponent.parent = classTableComponent;
 
-  //   // ERROR: Last child and return type do not match or can't be assigned
-  //   if (!canBeAssigned && !isAncestor) {
-  //     this.addError(
-  //       ctx,
-  //       `Cannot assign ${expressionType.tableName} to ${methodType.tableName} (Can't assign type ${expressionType.tableName} to ${methodType.tableName})`
-  //     );
-  //     return this.next(ctx);
-  //   }
+    // If it doesn't exist, it is a syntax error
+    const formalParameters = ctx.formal();
+    this.scopeStack.push(newMethod);
+    for (const param of formalParameters) {
+      const newParam = this.visit(param);
+      newMethod.addParameters(newParam);
+    }
 
-  //   const currentTable = this.getCurrentScope()!;
-  //   const { line, column } = this.lineAndColumn(ctx);
-  //   const newMethod = new MethodElement()
-  //     .setColumn(column)
-  //     .setLine(line)
-  //     .setName(ctx.IDENTIFIER().text)
-  //     .setType(methodType)
-  //     .setScope(this.getCurrentScope()!.tableName ?? "Global")
-  //     .setParentTable(methodType);
 
-  //   const formalParameters = ctx.formal();
-  //   this.scopeStack.push(newMethod);
-  //   for (const param of formalParameters) {
-  //     const newParam = this.visit(param);
-  //     newMethod.addParameter(newParam);
-  //   }
-  //   this.scopeStack.pop();
-  //   currentTable.addElement(newMethod);
+    const expressionResult: CompositionComponent = this.visit(methodBody);
+    const expressionType = expressionResult.getComponent(TypeComponent);
+    const expressionValue = expressionResult.getComponent(ValueHolderComponent);
+    // ERROR: If the expression is not valid, an empty component is returned, and no type will be found
+    if (!expressionType) {
+      this.addError(ctx, `Expected expression to return '${methodExpectedType.text}' inside method '${methodName}'`);
+      return this.next(ctx);
+    }
 
-  //   return methodType;
-  // };
-  // visitProperty = (ctx: PropertyContext) => {
-  //   // Previous table
-  //   const name = ctx.IDENTIFIER();
-  //   const dataType = ctx.TYPE();
-  //   const assignmentExpression = ctx.expression();
+    const canBeAssigned = methodType?.allowsAssignmentOf(expressionType);
+    const isAncestor = methodType?.isAncestorOf(expressionType);
 
-  //   const previousClass: Table<any> | undefined = this.findTable(dataType);
-  //   const previousClassCopy = previousClass?.copy(); // Create a copy that can go out of scope
-  //   const { line, column } = this.lineAndColumn(ctx);
+    // ERROR: Last child and return type do not match or can't be assigned
+    if (!canBeAssigned && !isAncestor) {
+      this.addError(
+        ctx,
+        `Cannot assign ${expressionType.name} to method of type ${methodType.name}`
+      );
+      return this.next(ctx);
+    }
 
-  //   // ERROR: The type is not yet defined
-  //   if (!previousClass) {
-  //     this.addError(ctx, `Type ${dataType.text} is not (yet?) defined`);
-  //     return this.next(ctx);
-  //   }
+    if (expressionValue) {
+      methodType.addComponent(new ValueHolderComponent({ value: expressionValue.value }));
+    }
+    this.scopeStack.pop();
+    classTableComponent.add(newMethod);
 
-  //   if (assignmentExpression) {
-  //     const resolvesTo: Table<any> = this.visit(assignmentExpression);
+    return methodType;
+  };
 
-  //     const [allowedAssigmentTo] = previousClass.allowsAssignmentOf(resolvesTo);
-  //     // ERROR: Not allowed an assignment and the assignment is not to an ancestor
-  //     if (!allowedAssigmentTo && !previousClass?.isAncestorOf(resolvesTo)) {
-  //       this.addError(
-  //         ctx,
-  //         `Cannot assign ${resolvesTo?.tableName ?? "erroneous class"} to ${
-  //           previousClass.tableName
-  //         } (Can't assign type ${resolvesTo?.tableName ?? ""} to ${
-  //           previousClass.tableName
-  //         })`
-  //       );
-  //       return this.next(ctx);
-  //     }
-  //     previousClassCopy!.setValue(resolvesTo?.value);
-  //   }
-  //   const currentScopeTable = this.getCurrentScope();
 
-  //   // const previousDeclared = currentScopeTable?.find(variableName);
-  //   const newTableElement = new SymbolElement()
-  //     .setColumn(column)
-  //     .setLine(line)
-  //     .setName(name.text)
-  //     .setType(previousClass)
-  //     .setScope(currentScopeTable?.tableName ?? "Global")
-  //     .setValue(
-  //       previousClassCopy?.value ??
-  //         previousClass.convertToType(assignmentExpression?.text) ??
-  //         previousClass.defaultValue ??
-  //         undefined
-  //     );
+  visitProperty = (ctx: PropertyContext) => {
+    // Previous table
+    const name = ctx.IDENTIFIER();
+    const dataType = ctx.TYPE();
+    const assignmentExpression = ctx.expression();
 
-  //   const previousDeclared = currentScopeTable.find(name.text);
-  //   // Case 1: Overriding (It does nothing)
-  //   if (previousDeclared) {
-  //     // ERROR: This name was previously defined
-  //     if (previousDeclared.getScope() === newTableElement.getScope()) {
-  //       // ERROR: Redefinition of a variable in the same scope
-  //       if (
-  //         previousDeclared.getDataStructureType() ===
-  //         newTableElement.getDataStructureType()
-  //       ) {
-  //         this.addError(ctx, `Redefinition of ${name.text} in the same scope`);
-  //         return this.next(ctx);
-  //       }
-  //       // ERROR: Definition of a variable with the name of a method, or viseversa
-  //       else {
-  //         this.addError(
-  //           ctx,
-  //           `Redefinition of ${name.text} in the same scope as a method and a variable`
-  //         );
-  //         return this.next(ctx);
-  //       }
-  //     }
+    const previousClass: TypeComponent | undefined = this.findTable(dataType)?.as(TypeComponent);
+    // const previousClassCopy = previousClass?.copy(); // Create a copy that can go out of scope
+    const { line, column } = this.lineAndColumn(ctx);
 
-  //     // ERROR: The variable was defined in a parent scope, but the definition type is not the same
-  //     // else if (previousDeclared.getType() !== newTableElement.getType()) {
+    // ERROR: The type is not yet defined
+    if (!previousClass) {
+      this.addError(ctx, `Type ${dataType.text} is not (yet?) defined`);
+      return this.next(ctx);
+    }
 
-  //     // }
-  //   }
 
-  //   // Case 2: Declaration of a new property
-  //   currentScopeTable.addElement(newTableElement);
-  //   return this.next(ctx);
-  // };
-  // visitClasses = (ctx: ClassesContext) => {
-  //   return this.next(ctx);
-  // };
-  // visitEof = (ctx: EofContext) => {
-  //   return this.next(ctx);
-  // };
-  // visitProgram = (ctx: ProgramContext) => {
-  //   return this.next(ctx);
-  // };
-  // visitProgramBlocks = (ctx: ProgramBlocksContext) => {
-  //   return this.next(ctx);
-  // };
-  // visitFeature = (ctx: FeatureContext) => {
-  //   return this.next(ctx);
-  // };
-  // visitFormal = (ctx: FormalContext) => {
-  //   const name = ctx.IDENTIFIER();
-  //   const datatype = ctx.TYPE();
-  //   const foundTable = this.findTable(datatype);
+    const newTableElement = new SymbolElement({
+      name: name.text,
+      type: previousClass,
+      column,
+      line,
+    })
 
-  //   // ERROR: The type is not yet defined
-  //   if (!foundTable) {
-  //     this.addError(ctx, `Type ${datatype.text} is not (yet?) defined`);
-  //     return undefined;
-  //   }
+    if (assignmentExpression) {
+      const resolvesTo: CompositionComponent = this.visit(assignmentExpression);
+      const allowedAssigmentTo = previousClass.allowsAssignmentOf(resolvesTo);
+      const isAncestor = previousClass.isAncestorOf(resolvesTo);
+      // ERROR: Not allowed an assignment and the assignment is not to an ancestor
+      if (!allowedAssigmentTo && !isAncestor) {
+        this.addError(
+          ctx,
+          `Cannot assign ${resolvesTo?.componentName ?? "erroneous class"} to ${previousClass.componentName
+          } (Can't assign type ${resolvesTo?.componentName ?? ""} to ${previousClass.componentName
+          })`
+        );
+        return this.next(ctx);
+      }
+      if (resolvesTo.getComponent(ValueHolderComponent)) {
+        newTableElement.addComponent(new ValueHolderComponent({ value: resolvesTo.getComponent(ValueHolderComponent)!.value }))
+      }
+    }
 
-  //   const { line, column } = this.lineAndColumn(ctx);
-  //   const newSymbol = new SymbolElement()
-  //     .setColumn(column)
-  //     .setLine(line)
-  //     .setName(name.text)
-  //     .setType(foundTable);
-  //   return newSymbol;
-  // };
-  // visitExpression = (ctx: ExpressionContext) => {
-  //   return this.next(ctx);
-  // };
+    const currentScope = this.getCurrentScope()!.as(ClassType)!;
+    const currentScopeTable = currentScope.getComponent(TableComponent)!;
+
+
+    const previousDeclared = currentScopeTable.get(name.text, {inCurrentScope: true});
+    // // Case 1: Overriding (It does nothing)
+    if (previousDeclared) {
+      this.addError(ctx, `Property ${name.text} is already declared in ${currentScope.toString()}`);
+      return this.next(ctx);
+    }
+
+    // ERROR: The variable was defined in a parent scope, but the definition type is not the same
+
+      // Case 2: Declaration of a new property
+      currentScopeTable.add(newTableElement);
+      return this.next(ctx);
+    };
+
+  visitFormal = (ctx: FormalContext) => {
+    const paramName = ctx.IDENTIFIER();
+    const dataType = ctx.TYPE();
+    const foundTable: CompositionComponent | null | undefined = this.findTable(dataType)?.copy();
+
+    // ERROR: The type is not yet defined
+    if (!foundTable) {
+      this.addError(ctx, `Type ${dataType.text} is not (yet?) defined`);
+      return new EmptyComponent();
+    }
+
+    const { line, column } = this.lineAndColumn(ctx);
+    const newSymbol = new SymbolElement({
+      name: paramName.text,
+      type: foundTable,
+      column,
+      line,
+    });
+    return newSymbol;
+  };
 }

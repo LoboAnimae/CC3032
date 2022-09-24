@@ -1,40 +1,66 @@
-import { BasicInfoComponent, TableImpl, CompositionComponent, TypeImpl, ValueHolderComponent } from "../Components";
+import {
+  CompositionComponent,
+  BasicInfoComponent,
+  TableComponent,
+  TypeComponent,
+  ValueHolderComponent,
+} from "../Components";
+import { Primitive } from "./Primitive.type";
 
-export default class Bool extends CompositionComponent {
-    static BoolType = new Bool();
+export default class Bool extends Primitive {
+  static Name = "Bool";
+  static BoolType = new Bool();
 
-    constructor() {
-        super({ componentName: "Bool" });
-        this.addComponent(new BasicInfoComponent({ name: "Bool" }));
-        this.addComponent(new TableImpl());
-        this.addComponent(new TypeImpl({
-            isGeneric: true,
-            sizeInBytes: 1,
-        }));
+  constructor() {
+    super({ name: Bool.Name, sizeInBytes: 1, isGeneric: true, parent: null });
+    const newBasicInfo = new BasicInfoComponent({ name: Bool.Name });
+    const newTable = new TableComponent();
 
-        // @ts-ignore 
-        this.allowsAssignmentOf = function (value?: CompositionComponent): boolean { return ["Integer", "Bool"].includes(value?.componentName ?? ""); };
-        // @ts-ignore
-        this.allowsComparisonTo = function (value?: CompositionComponent): boolean { return ["Integer", "Bool"].includes(value?.componentName ?? ""); };
-        // @ts-ignore
-        this.coherseType = function (value?: CompositionComponent): Integer | null {
-            if (value?.componentName === "Bool") {
-                return value as Bool;
-            } else if (value?.componentName === "Integer") {
-                const newBool = new Bool();
-                const foundValue = value.getComponent<ValueHolderComponent>({ name: "ValueHolder" });
-                if (foundValue !== null) {
-                    newBool.addComponent(new ValueHolderComponent({ value: !!foundValue?.value }));
-                }
-                return newBool;
-            }
-            return null;
-        };
+    newBasicInfo.configure(this);
+    newTable.configure(this);
+    
+    this.addComponent(newBasicInfo);
+    this.addComponent(newTable);
+    this.configure(this);
+  }
+
+  configure(into: any): void {
+    this.setMethods(into)
+  }
+
+  copy(): Bool {
+    return new Bool();
+  }
+
+  allowsAssignmentOf = function (value?: CompositionComponent): boolean {
+    if (value === null || value === undefined) return false;
+    const typeComponent = value instanceof TypeComponent ? value : value?.getComponent(TypeComponent);
+    if (!typeComponent) return false;
+    return ["Integer", "Bool"].includes(typeComponent.name ?? "");
+  };
+  allowsComparisonTo = function (value?: CompositionComponent): boolean {
+    if (value === null || value === undefined) return false;
+    const typeComponent = value instanceof TypeComponent ? value : value?.getComponent(TypeComponent);
+    if (!typeComponent) return false
+    return ["Integer", "Bool"].includes(typeComponent.name ?? "");
+  };
+  coherseType = function (value?: CompositionComponent): Bool | null {
+    if (value === null || value === undefined) return null;
+    const typeComponent = value instanceof TypeComponent ? value : value?.getComponent(TypeComponent);
+    if (!typeComponent) return null;
+    if (typeComponent.name === "Bool") {
+      return value as Bool;
+    } else if (typeComponent.name === "Integer") {
+      const newBool = new Bool();
+      const foundValue = value.getComponent(ValueHolderComponent);
+      if (foundValue !== null) {
+        newBool.addComponent(new ValueHolderComponent({ value: !!foundValue.getValue() }));
+      }
+      return newBool;
     }
+    return null;
+  };
 
-    copy(): Bool {
-        return new Bool();
-    }
 
-    setMethods(into: any): void { }
+  setMethods(into: any): void {}
 }

@@ -4,36 +4,38 @@ export interface Params {
   name: string;
 }
 
-export interface BasicInfoComponent {
-  getName: () => string;
-  setName: (name: string) => void;
-}
-
-class BasicInfoImpl extends Composition {
+class BasicInfoComponent extends Composition {
   public name?: string;
   constructor(options?: Partial<Params>) {
-    super({ componentName: 'BasicInformation' });
+    super({ componentName: "BasicInformation" });
     this.name = options?.name;
   }
 
+  getName = () => this.name;
+  setName = (newName: string) => {
+    this.name = newName;
+  };
+
   setMethods(into: any) {
-    into.getName = () => this.name;
-    into.setName = (name: string) => {
-      this.name = name;
-    };
+    into.getName = this.getName;
+    into.setName = this.setName;
+  }
+
+  copy(): Composition {
+    return new BasicInfoComponent({ name: this.name });
+  }
+  configure(into: any) {
+    this.setMethods(into);
   }
 }
-
 
 /**
  * Offers support for generic information
  */
 export interface Support {
   components: {
-    basicInfo: BasicInfoImpl;
+    basicInfo: BasicInfoComponent;
   };
-
 }
 
-export default BasicInfoImpl;
-
+export default BasicInfoComponent;

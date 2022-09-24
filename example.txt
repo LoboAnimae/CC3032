@@ -1,15 +1,7 @@
 class Something {
-    x: Something <- new Something;
-    a(x: String): Bool { true }; 
-};
-
-class SomethingElse inherits Something {
-    a(x: Int): SELF_TYPE { self };
-};
-
-class Main {
-    x: SomethingElse <- new SomethingElse;
-    main(): SomethingElse { {
-        x.a();
-    } };
+    x: Bool <- true;
+    a(): Bool { {
+            x <- 1 * 3;
+       }
+    }; 
 };
