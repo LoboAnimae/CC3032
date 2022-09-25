@@ -1,43 +1,40 @@
-import {
-  BasicInfoComponent,
-  CompositionComponent,
-  TableComponent,
-  TypeComponent,
-} from "../Components";
-import { Method, SymbolElement } from "../DataStructures/Method.type";
-import Integer from "./Integer.type";
-import { Primitive } from "./Primitive.type";
-import String from "./String.type";
+import { BasicInfoComponent, CompositionComponent, TableComponent } from '../Components';
+import ComponentInformation from '../Components/ComponentInformation';
+import { MethodElement, SymbolElement } from '../DataStructures/TableElements';
+import Integer from './Integer.type';
+import { Primitive } from './Primitive.type';
+import StringType from './String.type';
 
-export class IO extends Primitive {
-  static Name = "IO";
-  static IOType = new IO();
-
+export class IOType extends Primitive {
+  defaultValue: null = null;
+  allowsAssignmentOf = (_incomingType?: CompositionComponent | undefined) => false;
+  allowsComparisonTo = (_incomingType?: CompositionComponent | undefined) => false;
+  coherseType = (_incomingType?: CompositionComponent | undefined, _value?: any) => {
+    throw new Error('Cannot coherse IOType');
+  };
   constructor() {
-    super({ name: IO.Name, sizeInBytes: 1, isGeneric: false, parent: null });
-    this.addComponent(new BasicInfoComponent({ name: IO.Name }));
+    const { IO } = ComponentInformation.type;
+    super({ name: IO.name });
+    this.componentName = IO.name;
+    this.sizeInBytes = 1;
 
     const tableComponent = new TableComponent();
-    this.addComponent(tableComponent);
 
-    const outStringMethod = new Method({ name: "out_string", type: this }).addParameters(
-      new SymbolElement({ name: "x", type: new String() })
-    );
+    const outStringMethod = new MethodElement({ name: 'out_string', type: this });
+    outStringMethod.addParameters(new SymbolElement({ name: 'x', type: new StringType() }));
 
-    const outIntMethod = new Method({ name: "out_int", type: this }).addParameters(
-      new SymbolElement({ name: "x", type: new Integer() })
-    );
+    const outIntMethod = new MethodElement({ name: 'out_int', type: this });
+    outIntMethod.addParameters(new SymbolElement({ name: 'x', type: new Integer() }));
 
-    const inStringMethod = new Method({ name: "in_string", type: new String() });
-
-    const inIntMethod = new Method({ name: "in_int", type: new Integer() });
+    const inStringMethod = new MethodElement({ name: 'in_string', type: new StringType() });
+    const inIntMethod = new MethodElement({ name: 'in_int', type: new Integer() });
 
     tableComponent.add(outStringMethod, outIntMethod, inStringMethod, inIntMethod);
+
+    this.addComponent(tableComponent);
   }
 
-  configure(into: any): void {}
-  copy(): IO {
-    return new IO();
+  clone(): IOType {
+    return new IOType();
   }
-  setMethods(into: CompositionComponent): void {}
 }

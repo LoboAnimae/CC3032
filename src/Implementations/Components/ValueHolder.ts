@@ -1,14 +1,19 @@
-import Composition from "./Composition";
+import ComponentInformation from './ComponentInformation';
+import Composition from './Composition';
 
 export interface ValueHolderparams {
   value: any;
 }
 
-class ValueHolderComponent extends Composition {
+class ValueHolder extends Composition {
   public value?: any;
 
   constructor(options?: Partial<ValueHolderparams>) {
-    super({ componentName: "ValueHolder" });
+    super();
+
+    const ValueHolderInfo = ComponentInformation.components.ValueHolder;
+    this.componentName = ValueHolderInfo.name;
+    this.componentType = ValueHolderInfo.type;
     this.value = options?.value ?? null;
   }
 
@@ -16,16 +21,9 @@ class ValueHolderComponent extends Composition {
   setValue = (value: any) => {
     this.value = value;
   };
-  copy(): Composition {
-    return new ValueHolderComponent({ value: this.value });
-  }
-
-  configure(into: any): void {}
-
-  setMethods(into: any) {
-    into.getValue = this.getValue;
-    into.setValue = this.setValue;
+  clone(): Composition {
+    return new ValueHolder({ value: this.value });
   }
 }
 
-export default ValueHolderComponent;
+export default ValueHolder;

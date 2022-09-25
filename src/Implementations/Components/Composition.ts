@@ -1,47 +1,119 @@
-import { v4 as uuid } from "uuid";
+import { v4 as uuid } from 'uuid';
+import ComponentInformation from './ComponentInformation';
 
 export interface CompositionParams {
   componentName: string;
 }
 
+export enum CompositionErrors {
+  DUPLICATE_COMPONENT = 'Duplicate component',
+}
+
 abstract class CompositionComponent {
   id: string;
+  unique: boolean;
+  /** Managed by members */
   componentName: string;
-  children: CompositionComponent[] = [];
-  constructor(options?: Partial<CompositionParams>) {
+  /** Managed by primitives*/
+  componentType: string;
+  /**
+   * The children of a component. They are managed by the component and (should not) have duplicates.
+   */
+  children: CompositionComponent[];
+  constructor() {
     this.id = uuid();
-    this.componentName = options?.componentName || this.id;
+    const { Composition } = ComponentInformation.components;
+    this.componentName = Composition.name;
+    this.componentType = Composition.type;
+    this.unique = true;
+    this.children = [];
   }
+
   addComponent(...newComponents: (CompositionComponent | undefined | null)[]) {
     for (const newComponent of newComponents) {
       if (!newComponent) continue;
-        newComponent.setMethods(this);
-        this.children.push(newComponent);
+      if (newComponent.unique) {
+        const duplicateElement = this.getComponent(
+          { componentName: newComponent.componentName, componentType: newComponent.componentType },
+          { currentScope: true },
+        );
+        if (duplicateElement) {
+          throw new Error(CompositionErrors.DUPLICATE_COMPONENT);
+        }
+      }
+      this.children.push(newComponent);
     }
     return this;
   }
 
-  getComponent<T>(instance: new () => T ): T | null {
-      return (this instanceof instance ? this : this.children.find((component) => component instanceof instance)) as T ?? null;
+  getComponent<T extends CompositionComponent>(
+    params: { componentName?: string; componentType?: string; id?: string },
+    options?: { currentScope?: boolean },
+  ): T | null {
+    return this.getComponents<T>(params, options)[0] as T;
   }
-  removeComponent(options?: { id?: string; name?: string }) {
+
+  getComponents<T extends CompositionComponent>(
+    params: { componentName?: string; componentType?: string; id?: string },
+    options?: { currentScope?: boolean },
+  ): T[] {
+    const byPropertyRaw = Object.keys(params).map((key) => ({ key, value: params[key as keyof typeof params] }));
+    const filters: { key: string; value: any }[] = byPropertyRaw.filter((filtering) => !!filtering.value);
+
+    const allFound: CompositionComponent[] = [];
+    const allComponents = [this, ...this.children];
+    for (const filter of filters) {
+      // @ts-ignore
+      const found = allComponents.filter((component) => component[filter.key] === filter.value);
+      allFound.push(...found);
+    }
+    if (options?.currentScope) {
+      return allFound as T[];
+    }
+    for (const child of this.children) {
+      const found = child.getComponents<T>(params, { currentScope: false });
+      if (!found) continue;
+      allFound.push(...found);
+    }
+
+    return allFound as T[];
+  }
+
+  removeComponent(options?: { id?: string; name?: string; type?: string }): boolean {
     if (options?.id) {
       this.children = this.children.filter((component) => component.id !== options.id);
       return true;
     } else if (options?.name) {
       this.children = this.children.filter((component) => component.componentName !== options.name);
       return true;
+    } else if (options?.type) {
+      this.children = this.children.filter((component) => component.componentType !== options.type);
+      return true;
     }
     return false;
   }
 
-  as<T>(asType: new(params?: any) => T): T  {
+  /**
+   * Converts a component into a T type. Careful, this does not protect against type errors.
+   * @param asType
+   * @returns
+   */
+  as<T>(asType: any): T {
     return this as unknown as T;
   }
 
-  abstract copy(): CompositionComponent;
-  abstract setMethods(into: CompositionComponent): void;
-  abstract configure(into: any): void;
+  abstract clone(): CompositionComponent;
+  copy(): CompositionComponent {
+    const returnValue = this.clone();
+    for (const component of this.children) {
+      returnValue.addComponent(component.copy());
+    }
+    return returnValue;
+  }
+
+  toString(): string {
+    return `<Component> ${this.componentName}`;
+  }
 }
 
 export default CompositionComponent;

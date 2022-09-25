@@ -1,56 +1,49 @@
-import { yaplVisitor } from "./antlr/yaplVisitor";
-import { AbstractParseTreeVisitor } from "antlr4ts/tree/AbstractParseTreeVisitor";
+import { AbstractParseTreeVisitor } from 'antlr4ts/tree/AbstractParseTreeVisitor';
 import {
   AddContext,
   AssignmentContext,
   BlockContext,
-  BoolNotContext,
   ClassDefineContext,
-  ClassesContext,
   DivisionContext,
-  EofContext,
   EqualContext,
-  ExpressionContext,
   FalseContext,
-  FeatureContext,
   FormalContext,
   IdContext,
-  IfContext,
   IntContext,
   IsvoidContext,
   LessEqualContext,
   LessThanContext,
-  LetInContext,
-  MethodCallContext,
   MethodContext,
   MinusContext,
   MultiplyContext,
   NegativeContext,
   NewContext,
-  OwnMethodCallContext,
   ParenthesesContext,
-  ProgramBlocksContext,
-  ProgramContext,
   PropertyContext,
   StringContext,
   TrueContext,
-  WhileContext,
-} from "./antlr/yaplParser";
-import { Stack } from "./DataStructures/Stack";
-import { ErrorsTable, MethodElement, Table, TableElement } from "./DataStructures/Table";
-import { PropertyContextHelper } from "./yaplCheckpoint";
-import { SymbolsTable } from "./Implementations/SymbolsTable";
-import { IntegerType } from "./Implementations/Generics";
-import BoolType from "./Implementations/Generics/Boolean.type";
-import Integer from "./Implementations/Generics/Integer.type";
-import { BasicInfoComponent, CompositionComponent, EmptyComponent, PositioningComponent, TableComponent, TypeComponent } from "./Implementations/Components/index";
-import ValueHolderComponent from "./Implementations/Components/ValueHolder";
-import { String } from "./Implementations/Generics/String.type";
-import Bool from "./Implementations/Generics/Boolean.type";
-import { ObjectType } from "./Implementations/Generics/Object.type";
-import { IO } from "./Implementations/Generics/IO.type";
-import { ClassType } from "./Implementations/DataStructures/Class.type";
-import { Method, SymbolElement } from "./Implementations/DataStructures/Method.type";
+} from './antlr/yaplParser';
+import { yaplVisitor } from './antlr/yaplVisitor';
+import { Stack } from './Implementations/DataStructures/Stack';
+
+import {
+  BasicInfoComponent,
+  CompositionComponent,
+  EmptyComponent,
+  TableComponent,
+  TypeComponent,
+} from './Implementations/Components/index';
+import ValueHolder from './Implementations/Components/ValueHolder';
+import Bool from './Implementations/Generics/Boolean.type';
+import { default as Integer, default as IntType } from './Implementations/Generics/Integer.type';
+import { IOType } from './Implementations/Generics/IO.type';
+import { ObjectType, ClassType } from './Implementations/Generics/Object.type';
+import { StringType } from './Implementations/Generics/String.type';
+import { MethodElement, SymbolElement, TableElementType } from './Implementations/DataStructures/TableElements/index';
+import { BasicStorage, IError } from './Implementations/Errors/Errors';
+import { Primitive } from './Implementations/Generics/Primitive.type';
+import ComponentInformation from './Implementations/Components/ComponentInformation';
+import TableElement from './Implementations/DataStructures/TableElements/TableElement';
 
 enum Scope {
   Global = 1,
@@ -59,19 +52,23 @@ enum Scope {
 
 export class YaplVisitor extends AbstractParseTreeVisitor<any> implements yaplVisitor<any> {
   public scopeStack: Stack<CompositionComponent>;
-  public symbolsTable: SymbolsTable;
+  public symbolsTable: TableComponent<TypeComponent>;
   public mainExists: boolean = false;
   public mainMethodExists: boolean = false;
-  public errors: ErrorsTable;
+  public errors: BasicStorage<IError>;
   constructor() {
     super();
-    this.scopeStack = new Stack<TableComponent>(); // Scopes are implemented as a stack.
-    this.symbolsTable = new SymbolsTable(); // Symbols are universal
-    this.errors = new ErrorsTable();
-
+    this.scopeStack = new Stack<TypeComponent>(); // Scopes are implemented as a stack.
+    this.symbolsTable = new TableComponent<TypeComponent>(); // Symbols are universal
+    this.errors = new BasicStorage<IError>();
+    const objectType = new ObjectType();
+    const intType = new IntType();
+    const stringType = new StringType();
+    const boolType = new Bool();
+    const ioType = new IOType();
 
     this.scopeStack.push(new ObjectType());
-    this.symbolsTable.add(Integer.IntegerType, String.StringType, Bool.BoolType, IO.IOType, ObjectType.ObjectType);
+    this.symbolsTable.add(objectType, intType, stringType, boolType, ioType);
   }
   defaultResult(): any {
     return [];
@@ -84,7 +81,7 @@ export class YaplVisitor extends AbstractParseTreeVisitor<any> implements yaplVi
     return [...aggregate, nextResult];
   }
 
-  lineAndColumn = (ctx: any): { line: number, column: number } => ({
+  lineAndColumn = (ctx: any): { line: number; column: number } => ({
     line: ctx.start?.line ?? 0,
     column: ctx.start?.charPositionInLine ?? 0,
   });
@@ -94,24 +91,11 @@ export class YaplVisitor extends AbstractParseTreeVisitor<any> implements yaplVi
     const coloredBlueMessage = coloredRedMessage.replace('{{', '\x1b[34m').replace('}}', '\x1b[0m');
     const coloredGreenMessage = coloredBlueMessage.replace('{', '\x1b[32m').replace('}', '\x1b[0m');
     const { line, column } = this.lineAndColumn(ctx);
-    this.errors.addError({ line, column, message: coloredGreenMessage });
+    this.errors.add({ line, column, message: coloredGreenMessage });
   }
 
-  protected findTable(name: string | Table<any> | any): CompositionComponent | null {
-    // if (typeof name === "string") {
-    //   return this.symbolsTable.find(
-    //     (table: Table<any>) => table.scope === name
-    //   );
-    // } else if (name instanceof Table) {
-    //   return this.symbolsTable.find(
-    //     (table: Table<any>) => table.scope === name.scope
-    //   );
-    // } else if (name) {
-    //   return this.symbolsTable.find(
-    //     (table: Table<any>) => table.scope === name.text ?? name.toString()
-    //   );
-    // }
-    return this.symbolsTable.get(name.toString())
+  protected findTable(name: string | TypeComponent | any): ClassType | null {
+    return this.symbolsTable.get(name.toString(), { inCurrentScope: true }) as ClassType;
   }
 
   protected returnToScope(scope: Scope) {
@@ -127,29 +111,22 @@ export class YaplVisitor extends AbstractParseTreeVisitor<any> implements yaplVi
   }
 
   // // The second scope in the stack is always a class
-  private getCurrentScope<T = CompositionComponent>(): T {
+  private getCurrentScope<T = ClassType | MethodElement>(): T {
     return this.scopeStack.getItem(this.scopeStack.size() - 1) as T;
   }
-  visitClassDefine = (ctx: ClassDefineContext): number => {
+  visitClassDefine = (ctx: ClassDefineContext) => {
     this.returnToGlobalScope();
-    const [cls, inheritsFrom = "Object"] = ctx.TYPE();
-
-
+    const { Object } = ComponentInformation.type;
+    const { BasicInfo, Type } = ComponentInformation.components;
+    const [cls, inheritsFrom = Object.name] = ctx.TYPE();
     // ERROR: Class inherits from itself
-    if (cls == inheritsFrom) {
+    if (cls.toString() === inheritsFrom) {
       return this.next(ctx);
     }
-
-
-
     const classTable = this.findTable(cls);
-    const { line, column } = this.lineAndColumn(ctx);
-
-
     // ERROR: Class already exists
     if (classTable) {
-      const typeComponent = classTable.getComponent(TypeComponent)!;
-
+      const typeComponent = classTable.getComponent<TypeComponent>({ componentType: Type.type })!;
       if (typeComponent.isGeneric) {
         this.addError(ctx, `Generic class ${cls} can't be redefined`);
       } else {
@@ -157,53 +134,39 @@ export class YaplVisitor extends AbstractParseTreeVisitor<any> implements yaplVi
       }
       return this.next(ctx);
     }
-
-    const parentTable = this.findTable(inheritsFrom);
-    const typeTableComponent = parentTable?.getComponent(TypeComponent);
+    let parentTable: ClassType | null = this.findTable(inheritsFrom);
+    const typeTableComponent = parentTable?.getComponent<TypeComponent>({ componentType: Type.type })!;
     // ERROR: Trying to inherit from a non-existing class
     if (!parentTable) {
-      this.addError(
-        ctx,
-        `Class ${cls} is trying to inherit from class ${inheritsFrom}, which does not exist`
-      );
+      this.addError(ctx, `Class ${cls} is trying to inherit from class ${inheritsFrom}, which does not exist`);
+      parentTable = this.findTable(Object.name)!; // Shift back to Object as a failsafe
     }
     // ERROR: The table can't be inherited
-
-    if (!typeTableComponent) {
+    else if (!typeTableComponent) {
       this.addError(ctx, `Class ${cls} is trying to inherit from class ${inheritsFrom}, which is not a type`);
-      return this.next(ctx)
-    }
-    else if (typeTableComponent.isGeneric) {
+      return this.next(ctx);
+    } else if (typeTableComponent.isGeneric) {
       this.addError(ctx, `Class ${cls} is trying to inherit from generic class ${inheritsFrom}`);
-      return this.next(ctx)
+      return this.next(ctx);
     }
-
-    const basicComponent = new BasicInfoComponent();
-    const typeComponent = new TypeComponent({ name: cls.toString() });
-    const classType = new ClassType({ basicComponent, typeComponent, name: cls.toString() });
-
-    typeComponent.parent = parentTable?.getComponent(TypeComponent) ?? null;
-    console.log(classType)
-
-    // if (newTable.tableName === "Main") {
-    //   // ERROR: Main class is declared more than once
-    //   if (this.mainExists) {
-    //     this.addError(ctx, "Main class is declared more than once");
-    //     return this.next(ctx);
-    //   }
-    //   this.mainExists = this.mainExists || cls.text === "Main";
-    //   // ERROR: Main class is trying to inherit from another class, which is not allowed
-    //   if (parentTable?.tableName !== "Object") {
-    //     this.addError(
-    //       ctx,
-    //       `Main class can't inherit from ${inheritsFrom} (Main class can only inherit from Object)`
-    //     );
-    //   }
-    // }
-
+    const newTable = parentTable.createChild();
+    const basicComponent = newTable.getComponent<BasicInfoComponent>({ componentType: BasicInfo.type })!;
+    basicComponent.setName(cls.toString());
+    if (basicComponent.getName() === 'Main') {
+      // ERROR: Main class is declared more than once
+      if (this.mainExists) {
+        this.addError(ctx, 'Main class is declared more than once');
+        return this.next(ctx);
+      }
+      this.mainExists = true;
+      // ERROR: Main class is trying to inherit from another class, which is not allowed
+      if (parentTable?.componentName !== Object.name) {
+        this.addError(ctx, `Main class can't inherit from ${inheritsFrom} (Main class can only inherit from Object)`);
+      }
+    }
     // Push the table to the stack and the table to the list of tables
-    this.symbolsTable.add(classType);
-    this.scopeStack.push(classType);
+    this.symbolsTable.add(newTable);
+    this.scopeStack.push(newTable);
     return this.next(ctx);
   };
 
@@ -391,349 +354,390 @@ export class YaplVisitor extends AbstractParseTreeVisitor<any> implements yaplVi
     // Return only the last thing in the block
     const resultingExpression = this.visitChildren(ctx);
     if (!resultingExpression) {
-      this.addError(ctx, "Empty code block");
+      this.addError(ctx, 'Empty code block');
       return new EmptyComponent();
     }
-    const lastChild = Array.isArray(resultingExpression)
-      ? resultingExpression.at(-1)
-      : resultingExpression;
+    const lastChild = Array.isArray(resultingExpression) ? resultingExpression.at(-1) : resultingExpression;
     return lastChild;
   };
 
-  // visitLetIn = (ctx: LetInContext) => {
-  //   return this.next(ctx);
-  // };
-
   visitNew = (ctx: NewContext) => {
-    const currentClass: ClassType = this.getCurrentScope();
-    const currentClassType = currentClass.getComponent(TypeComponent)!;
-
-
     const instantiationOf = ctx.TYPE();
-    // Find a table with the same name as the type of the instantiation
-    const instantiationOfTable = this.findTable(instantiationOf);
-    const typeComponentTable = instantiationOfTable?.getComponent(TypeComponent);
+    const { Type, BasicInfo } = ComponentInformation.components;
 
+    const currentClass: ClassType | MethodElement = this.getCurrentScope();
+    const currentClassBasicComponent = currentClass.getComponent<BasicInfoComponent>({
+      componentType: BasicInfo.type,
+    })!;
 
+    const instantiatingClass = this.findTable(instantiationOf.text) as ClassType | undefined;
+    const instantiatingType = instantiatingClass?.getComponent<TypeComponent>({ componentType: Type.type })!;
+    const instantiatingBasicComponent = instantiatingClass?.getComponent<BasicInfoComponent>({
+      componentType: BasicInfo.type,
+    })!;
 
-    // ERROR: Trying to instantiate a non-existing class
-    if (!instantiationOfTable) {
-      this.addError(
-        ctx,
-        `Trying to instantiate a non-existing class ${instantiationOf.text}`
-      );
+    if (!instantiatingType) {
+      this.addError(ctx, `Cannot instantiate non-existing class ${instantiationOf.text}`);
+      return new EmptyComponent();
+    } else if (!instantiatingBasicComponent) {
+      throw new Error('Bug! Instantiating class has no basic info component');
+    } else if (currentClassBasicComponent.getName() === instantiatingBasicComponent.getName()) {
+      this.addError(ctx, `Attempting to instantiate ${currentClassBasicComponent.getName()} inside itself`);
       return new EmptyComponent();
     }
-    if (!typeComponentTable) {
-      this.addError(ctx, `Trying to instantiate a non-type ${instantiationOf.text}`);
-    } else if (!typeComponentTable.isGeneric && !(instantiationOfTable instanceof ClassType)) {
-      this.addError(ctx, `Trying to instantiate a non-class ${instantiationOf.text}`);
-    }
-    // ERROR: Trying to instantiate the class we're currently in
-    else if (typeComponentTable.name === currentClassType.name) {
-      this.addError(
-        ctx,
-        `Attempting to instantiate class ${typeComponentTable.name} inside itself`
-      );
-      return new EmptyComponent();
-    }
-
-
-
-    return instantiationOfTable;
+    return instantiatingClass;
   };
 
-  // visitNegative = (ctx: NegativeContext) => {
-  //   const expressionRaw = ctx.expression();
-  //   const expressionType: Table<any> = this.visit(expressionRaw);
+  visitNegative = (ctx: NegativeContext) => {
+    const expressionRaw = ctx.expression();
+    const expressionType: TypeComponent = this.visit(expressionRaw);
+    const { BasicInfo } = ComponentInformation.components;
+    const basicInformationComponent = expressionType.getComponent<BasicInfoComponent>({
+      componentType: BasicInfo.type,
+    });
+    if (!basicInformationComponent) {
+      throw new Error('Semantic bug: expression type does not have basic information');
+    }
+    // ERROR: Expression can't be negated
+    if (!expressionType.allowsNegation) {
+      this.addError(
+        ctx,
+        `Expression ${basicInformationComponent.getName()} of type ${expressionType.componentType} can't be negated`,
+      );
+    }
+    return this.next(ctx);
+  };
 
-  //   // ERROR: Expression can't be negated
-  //   if (!expressionType.allowNegation) {
-  //     this.addError(
-  //       ctx,
-  //       `Expression of type ${expressionType.tableName} can't be negated`
-  //     );
-  //   }
-  //   return this.next(ctx);
-  // };
-  // visitIsvoid = (ctx: IsvoidContext) => {
-  //   const expressionRaw = ctx.expression();
-  //   const expressionType = this.visit(expressionRaw);
-  //   const cantBeInstantiated = ["Int", "Bool", "String", "IO"];
+  visitIsvoid = (ctx: IsvoidContext) => {
+    const expressionRaw = ctx.expression();
+    const expressionType: TypeComponent = this.visit(expressionRaw);
 
-  //   // ERROR: Something that can't be instantiated can't be void
-  //   if (cantBeInstantiated.includes(expressionType.tableName)) {
-  //     this.addError(
-  //       ctx,
-  //       `Something of type ${expressionType.tableName} can't be void (Make sure it can be instantiated with 'new')`
-  //     );
-  //   }
-  //   return expressionType;
-  // };
+    const { Class } = ComponentInformation.components;
+    const { Object } = ComponentInformation.type;
+    // ERROR: Something that can't be instantiated can't be void
+    if (![Class.name, Object.name].includes(expressionType.componentName)) {
+      this.addError(
+        ctx,
+        `Something of type ${expressionType.componentName} can't be void (Make sure it can be instantiated with 'new')`,
+      );
+    }
+    return expressionType;
+  };
+
   visitMultiply = (ctx: MultiplyContext) => {
-    const lExpr: CompositionComponent = this.visit(ctx.children![0]!);
-    const rExpr: CompositionComponent = this.visit(ctx.children![2]!);
+    // TODO: Add value
+    // Must be done between two possible integers
+    const [leftChild, rightChild] = ctx.expression();
+    const { Type } = ComponentInformation.components;
+    const boolTable = this.findTable('Bool')!.copy();
 
-    const IntegerVal = new Integer();
-    
-    const lCanBeInt = IntegerVal.allowsAssignmentOf(lExpr);
-    const rCanBeInt = IntegerVal.allowsAssignmentOf(rExpr);
-
-    // ERROR: One of the expressions cannot be set as an integer
-    if (!lCanBeInt || !rCanBeInt) {
-      this.addError(
-        ctx,
-        `One of the expressions cannot be set as an integer (got ${lExpr.componentName} and ${rExpr.componentName})`
-      );
-      return undefined;
+    const lExpr: TypeComponent | null | undefined = (
+      this.visit(leftChild) as CompositionComponent
+    )?.getComponent<TypeComponent>({ componentType: Type.type });
+    const rExpr: TypeComponent | null | undefined = (
+      this.visit(rightChild) as CompositionComponent
+    )?.getComponent<TypeComponent>({ componentType: Type.type });
+    if (!lExpr || !rExpr) {
+      this.addError(ctx, `One of the expressions is not a type`);
+      return new EmptyComponent();
     }
 
-    const lValue = lExpr.getComponent(ValueHolderComponent);
-    const rValue = rExpr.getComponent(ValueHolderComponent);
+    const allowedComparison = lExpr.allowsComparisonTo(rExpr);
 
-    if (lValue && rValue) {
-      const value = lValue.value * rValue.value;
-      IntegerVal.addComponent(new ValueHolderComponent({value}))
+    // ERROR: If one of them is an ancestor of the other, they can be compared
+    if (!allowedComparison) {
+      this.addError(ctx, `Invalid Comparison: ${leftChild.toString()} = ${rightChild.toString()}`);
+      return new EmptyComponent();
     }
-    return IntegerVal
+    return boolTable;
   };
-  // visitDivision = (ctx: DivisionContext) => {
-  //   const lExpr: Table<any> = this.visit(ctx.children![0]!);
-  //   const rExpr: Table<any> = this.visit(ctx.children![2]!);
 
-  //   const intTable: Table<number> = this.findTable("Int")!.copy();
+  visitDivision = (ctx: DivisionContext) => {
+    // TODO: Add value
+    // Must be done between two possible integers
+    const [leftChild, rightChild] = ctx.expression();
+    const { Type } = ComponentInformation.components;
+    const boolTable = this.findTable('Bool')!.copy();
 
-  //   const [lCanBeInt] = intTable.allowsAssignmentOf(lExpr);
-  //   const [rCanBeInt] = intTable.allowsAssignmentOf(rExpr);
+    const lExpr: TypeComponent | null | undefined = (
+      this.visit(leftChild) as CompositionComponent
+    )?.getComponent<TypeComponent>({ componentType: Type.type });
+    const rExpr: TypeComponent | null | undefined = (
+      this.visit(rightChild) as CompositionComponent
+    )?.getComponent<TypeComponent>({ componentType: Type.type });
+    if (!lExpr || !rExpr) {
+      this.addError(ctx, `One of the expressions is not a type`);
+      return new EmptyComponent();
+    }
 
-  //   // ERROR: One of the expressions cannot be set as an integer
-  //   if (!lCanBeInt || !rCanBeInt) {
-  //     this.addError(
-  //       ctx,
-  //       `One of the expressions cannot be set as an integer (got ${lExpr.tableName} and ${rExpr.tableName})`
-  //     );
-  //     return undefined;
-  //   }
-  //   return intTable.setValue(lExpr.value / rExpr.value);
-  // };
-  // visitAdd = (ctx: AddContext) => {
-  //   const lExpr: Table<any> = this.visit(ctx.children![0]!);
-  //   const rExpr: Table<any> = this.visit(ctx.children![2]!);
+    const allowedComparison = lExpr.allowsComparisonTo(rExpr);
 
-  //   const intTable: Table<number> = this.findTable("Int")!.copy();
+    // ERROR: If one of them is an ancestor of the other, they can be compared
+    if (!allowedComparison) {
+      this.addError(ctx, `Invalid Comparison: ${leftChild.toString()} = ${rightChild.toString()}`);
+      return new EmptyComponent();
+    }
+    return boolTable;
+  };
+  visitAdd = (ctx: AddContext) => {
+    // TODO: Add value
+    // Must be done between two possible integers
+    const [leftChild, rightChild] = ctx.expression();
+    const { Type } = ComponentInformation.components;
+    const boolTable = this.findTable('Bool')!.copy();
 
-  //   const [lCanBeInt] = intTable.allowsAssignmentOf(lExpr);
-  //   const [rCanBeInt] = intTable.allowsAssignmentOf(rExpr);
+    const lExpr: TypeComponent | null | undefined = (
+      this.visit(leftChild) as CompositionComponent
+    )?.getComponent<TypeComponent>({ componentType: Type.type });
+    const rExpr: TypeComponent | null | undefined = (
+      this.visit(rightChild) as CompositionComponent
+    )?.getComponent<TypeComponent>({ componentType: Type.type });
+    if (!lExpr || !rExpr) {
+      this.addError(ctx, `One of the expressions is not a type`);
+      return new EmptyComponent();
+    }
 
-  //   // ERROR: One of the expressions cannot be set as an integer
-  //   if (!lCanBeInt || !rCanBeInt) {
-  //     this.addError(
-  //       ctx,
-  //       `One of the expressions cannot be set as an integer (got ${lExpr.tableName} and ${rExpr.tableName})`
-  //     );
-  //     return undefined;
-  //   }
-  //   return intTable.setValue(lExpr.value + rExpr.value);
-  // };
-  // visitMinus = (ctx: MinusContext) => {
-  //   const lExpr: Table<any> = this.visit(ctx.children![0]!);
-  //   const rExpr: Table<any> = this.visit(ctx.children![2]!);
+    const allowedComparison = lExpr.allowsComparisonTo(rExpr);
 
-  //   const intTable: Table<number> = this.findTable("Int")!.copy();
+    // ERROR: If one of them is an ancestor of the other, they can be compared
+    if (!allowedComparison) {
+      this.addError(ctx, `Invalid Comparison: ${leftChild.toString()} = ${rightChild.toString()}`);
+      return new EmptyComponent();
+    }
+    return boolTable;
+  };
+  visitMinus = (ctx: MinusContext) => {
+    // TODO: Add value
+    // Must be done between two possible integers
+    const [leftChild, rightChild] = ctx.expression();
+    const { Type } = ComponentInformation.components;
+    const boolTable = this.findTable('Bool')!.copy();
 
-  //   const [lCanBeInt] = intTable.allowsAssignmentOf(lExpr);
-  //   const [rCanBeInt] = intTable.allowsAssignmentOf(rExpr);
+    const lExpr: TypeComponent | null | undefined = (
+      this.visit(leftChild) as CompositionComponent
+    )?.getComponent<TypeComponent>({ componentType: Type.type });
+    const rExpr: TypeComponent | null | undefined = (
+      this.visit(rightChild) as CompositionComponent
+    )?.getComponent<TypeComponent>({ componentType: Type.type });
+    if (!lExpr || !rExpr) {
+      this.addError(ctx, `One of the expressions is not a type`);
+      return new EmptyComponent();
+    }
 
-  //   // ERROR: One of the expressions cannot be set as an integer
-  //   if (!lCanBeInt || !rCanBeInt) {
-  //     this.addError(
-  //       ctx,
-  //       `One of the expressions cannot be set as an integer (got ${lExpr.tableName} and ${rExpr.tableName})`
-  //     );
-  //     return undefined;
-  //   }
-  //   return intTable.setValue(lExpr.value - rExpr.value);
-  // };
+    const allowedComparison = lExpr.allowsComparisonTo(rExpr);
 
-  // // Less thans return booleans.
-  // visitLessThan = (ctx: LessThanContext) => {
-  //   const [leftChild, rightChild] = ctx.expression();
-  //   const lExpr: Table<number> = this.visit(leftChild);
-  //   const rExpr: Table<number> = this.visit(rightChild);
+    // ERROR: If one of them is an ancestor of the other, they can be compared
+    if (!allowedComparison) {
+      this.addError(ctx, `Invalid Comparison: ${leftChild.toString()} = ${rightChild.toString()}`);
+      return new EmptyComponent();
+    }
+    return boolTable;
+  };
 
-  //   const intTable = this.findTable("Int")!.copy();
+  // Less thans return booleans.
+  visitLessThan = (ctx: LessThanContext) => {
+    // TODO: Add value
+    // Must be done between two possible integers
+    const [leftChild, rightChild] = ctx.expression();
+    const { Type } = ComponentInformation.components;
+    const boolTable = this.findTable('Bool')!.copy();
 
-  //   const [lCanBeInt] = intTable.allowsAssignmentOf(lExpr);
-  //   const [rCanBeInt] = intTable.allowsAssignmentOf(rExpr);
+    const lExpr: TypeComponent | null | undefined = (
+      this.visit(leftChild) as CompositionComponent
+    )?.getComponent<TypeComponent>({ componentType: Type.type });
+    const rExpr: TypeComponent | null | undefined = (
+      this.visit(rightChild) as CompositionComponent
+    )?.getComponent<TypeComponent>({ componentType: Type.type });
+    if (!lExpr || !rExpr) {
+      this.addError(ctx, `One of the expressions is not a type`);
+      return new EmptyComponent();
+    }
 
-  //   // ERROR: One of the expressions cannot be set as an integer
-  //   if (!lCanBeInt || !rCanBeInt) {
-  //     this.addError(
-  //       ctx,
-  //       `One of the expressions cannot be set as an integer (got ${lExpr.tableName} and ${rExpr.tableName})`
-  //     );
+    const allowedComparison = lExpr.allowsComparisonTo(rExpr);
 
-  //     return undefined;
-  //   }
-  //   return this.findTable("Bool")!
-  //     .copy()
-  //     .setValue(lExpr.value < rExpr.value);
-  // };
+    // ERROR: If one of them is an ancestor of the other, they can be compared
+    if (!allowedComparison) {
+      this.addError(ctx, `Invalid Comparison: ${leftChild.toString()} = ${rightChild.toString()}`);
+      return new EmptyComponent();
+    }
+    return boolTable;
+  };
 
-  // visitLessEqual = (ctx: LessEqualContext) => {
-  //   // Must be done between two possible integers
-  //   const [leftChild, rightChild] = ctx.expression();
-  //   const lExpr: Table<number> = this.visit(leftChild);
-  //   const rExpr: Table<number> = this.visit(rightChild);
-  //   const { line, column } = this.lineAndColumn(ctx);
+  visitLessEqual = (ctx: LessEqualContext) => {
+    // Must be done between two possible integers
+    // TODO: Add value
+    const [leftChild, rightChild] = ctx.expression();
+    const { Type } = ComponentInformation.components;
+    const boolTable = this.findTable('Bool')!.copy();
 
-  //   const intTable = this.findTable("Int")!.copy();
+    const lExpr: TypeComponent | null | undefined = (
+      this.visit(leftChild) as CompositionComponent
+    )?.getComponent<TypeComponent>({ componentType: Type.type });
+    const rExpr: TypeComponent | null | undefined = (
+      this.visit(rightChild) as CompositionComponent
+    )?.getComponent<TypeComponent>({ componentType: Type.type });
+    if (!lExpr || !rExpr) {
+      this.addError(ctx, `One of the expressions is not a type`);
+      return new EmptyComponent();
+    }
 
-  //   const [lCanBeInt] = intTable.allowsAssignmentOf(lExpr);
-  //   const [rCanBeInt] = intTable.allowsAssignmentOf(rExpr);
+    const allowedComparison = lExpr.allowsComparisonTo(rExpr);
 
-  //   // ERROR: One of the expressions cannot be set as an integer
-  //   if (!lCanBeInt || !rCanBeInt) {
-  //     this.addError(
-  //       ctx,
-  //       `One of the expressions cannot be set as an integer (got ${lExpr.tableName} and ${rExpr.tableName})`
-  //     );
-  //     return undefined;
-  //   }
-  //   return this.findTable("Bool")!
-  //     .copy()
-  //     .setValue(lExpr.value <= rExpr.value);
-  // };
-  // visitEqual = (ctx: EqualContext) => {
-  //   // Must be done between two possible integers
-  //   const [leftChild, rightChild] = ctx.expression();
-  //   const lExpr: Table<number> = this.visit(leftChild);
-  //   const rExpr: Table<number> = this.visit(rightChild);
-  //   const { line, column } = this.lineAndColumn(ctx);
+    // ERROR: If one of them is an ancestor of the other, they can be compared
+    if (!allowedComparison) {
+      this.addError(ctx, `Invalid Comparison: ${leftChild.toString()} = ${rightChild.toString()}`);
+      return new EmptyComponent();
+    }
+    return boolTable;
+  };
+  visitEqual = (ctx: EqualContext) => {
+    // TODO: Add value
+    // Must be done between two possible integers
+    const [leftChild, rightChild] = ctx.expression();
+    const { Type } = ComponentInformation.components;
+    const boolTable = this.findTable('Bool')!.copy();
 
-  //   const [allowed] = lExpr.allowsAssignmentOf(rExpr);
-  //   const lAncestorOf = lExpr.isAncestorOf(rExpr);
-  //   const rAncestorOf = rExpr.isAncestorOf(lExpr);
+    const lExpr: TypeComponent | null | undefined = (
+      this.visit(leftChild) as CompositionComponent
+    )?.getComponent<TypeComponent>({ componentType: Type.type });
+    const rExpr: TypeComponent | null | undefined = (
+      this.visit(rightChild) as CompositionComponent
+    )?.getComponent<TypeComponent>({ componentType: Type.type });
+    if (!lExpr || !rExpr) {
+      this.addError(ctx, `One of the expressions is not a type`);
+      return new EmptyComponent();
+    }
 
-  //   // ERROR: If one of them is an ancestor of the other, they can be compared
-  //   if (!allowed && !lAncestorOf && !rAncestorOf) {
-  //     this.addError(
-  //       ctx,
-  //       `Cannot compare ${lExpr.tableName} and ${rExpr.tableName}`
-  //     );
-  //     return undefined;
-  //   }
-  //   return this.findTable("Bool")!.copy();
-  // };
-  // visitParentheses = (ctx: ParenthesesContext) => {
-  //   return this.visit(ctx.expression());
-  // };
+    const allowedComparison = lExpr.allowsComparisonTo(rExpr);
+
+    // ERROR: If one of them is an ancestor of the other, they can be compared
+    if (!allowedComparison) {
+      this.addError(ctx, `Invalid Comparison: ${leftChild.toString()} = ${rightChild.toString()}`);
+      return new EmptyComponent();
+    }
+    return boolTable;
+  };
+
+  visitParentheses = (ctx: ParenthesesContext) => {
+    return this.visit(ctx.expression());
+  };
+
   visitId = (ctx: IdContext) => {
     // Find it in the scope
     const name = ctx.IDENTIFIER();
-    if (name.text.toLocaleLowerCase() === "self") {
-      return this.getCurrentScope();
+    const currentScope = this.getCurrentScope();
+    const { Table, BasicInfo } = ComponentInformation.components;
+
+    if (name.text.toLocaleLowerCase() === 'self') {
+      return currentScope;
     }
-    const currentScope = this.getCurrentScope<CompositionComponent>()!;
-    const tableComponent = currentScope.getComponent(TableComponent);
+
+    const tableComponent = currentScope.getComponent<TableComponent<TableElementType>>({ componentType: Table.type });
     if (!tableComponent) {
       return new EmptyComponent();
     }
-    // const foundSymbol = currentScope.find(name.text);
-    const foundComponent = tableComponent.get(name.text);
-    // The ID is being used, but it wasn't defined yet
+
+    const foundComponent: TableElementType | null = tableComponent.get(name.text);
+
     if (!foundComponent) {
-      this.addError(
-        ctx,
-        `Symbol '${name.text}' is not defined in scope '${currentScope.getComponent(BasicInfoComponent)!.name}'`
-      );
+      const basicInfo = currentScope.getComponent<BasicInfoComponent>({ componentType: BasicInfo.type });
+      this.addError(ctx, `Symbol '${name.text}' is not defined in scope '${basicInfo!.name}'`);
       return new EmptyComponent();
     }
+
     return foundComponent;
-    // return this.findTable(foundSymbol?.getType()!);
   };
+
   visitInt = (ctx: IntContext): CompositionComponent => {
-    const newInt = new Integer();
-    newInt.addComponent(new ValueHolderComponent({ value: parseInt(ctx.INT().text) }));
+    const newInt = new IntType();
+    newInt.addComponent(new ValueHolder({ value: parseInt(ctx.INT().text) }));
     return newInt;
   };
 
   visitString = (ctx: StringContext): CompositionComponent => {
-    const newString = new String();
-    const stringValue = new ValueHolderComponent({ value: ctx.STRING().text });
+    const newString = new StringType();
+    const stringValue = new ValueHolder({ value: ctx.STRING().text });
     newString.addComponent(stringValue);
     return newString;
   };
+
   visitTrue = (_ctx: TrueContext): CompositionComponent => {
     const newBool = new Bool();
-    const boolValue = new ValueHolderComponent({ value: true });
+    const boolValue = new ValueHolder({ value: true });
     newBool.addComponent(boolValue);
     return newBool;
   };
+
   visitFalse = (_ctx: FalseContext): CompositionComponent => {
     const newBool = new Bool();
-    const boolValue = new ValueHolderComponent({ value: false });
+    const boolValue = new ValueHolder({ value: false });
     newBool.addComponent(boolValue);
     return newBool;
   };
+
   visitAssignment = (ctx: AssignmentContext) => {
+    const { Table, BasicInfo, Type } = ComponentInformation.components;
     const assignmentTo = ctx.IDENTIFIER();
     const assignmentValue: CompositionComponent = this.visit(ctx.expression());
-    const currentScope = this.getCurrentScope()!.as(Method)!;
-    const tableComponent = currentScope.getComponent(TableComponent)!;
+    const assignmentValueBasicInfo = assignmentValue.getComponent<BasicInfoComponent>({
+      componentType: BasicInfo.type,
+    });
+    const currentScope = this.getCurrentScope()!;
+    const currentScopeBasicInfo = currentScope.getComponent<BasicInfoComponent>({ componentType: BasicInfo.type })!;
+
+    const tableComponent = currentScope.getComponent<TableComponent<TableElementType>>({ componentType: Table.type })!;
     const foundSymbol: CompositionComponent | null = tableComponent.get(assignmentTo.text);
-    // // ERROR: The variable does not exist yet
+    const symbolBasicInformation = foundSymbol?.getComponent<BasicInfoComponent>({ componentType: BasicInfo.type });
+    const symbolType = foundSymbol?.getComponent<TypeComponent>({ componentType: Type.type });
+    // ERROR: The variable does not exist yet
     if (!foundSymbol) {
-      this.addError(
-        ctx,
-        `Symbol ${assignmentTo.text} is not defined in scope ${currentScope.as(BasicInfoComponent).getName()}`
-      );
+      this.addError(ctx, `Symbol ${assignmentTo.text} is not defined in scope ${currentScopeBasicInfo.getName()}`);
       return new EmptyComponent();
     }
-    const allowed = foundSymbol.as(TypeComponent).allowsAssignmentOf(assignmentValue);
+
+    const allowed = symbolType?.allowsAssignmentOf(assignmentValue);
     if (!allowed) {
       this.addError(
         ctx,
-        `Cannot assign ${assignmentValue.as(BasicInfoComponent).getName()} to ${foundSymbol.as(BasicInfoComponent).getName()}`
-      )
+        `Cannot assign ${assignmentValueBasicInfo?.getName()} to ${symbolBasicInformation?.getName()}`,
+      );
     }
     return new EmptyComponent(); // Assignments don't return anything
-  }
+  };
 
   visitMethod = (ctx: MethodContext) => {
     const methodName = ctx.IDENTIFIER().text;
     const methodExpectedType = ctx.TYPE();
     const methodBody = ctx.expression();
-
+    const { Type, Table, ValueHolder: ValueHolderComponent } = ComponentInformation.components;
 
     const methodTable =
-      methodExpectedType.text === "SELF_TYPE"
-        ? this.getCurrentScope()
-        : this.findTable(methodExpectedType);
+      methodExpectedType.text === 'SELF_TYPE' ? this.getCurrentScope() : this.findTable(methodExpectedType);
+    const methodType = methodTable?.getComponent<TypeComponent>({ componentType: Type.type });
 
     // ERROR: The method type is not yet defined (if ever)
-    if (!methodTable) {
+    if (!methodType) {
       this.addError(ctx, `Method type ${methodExpectedType.text} is not defined`);
       return this.next(ctx);
     }
-
-    const methodType = methodTable.as(TypeComponent);
-    if (!methodType) {
-      this.addError(ctx, `Method type ${methodExpectedType.text} is not defined`);
-      return this.next(ctx)
-    }
     const { line, column } = this.lineAndColumn(ctx);
 
-    const newMethod = new Method({
+    const newMethod = new MethodElement({
       name: methodName,
       type: methodType,
       column,
       line,
-    })
-    const currentTable: ClassType = this.getCurrentScope()!;
-    const classTableComponent = currentTable.getComponent(TableComponent)!;
+    });
 
-    const methodTableComponent = newMethod.getComponent(TableComponent)!;
+    const currentTable: ClassType = this.getCurrentScope()!;
+    const classTableComponent = currentTable.getComponent<TableComponent<TableElementType>>({
+      componentType: Table.type,
+    })!;
+
+    const methodTableComponent = newMethod.getComponent<TableComponent<TableElementType>>({
+      componentType: Table.type,
+    })!;
+
     methodTableComponent.parent = classTableComponent;
 
     // If it doesn't exist, it is a syntax error
@@ -744,10 +748,9 @@ export class YaplVisitor extends AbstractParseTreeVisitor<any> implements yaplVi
       newMethod.addParameters(newParam);
     }
 
-
     const expressionResult: CompositionComponent = this.visit(methodBody);
-    const expressionType = expressionResult.getComponent(TypeComponent);
-    const expressionValue = expressionResult.getComponent(ValueHolderComponent);
+    const expressionType = expressionResult.getComponent<TypeComponent>({ componentType: Type.type });
+    const expressionValue = expressionResult.getComponent<ValueHolder>({ componentType: ValueHolderComponent.type });
     // ERROR: If the expression is not valid, an empty component is returned, and no type will be found
     if (!expressionType) {
       this.addError(ctx, `Expected expression to return '${methodExpectedType.text}' inside method '${methodName}'`);
@@ -755,19 +758,14 @@ export class YaplVisitor extends AbstractParseTreeVisitor<any> implements yaplVi
     }
 
     const canBeAssigned = methodType?.allowsAssignmentOf(expressionType);
-    const isAncestor = methodType?.isAncestorOf(expressionType);
-
     // ERROR: Last child and return type do not match or can't be assigned
-    if (!canBeAssigned && !isAncestor) {
-      this.addError(
-        ctx,
-        `Cannot assign ${expressionType.name} to method of type ${methodType.name}`
-      );
+    if (!canBeAssigned) {
+      this.addError(ctx, `Cannot assign ${expressionType.componentName} to method of type ${methodType.componentName}`);
       return this.next(ctx);
     }
 
     if (expressionValue) {
-      methodType.addComponent(new ValueHolderComponent({ value: expressionValue.value }));
+      methodType.addComponent(new ValueHolder({ value: expressionValue.value }));
     }
     this.scopeStack.pop();
     classTableComponent.add(newMethod);
@@ -775,14 +773,13 @@ export class YaplVisitor extends AbstractParseTreeVisitor<any> implements yaplVi
     return methodType;
   };
 
-
   visitProperty = (ctx: PropertyContext) => {
     // Previous table
     const name = ctx.IDENTIFIER();
     const dataType = ctx.TYPE();
     const assignmentExpression = ctx.expression();
 
-    const previousClass: TypeComponent | undefined = this.findTable(dataType)?.as(TypeComponent);
+    const previousClass: TypeComponent | null = this.findTable(dataType);
     // const previousClassCopy = previousClass?.copy(); // Create a copy that can go out of scope
     const { line, column } = this.lineAndColumn(ctx);
 
@@ -792,38 +789,38 @@ export class YaplVisitor extends AbstractParseTreeVisitor<any> implements yaplVi
       return this.next(ctx);
     }
 
-
     const newTableElement = new SymbolElement({
       name: name.text,
       type: previousClass,
       column,
       line,
-    })
+    });
 
     if (assignmentExpression) {
       const resolvesTo: CompositionComponent = this.visit(assignmentExpression);
       const allowedAssigmentTo = previousClass.allowsAssignmentOf(resolvesTo);
-      const isAncestor = previousClass.isAncestorOf(resolvesTo);
       // ERROR: Not allowed an assignment and the assignment is not to an ancestor
-      if (!allowedAssigmentTo && !isAncestor) {
+      if (!allowedAssigmentTo) {
         this.addError(
           ctx,
-          `Cannot assign ${resolvesTo?.componentName ?? "erroneous class"} to ${previousClass.componentName
-          } (Can't assign type ${resolvesTo?.componentName ?? ""} to ${previousClass.componentName
-          })`
+          `Cannot assign ${resolvesTo?.componentName ?? 'erroneous class'} to ${
+            previousClass.componentName
+          } (Can't assign type ${resolvesTo?.componentName ?? ''} to ${previousClass.componentName})`,
         );
         return this.next(ctx);
       }
-      if (resolvesTo.getComponent(ValueHolderComponent)) {
-        newTableElement.addComponent(new ValueHolderComponent({ value: resolvesTo.getComponent(ValueHolderComponent)!.value }))
-      }
+      const { ValueHolder } = ComponentInformation.components;
+      const valueHolder = resolvesTo.getComponent<ValueHolder>({ componentType: ValueHolder.type });
+      newTableElement.addComponent(valueHolder?.copy());
     }
 
-    const currentScope = this.getCurrentScope()!.as(ClassType)!;
-    const currentScopeTable = currentScope.getComponent(TableComponent)!;
+    const currentScope: ClassType | MethodElement = this.getCurrentScope();
+    const { Table } = ComponentInformation.components;
+    const currentScopeTable = currentScope.getComponent<TableComponent<TableElementType>>({
+      componentType: Table.type,
+    })!;
 
-
-    const previousDeclared = currentScopeTable.get(name.text, {inCurrentScope: true});
+    const previousDeclared = currentScopeTable.get(name.text, { inCurrentScope: true });
     // // Case 1: Overriding (It does nothing)
     if (previousDeclared) {
       this.addError(ctx, `Property ${name.text} is already declared in ${currentScope.toString()}`);
@@ -832,10 +829,10 @@ export class YaplVisitor extends AbstractParseTreeVisitor<any> implements yaplVi
 
     // ERROR: The variable was defined in a parent scope, but the definition type is not the same
 
-      // Case 2: Declaration of a new property
-      currentScopeTable.add(newTableElement);
-      return this.next(ctx);
-    };
+    // Case 2: Declaration of a new property
+    currentScopeTable.add(newTableElement);
+    return this.next(ctx);
+  };
 
   visitFormal = (ctx: FormalContext) => {
     const paramName = ctx.IDENTIFIER();

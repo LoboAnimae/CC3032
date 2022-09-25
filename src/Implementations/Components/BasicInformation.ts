@@ -1,4 +1,5 @@
-import Composition from "./Composition";
+import ComponentInformation from './ComponentInformation';
+import Composition from './Composition';
 
 export interface Params {
   name: string;
@@ -7,7 +8,10 @@ export interface Params {
 class BasicInfoComponent extends Composition {
   public name?: string;
   constructor(options?: Partial<Params>) {
-    super({ componentName: "BasicInformation" });
+    super();
+    const { BasicInfo } = ComponentInformation.components;
+    this.componentName = BasicInfo.name;
+    this.componentType = BasicInfo.type;
     this.name = options?.name;
   }
 
@@ -16,16 +20,8 @@ class BasicInfoComponent extends Composition {
     this.name = newName;
   };
 
-  setMethods(into: any) {
-    into.getName = this.getName;
-    into.setName = this.setName;
-  }
-
-  copy(): Composition {
+  clone(): BasicInfoComponent {
     return new BasicInfoComponent({ name: this.name });
-  }
-  configure(into: any) {
-    this.setMethods(into);
   }
 }
 
@@ -33,9 +29,7 @@ class BasicInfoComponent extends Composition {
  * Offers support for generic information
  */
 export interface Support {
-  components: {
-    basicInfo: BasicInfoComponent;
-  };
+  components: { basicInfo: BasicInfoComponent };
 }
 
 export default BasicInfoComponent;

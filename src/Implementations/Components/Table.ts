@@ -1,60 +1,71 @@
-import BasicInfoComponent from "./BasicInformation";
-import Composition from "./Composition";
-import { CompositionComponent, TypeComponent } from "./index";
+import BasicInfoComponent from './BasicInformation';
+import ComponentInformation from './ComponentInformation';
+import Composition from './Composition';
+import { CompositionComponent, TypeComponent } from './index';
 
-export interface TableParams {
-  parent: TableComponent | null;
+export interface TableParams<T extends CompositionComponent> {
+  parent: TableComponent<T> | null;
 }
 
-export interface TableInstance {
-  get: <T>(key: string) => T | null;
-  add: (value: CompositionComponent) => void;
+export interface TableInstance<T extends CompositionComponent> {
+  get: (key: string) => T | null;
+  add: (value: T) => void;
   [Symbol.iterator]: () => any;
-  createChild: () => TableComponent;
+  createChild: () => TableComponent<T>;
 }
 
-class TableComponent extends Composition {
-  public parent: TableComponent | null;
-  public elements: CompositionComponent[];
-  constructor(options?: Partial<TableParams>) {
-    super({ componentName: "Table" });
+class TableComponent<T extends CompositionComponent> extends Composition {
+  public parent: TableComponent<T> | null;
+  public elements: T[];
+  constructor(options?: Partial<TableParams<T>>) {
+    super();
+
+    const { Table } = ComponentInformation.components;
+    this.componentName = Table.name;
+    this.componentType = Table.type;
+
     this.elements = [];
     this.parent = options?.parent ?? null;
   }
-  get<T>(key: string, options?: {inCurrentScope: boolean}): T | null {
-    const foundComponent = this.elements.find((element: CompositionComponent) => {
-      const basicInfo = element.getComponent(BasicInfoComponent);
-      const typeComponent = element.getComponent(TypeComponent);
-      return basicInfo?.getName() === key || typeComponent?.name === key;
+
+  /**
+   * Looks up a value in the table
+   * @param key The name of the value in the symbols table
+   * @param options
+   * @returns The symbol or null
+   */
+  get(key: string, options?: { inCurrentScope: boolean }): T | null {
+    const { BasicInfo } = ComponentInformation.components;
+    const foundComponent = this.elements.find((element: T) => {
+      const basicInfo = element.getComponent<BasicInfoComponent>({
+        componentType: BasicInfo.type,
+      });
+      return basicInfo?.getName() === key;
     });
+
     if (options?.inCurrentScope) {
-      return foundComponent as T;
+      return (foundComponent as T) ?? null;
     }
-    return (foundComponent ?? this.parent?.get<T>(key) ?? null) as T;
+    return (foundComponent ?? this.parent?.get(key) ?? null) as T;
   }
-  add(...values: (CompositionComponent | undefined)[]): void {
+
+  /**
+   * Adds new values to the table
+   * @param values
+   */
+  add(...values: (T | undefined)[]): void {
     for (const value of values) {
-      if (!(value instanceof CompositionComponent)) {
-        throw new Error("Attempting to add a non CompositionComponent to a TableComponent");
-      }
-      this.elements.push(value);
+      this.elements.push(value as T);
     }
   }
 
-  createChild(): TableComponent {
-    return new TableComponent({ parent: this });
+  clone(): Composition {
+    const newTable = new TableComponent({ parent: this.parent });
+    for (const element of this.elements) {
+      newTable.add(element.clone() as T);
+    }
+    return newTable;
   }
-  setMethods(into: any): void {
-    into.get = <T>(key: string) => this.get<T>(key);
-    into.add = (value: CompositionComponent) => this.add(value);
-    into.createChild = () => this.createChild();
-  }
-
-  copy(): Composition {
-    return new TableComponent({ parent: this.parent });
-  }
-
-  configure(into: any): void {}
 
   [Symbol.iterator]() {
     let index = 0;
@@ -75,8 +86,8 @@ class TableComponent extends Composition {
   }
 }
 
-export interface TableSupport {
-  components: { table: TableComponent };
+export interface TableSupport<T extends CompositionComponent> {
+  components: { table: T };
 }
 
 export default TableComponent;

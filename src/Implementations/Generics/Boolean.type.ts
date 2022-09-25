@@ -1,66 +1,60 @@
-import {
-  CompositionComponent,
-  BasicInfoComponent,
-  TableComponent,
-  TypeComponent,
-  ValueHolderComponent,
-} from "../Components";
-import { Primitive } from "./Primitive.type";
+import { BasicInfoComponent, CompositionComponent, TableComponent, TypeComponent, ValueHolder } from '../Components';
+import ComponentInformation from '../Components/ComponentInformation';
+import { Primitive } from './Primitive.type';
 
-export default class Bool extends Primitive {
-  static Name = "Bool";
-  static BoolType = new Bool();
-
+export default class BoolType extends Primitive {
+  defaultValue: boolean = false;
   constructor() {
-    super({ name: Bool.Name, sizeInBytes: 1, isGeneric: true, parent: null });
-    const newBasicInfo = new BasicInfoComponent({ name: Bool.Name });
-    const newTable = new TableComponent();
-
-    newBasicInfo.configure(this);
-    newTable.configure(this);
-    
-    this.addComponent(newBasicInfo);
-    this.addComponent(newTable);
-    this.configure(this);
+    const { Bool } = ComponentInformation.type;
+    super({ name: Bool.name });
+    this.componentName = Bool.name;
+    this.sizeInBytes = 1;
+    this.allowsNegation = true;
+    this.addComponent(new TableComponent());
   }
 
-  configure(into: any): void {
-    this.setMethods(into)
-  }
-
-  copy(): Bool {
-    return new Bool();
+  clone(): BoolType {
+    return new BoolType();
   }
 
   allowsAssignmentOf = function (value?: CompositionComponent): boolean {
-    if (value === null || value === undefined) return false;
-    const typeComponent = value instanceof TypeComponent ? value : value?.getComponent(TypeComponent);
+    const { type } = ComponentInformation.components.Type;
+    const typeComponent = value?.getComponent<TypeComponent>({ componentType: type });
     if (!typeComponent) return false;
-    return ["Integer", "Bool"].includes(typeComponent.name ?? "");
+
+    const { Integer, Bool } = ComponentInformation.type;
+    return [Integer.name, Bool.name].includes(typeComponent.componentName);
   };
+
   allowsComparisonTo = function (value?: CompositionComponent): boolean {
-    if (value === null || value === undefined) return false;
-    const typeComponent = value instanceof TypeComponent ? value : value?.getComponent(TypeComponent);
-    if (!typeComponent) return false
-    return ["Integer", "Bool"].includes(typeComponent.name ?? "");
+    const { type } = ComponentInformation.components.Type;
+    const typeComponent = value?.getComponent<TypeComponent>({ componentType: type });
+    if (!typeComponent) return false;
+
+    const { Integer, Bool } = ComponentInformation.type;
+    return [Integer.name, Bool.name].includes(typeComponent.componentName);
   };
-  coherseType = function (value?: CompositionComponent): Bool | null {
-    if (value === null || value === undefined) return null;
-    const typeComponent = value instanceof TypeComponent ? value : value?.getComponent(TypeComponent);
+
+  coherseType = function (value?: CompositionComponent): BoolType | null {
+    const { type } = ComponentInformation.components.Type;
+    const typeComponent = value?.getComponent<TypeComponent>({ componentType: type });
     if (!typeComponent) return null;
-    if (typeComponent.name === "Bool") {
-      return value as Bool;
-    } else if (typeComponent.name === "Integer") {
-      const newBool = new Bool();
-      const foundValue = value.getComponent(ValueHolderComponent);
-      if (foundValue !== null) {
-        newBool.addComponent(new ValueHolderComponent({ value: !!foundValue.getValue() }));
+
+    const { Integer, Bool } = ComponentInformation.type;
+    if (typeComponent.componentName === Bool.name) {
+      return value as BoolType;
+    } else if (typeComponent.componentName === Integer.name) {
+      const newBool = new BoolType();
+
+      const valueHolderType = ComponentInformation.components.ValueHolder.type;
+      const foundValue = value!.getComponent<ValueHolder>({
+        componentType: valueHolderType,
+      });
+      if (foundValue) {
+        newBool.addComponent(new ValueHolder({ value: !!foundValue.getValue() }));
       }
       return newBool;
     }
     return null;
   };
-
-
-  setMethods(into: any): void {}
 }

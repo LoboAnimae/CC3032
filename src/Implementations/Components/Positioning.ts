@@ -1,4 +1,5 @@
-import Composition from "./Composition";
+import ComponentInformation from './ComponentInformation';
+import Composition from './Composition';
 
 export interface PositioningParams {
   line: number;
@@ -13,7 +14,10 @@ class PositioningComponent extends Composition {
   public line?: number;
   public column?: number;
   constructor(options?: Partial<PositioningParams>) {
-    super({ componentName: "Positioning" });
+    super();
+    const { Positioning } = ComponentInformation.components;
+    this.componentName = Positioning.name;
+    this.componentType = Positioning.type;
     this.line = options?.line;
     this.column = options?.column;
   }
@@ -27,18 +31,9 @@ class PositioningComponent extends Composition {
     this.column = column;
   };
 
-  setMethods(into: any): void {
-    into.getLine = this.getLine;
-    into.getColumn = this.getColumn;
-    into.setLine = this.setLine;
-    into.setColumn = this.setColumn;
-  }
-
-  copy(): Composition {
+  clone(): Composition {
     return new PositioningComponent({ line: this.line, column: this.column });
   }
-
-  configure(into: any): void {}
 }
 
 export interface PositioningSupport {

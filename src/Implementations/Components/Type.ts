@@ -1,8 +1,8 @@
-import Composition from "./Composition";
-import { DownUpHierarchy } from "./Hierarchy";
+import ComponentInformation from './ComponentInformation';
+import Composition from './Composition';
+import { DownUpHierarchy } from './Hierarchy';
 
 export interface TypeParams {
-  name: string;
   isGeneric?: boolean;
   sizeInBytes: number;
   parent: TypeComponent | null;
@@ -18,69 +18,55 @@ export interface TypeInstance {
 }
 
 /**
- * Unlike other components, the IType component
- * has a lot of logic inside of itself.
- * The idea is to create subsequent classes that inherit from this one
+ * A type component is a component that describes a type. It is the main component of a type system.
  */
-export class TypeComponent extends Composition implements DownUpHierarchy<TypeComponent> {
-  public name?: string;
-  public isGeneric?: boolean;
-  public sizeInBytes?: number;
-  public parent: TypeComponent | null;
+export abstract class TypeComponent extends Composition implements DownUpHierarchy<TypeComponent> {
+  readonly componentType = ComponentInformation.components.Type.type;
+  isGeneric?: boolean;
+  sizeInBytes?: number;
+  parent: TypeComponent | null;
+  allowsNegation: boolean;
 
   constructor(options?: Partial<TypeParams> & Partial<TypeInstance>) {
-    super({ componentName: "Type" });
-    this.name = options?.name;
+    super();
+    const { Type } = ComponentInformation.components;
+    this.componentName = Type.name;
     this.isGeneric = options?.isGeneric ?? false;
     this.sizeInBytes = options?.sizeInBytes;
     this.parent = options?.parent ?? null;
+    this.allowsNegation = false;
   }
 
-  getHierarchy(): TypeComponent[] {
+  readonly getHierarchy = (): TypeComponent[] => {
     return [...(this.parent?.getHierarchy() ?? []), this];
-  }
+  };
 
-  copy(): TypeComponent {
-    return new TypeComponent({
-      name: this.name,
-      isGeneric: this.isGeneric,
-      sizeInBytes: this.sizeInBytes,
-      parent: this.parent,
-    });
-  }
-
-  isAncestorOf = (incomingType?: Composition) => {
-    const typeComponent = incomingType?.getComponent(TypeComponent);
+  readonly isAncestorOf = (incomingType?: Composition) => {
+    const typeComponent = incomingType?.getComponent<TypeComponent>(
+      { componentType: incomingType.componentType },
+      { currentScope: true },
+    );
     if (!typeComponent) return false;
     return typeComponent.hasAsAncestor(this);
   };
-  hasAsAncestor = (_incomingType?: Composition) => {
-    const hierarchyChain = this.getHierarchy().map(t => t.name).filter( t => t !== this.name);
-    if (_incomingType instanceof TypeComponent) {
-      return hierarchyChain.includes(_incomingType.name);
-    }
-    return hierarchyChain.includes(_incomingType?.getComponent(TypeComponent)?.name);
+
+  readonly hasAsAncestor = (incomingType?: Composition) => {
+    const hierarchyChainNames = this.getHierarchy()
+      .map((t) => t.componentName)
+      .filter((t) => t !== this.componentName);
+
+    // Don't grab only in the current scope because inherited types are allowed
+    const incomingTypeComponent = incomingType?.getComponent<TypeComponent>({
+      componentType: ComponentInformation.components.Type.type,
+    })?.componentName;
+
+    return hierarchyChainNames.includes(incomingTypeComponent ?? '');
   };
-  allowsAssignmentOf = (_incomingType?: Composition) => false;
-  allowsComparisonTo = (_incomingType?: Composition) => false;
-  coherseType = (_incomingType?: Composition, value?: any) => value;
-  createChild = () => new TypeComponent({ parent: this });
 
-  configure(into: any): void {
-    this.setMethods(into);
-  }
-
-  setMethods(into: any, overrides?: Partial<TypeInstance>) {
-    into.isAncestorOf = overrides?.isAncestorOf?.bind(into) ?? ((_incomingType?: TypeComponent) => false).bind(into);
-    into.hasAsAncestor = overrides?.hasAsAncestor?.bind(into) ?? ((_incomingType?: TypeComponent) => false).bind(into);
-    into.allowsAssignmentOf =
-      overrides?.allowsAssignmentOf?.bind(into) ?? ((_incomingType?: TypeComponent) => false).bind(into);
-    into.allowsComparisonTo =
-      overrides?.allowsComparisonTo?.bind(into) ?? ((_incomingType?: TypeComponent) => false).bind(into);
-    into.coherseType =
-      overrides?.coherseType?.bind(into) ?? ((_incomingType?: TypeComponent, value?: any) => value).bind(into);
-    into.createChild = overrides?.createChild?.bind(into) ?? (() => new TypeComponent({ parent: this })).bind(into);
-  }
+  abstract allowsAssignmentOf: (_incomingType?: Composition) => boolean;
+  abstract allowsComparisonTo: (_incomingType?: Composition) => boolean;
+  abstract coherseType: (_incomingType?: Composition, value?: any) => any;
+  abstract createChild: () => TypeComponent;
 }
 
 export interface TypeSupport {

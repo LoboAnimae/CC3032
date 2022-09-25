@@ -5,64 +5,72 @@ import {
   TableInstance,
   TypeComponent,
   TypeInstance,
-  ValueHolderComponent,
-} from "../Components";
-import { Method, SymbolElement } from "../DataStructures/Method.type";
-import Integer from "./Integer.type";
-import { Primitive } from "./Primitive.type";
+  ValueHolder,
+} from '../Components';
+import ComponentInformation from '../Components/ComponentInformation';
+import { MethodElement, SymbolElement } from '../DataStructures/TableElements';
+import Integer from './Integer.type';
+import { Primitive } from './Primitive.type';
 
-export class String extends Primitive {
-  static Name = "String";
-  static StringType = new String();
-
+export class StringType extends Primitive {
+  defaultValue: string = '';
   constructor() {
-    super({ name: String.Name, sizeInBytes: 24, isGeneric: true, parent: null });
-    this.addComponent(new BasicInfoComponent({ name: String.Name }));
+    const { String } = ComponentInformation.type;
+    super({ name: String.name });
+    this.componentName = String.name;
+    this.sizeInBytes = 24;
 
     const tableComponent = new TableComponent();
     this.addComponent(tableComponent);
 
-    this.configure(this);
-    const lengthMethod = new Method({ name: "length", type: new Integer() });
+    const lengthMethod = new MethodElement({ name: 'length', type: new Integer() });
 
-    const concatMethod = new Method({ name: "concat", type: this }).addParameters(
-      new SymbolElement({ name: "s", type: this })
-    );
+    const concatMethod = new MethodElement({ name: 'concat', type: this });
+    concatMethod.addParameters(new SymbolElement({ name: 's', type: this }));
 
-    const substrMethod = new Method({ name: "substr", type: this }).addParameters(
-      new SymbolElement({ name: "i", type: new Integer() }),
-      new SymbolElement({ name: "l", type: new Integer() })
+    const substrMethod = new MethodElement({ name: 'substr', type: this });
+    substrMethod.addParameters(
+      new SymbolElement({ name: 'i', type: new Integer() }),
+      new SymbolElement({ name: 'l', type: new Integer() }),
     );
 
     tableComponent.add(lengthMethod, concatMethod, substrMethod);
   }
 
   allowsAssignmentOf = function (value?: CompositionComponent): boolean {
-    return ["String"].includes(value?.componentName ?? "");
+    const { String } = ComponentInformation.type;
+    const { Type } = ComponentInformation.components;
+    const incomingValueComponent = value?.getComponent<TypeComponent>({ componentType: Type.name });
+
+    if (!incomingValueComponent) return false;
+
+    return [String.name].includes(incomingValueComponent.componentName);
   };
   allowsComparisonTo = function (value?: CompositionComponent): boolean {
-    return ["String"].includes(value?.componentName ?? "");
-  };
-  coherseType = function (value?: CompositionComponent): String | null {
-    if (value) {
-      const newValue = new String();
-      const foundValue = value.getComponent(ValueHolderComponent);
-      if (foundValue) {
-        newValue.addComponent(new ValueHolderComponent({ value: "" + foundValue.value }));
-      }
-      return newValue;
-    }
-    return null;
+    const { String } = ComponentInformation.type;
+    const { Type } = ComponentInformation.components;
+    const incomingValueComponent = value?.getComponent<TypeComponent>({ componentType: Type.name });
+
+    if (!incomingValueComponent) return false;
+
+    return [String.name].includes(incomingValueComponent.componentName);
   };
 
-  configure(into: any): void {
+  coherseType = function (value?: CompositionComponent): StringType | null {
+    const { Type, ValueHolder: ValueHolderInfo } = ComponentInformation.components;
 
+    const incomingValueTypeComponent = value?.getComponent<TypeComponent>({ componentType: Type.name });
+    const incomingValueComponent = value?.getComponent<ValueHolder>({ componentType: ValueHolderInfo.name });
+    if (!incomingValueTypeComponent || !incomingValueComponent) return null;
+
+    const newValue = new StringType();
+    newValue.addComponent(new ValueHolder({ value: '' + incomingValueComponent.value }));
+    return newValue;
+  };
+
+  clone(): StringType {
+    return new StringType();
   }
-  copy(): String {
-    return new String();
-  }
-  setMethods(into: CompositionComponent): void {}
 }
 
-
-export default String;
+export default StringType;

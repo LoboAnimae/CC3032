@@ -1,53 +1,54 @@
-import {
-  TableInstance,
-  TypeInstance,
-  CompositionComponent,
-  BasicInfoComponent,
-  TableComponent,
-  TypeComponent,
-  ValueHolderComponent,
-} from "../Components/index";
+import ComponentInformation from '../Components/ComponentInformation';
+import { BasicInfoComponent, CompositionComponent, TypeComponent, ValueHolder } from '../Components/index';
+import { Primitive } from './Primitive.type';
 
-export default class Integer extends TypeComponent {
-  static Name = "Int";
-  static IntegerType = new Integer();
-
+export default class IntType extends Primitive {
+  defaultValue: number = 0;
   constructor() {
-    super({ name: Integer.Name, sizeInBytes: 4, isGeneric: true, parent: null });
-    this.addComponent(new BasicInfoComponent({ name: Integer.Name }));
-    this.addComponent(new TableComponent());
-    this.configure(this);
+    const { Integer } = ComponentInformation.type;
+    super({ name: Integer.name });
+    this.componentName = Integer.name;
+    this.sizeInBytes = 4;
+    this.allowsNegation = true;
+    // Don't set the type here, so that it ends up being a type itself
   }
 
-  øallowsAssignmentOf = function (value?: CompositionComponent): boolean {
-    return ["Int", "Bool"].includes(value?.componentName ?? "");
+  allowsAssignmentOf = function (value?: CompositionComponent): boolean {
+    const { Integer, Bool } = ComponentInformation.type;
+    const { type } = ComponentInformation.components.Type;
+    const valueType = value?.getComponent<TypeComponent>({ componentType: type });
+    if (!valueType) return false;
+    return [Integer.name, Bool.name].includes(valueType.componentName);
   };
 
   allowsComparisonTo = function (value?: CompositionComponent): boolean {
-    return ["Int", "Bool"].includes(value?.componentName ?? "");
+    const { Integer, Bool } = ComponentInformation.type;
+    const { type } = ComponentInformation.components.Type;
+    const valueType = value?.getComponent<TypeComponent>({ componentType: type });
+    return [Integer.name, Bool.name].includes(valueType?.componentName ?? '');
   };
 
-  coherseType = function (value?: CompositionComponent): Integer | null {
-    if (value?.componentName === "Integer") {
-      return value as Integer;
-    } else if (value?.componentName === "Bool") {
-      const newInteger = new Integer();
-      const foundValue = value.getComponent(ValueHolderComponent);
-      if (foundValue !== null) {
-        newInteger.addComponent(new ValueHolderComponent({ value: Number(foundValue.getValue()) }));
+  coherseType = function (value?: CompositionComponent): IntType | null {
+    if (!value) return null;
+    const { Integer, Bool } = ComponentInformation.type;
+
+    if (value.componentName === Integer.name) {
+      return value as IntType;
+    } else if (value?.componentName === Bool.name) {
+      const ValueHolderType = ComponentInformation.components.ValueHolder.type;
+      const newInt = new IntType();
+      const foundValue = value.getComponent<ValueHolder>({
+        componentType: ValueHolderType,
+      });
+      if (foundValue) {
+        newInt.addComponent(new ValueHolder({ value: Number(foundValue.getValue()) }));
       }
-      return newInteger;
+      return newInt;
     }
     return null;
   };
 
-  configure(into: any): void {
-
+  clone(): IntType {
+    return new IntType();
   }
-
-  copy(): Integer {
-    return new Integer();
-  }
-
-  setMethods(into: CompositionComponent): void {}
 }
