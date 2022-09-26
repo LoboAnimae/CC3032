@@ -106,6 +106,9 @@ abstract class CompositionComponent {
   copy(): CompositionComponent {
     const returnValue = this.clone();
     for (const component of this.children) {
+
+      const elementExists = !!returnValue.getComponent({ componentType: component.componentType });
+      if (elementExists) continue;
       returnValue.addComponent(component.copy());
     }
     return returnValue;

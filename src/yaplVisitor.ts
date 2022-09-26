@@ -24,30 +24,47 @@ import {
   PropertyContext,
   StringContext,
   TrueContext,
+  WhileContext
 } from './antlr/yaplParser';
 import { yaplVisitor } from './antlr/yaplVisitor';
-import { Stack } from './Implementations/DataStructures/Stack';
 import {
-  BasicInfoComponent,
-  CompositionComponent,
-  EmptyComponent,
-  extractTableComponent,
-  extractTypeComponent,
-  TableComponent,
-  TypeComponent,
+  CompositionComponent, TableComponent,
+  TypeComponent
 } from './Implementations/Components/index';
-import ValueComponent, { extractValueComponent } from './Implementations/Components/ValueHolder';
-import { MethodElement, SymbolElement, TableElementType } from './Implementations/DataStructures/TableElements/index';
+import { Stack } from './Implementations/DataStructures/Stack';
+import { MethodElement, SymbolElement } from './Implementations/DataStructures/TableElements/index';
 import { BasicStorage, IError } from './Implementations/Errors/Errors';
 import Bool from './Implementations/Generics/Boolean.type';
 import { default as IntType } from './Implementations/Generics/Integer.type';
 import { IOType } from './Implementations/Generics/IO.type';
 import { ClassType, ObjectType } from './Implementations/Generics/Object.type';
 import { StringType } from './Implementations/Generics/String.type';
-import ComponentInformation from './Implementations/Components/ComponentInformation';
-import { HelperFunctions, ParseTreeProperties } from './Implementations/visitorFunctions/meta';
+import visitAdd from './Implementations/visitorFunctions/add';
+import visitAssignment from './Implementations/visitorFunctions/assignment';
+import visitBlock from './Implementations/visitorFunctions/block';
 import visitClassDefine from './Implementations/visitorFunctions/classDefine';
+import visitDivision from './Implementations/visitorFunctions/division';
+import visitEqual from './Implementations/visitorFunctions/equal';
+import visitFalse from './Implementations/visitorFunctions/false';
+import visitFormal from './Implementations/visitorFunctions/formal';
+import visitId from './Implementations/visitorFunctions/id';
+import visitInt from './Implementations/visitorFunctions/int';
+import visitIsvoid from './Implementations/visitorFunctions/isVoid';
+import visitLessEqual from './Implementations/visitorFunctions/lessEqual';
+import visitLessThan from './Implementations/visitorFunctions/lessThan';
+import { HelperFunctions, ParseTreeProperties } from './Implementations/visitorFunctions/meta';
+import visitMethod from './Implementations/visitorFunctions/method';
+import visitMethodCall from './Implementations/visitorFunctions/methodCall';
+import visitMinus from './Implementations/visitorFunctions/minus';
+import visitMultiply from './Implementations/visitorFunctions/multiply';
+import visitNegative from './Implementations/visitorFunctions/negative';
+import visitNew from './Implementations/visitorFunctions/new';
 import visitOwnMethodCall from './Implementations/visitorFunctions/ownMethodCall';
+import visitParentheses from './Implementations/visitorFunctions/parentheses';
+import visitProperty from './Implementations/visitorFunctions/property';
+import visitString from './Implementations/visitorFunctions/string';
+import visitTrue from './Implementations/visitorFunctions/true';
+import visitWhile from './Implementations/visitorFunctions/while';
 
 export enum Scope {
   Global = 1,
@@ -61,8 +78,7 @@ export const lineAndColumn = (ctx: any): { line: number; column: number } => ({
 
 export class YaplVisitor
   extends AbstractParseTreeVisitor<any>
-  implements yaplVisitor<any>, HelperFunctions, ParseTreeProperties
-{
+  implements yaplVisitor<any>, HelperFunctions, ParseTreeProperties {
   public scopeStack: Stack<CompositionComponent>;
   public symbolsTable: TableComponent<TypeComponent>;
   public mainExists: boolean = false;
@@ -132,88 +148,7 @@ export class YaplVisitor
   };
 
   visitMethodCall = (ctx: MethodCallContext) => {
-    const methodType = ctx.TYPE();
-    const methodName = ctx.IDENTIFIER();
-    const [variableName, ...methodParametersRaw] = ctx.expression();
-    const methodParameters: SymbolElement[] = methodParametersRaw.map((p: any) => this.visit(p));
-    const variable = this.visit(variableName);
-
-    // ERROR: Variable is not defined
-    if (!variable) {
-      return this.next(ctx);
-    }
-
-    // const { BasicInfo, Type, Table } = ComponentInformation.components;
-    // const methodHoldingClass = (() => {
-    //   const isSelf = variableName.text.toLocaleLowerCase() === 'self';
-    //   if (isSelf) {
-    //     return this.getCurrentScope();
-    //   }
-    //   if (this.findTable(methodType)) {
-
-    //   }
-    // })();
-
-    // const methodHoldingClass =
-    //   variableName.text.toLocaleLowerCase() === 'self'
-    //     ? this.getCurrentScope()
-    //     : this.findTable(ctx.TYPE()) ?? this.getCurrentScope().get(variableName.text)?.getType();
-
-    // // ERROR: The method holding the class does not exist
-    // if (!methodHoldingClass) {
-    //   this.addError(
-    //     ctx,
-    //     `Attempting to call method from non-existing class (class ${ctx.TYPE()} does not exist or is not yet defined)`,
-    //   );
-    //   return this.next(ctx);
-    // }
-    // const isAncestor = methodHoldingClass.isAncestorOf(variable);
-
-    // // ERROR: A class is able to call only its own methods or it's parents methods
-    // if (!isAncestor) {
-    //   this.addError(
-    //     ctx,
-    //     `Attempting to call method from class ${methodHoldingClass.tableName} from class ${variable.tableName}, but ${variable.tableName} is not a child of ${methodHoldingClass.tableName}`,
-    //   );
-    // }
-
-    // const calledMethod = ctx.IDENTIFIER();
-    // const referencedMethod = methodHoldingClass.find(calledMethod.text) as MethodElement;
-
-    // // ERROR: The method does not exist in the class (self or not)
-    // if (!referencedMethod) {
-    //   this.addError(
-    //     ctx,
-    //     `Attempting to call non-existing method ${calledMethod.text} from class ${methodHoldingClass.tableName}`,
-    //   );
-    //   return this.next(ctx);
-    // }
-
-    // const requiredMethodParameters: SymbolElement[] = referencedMethod.getParameters() ?? [];
-    // const sameNumberOfParameters = requiredMethodParameters.length === methodParameters.length;
-
-    // // ERROR: The method is called with a different number of parameters than it requires
-    // if (!sameNumberOfParameters) {
-    //   this.addError(
-    //     ctx,
-    //     `Incorrect number of parameters for method ${calledMethod.text} from class ${methodHoldingClass.tableName} (expected ${requiredMethodParameters.length}, got ${methodParameters.length})`,
-    //   );
-    //   return this.next(ctx);
-    // }
-
-    // for (let i = 0; i < requiredMethodParameters.length; i++) {
-    //   const requiredParameterType = requiredMethodParameters[i].getType();
-    //   const methodParameterType = methodParameters[i];
-    //   const [allowed] = requiredParameterType.allowsAssignmentOf(methodParameterType);
-    //   // ERROR: The parameter required is not the same as the one passed
-    //   if (!allowed) {
-    //     this.addError(
-    //       ctx,
-    //       `Incorrect type of parameter ${requiredMethodParameters[i].name} for method ${calledMethod.text} from class ${methodHoldingClass.tableName} (expected ${requiredParameterType.tableName}, got ${methodParameterType.tableName})`,
-    //     );
-    //   }
-    // }
-    // return referencedMethod.getType();
+    return visitMethodCall(this, ctx); 
   };
 
   visitOwnMethodCall = (ctx: OwnMethodCallContext) => {
@@ -248,26 +183,9 @@ export class YaplVisitor
   //   return thisIfType;
   // };
 
-  // visitWhile = (ctx: WhileContext) => {
-  //   const expressionToCast = ctx.children?.[1];
-
-  //   // There is no expression inside the while loop
-  //   if (!expressionToCast) {
-  //     return this.next(ctx);
-  //   }
-  //   const foundExpression: Table<boolean> = this.visit(expressionToCast);
-  //   const boolTable = this.findTable("Bool")!;
-  //   const [allowsAssignment] = boolTable.allowsAssignmentOf(foundExpression);
-  //   // ERROR: The expression inside the while loop cannot be set as a boolean expression
-  //   if (!allowsAssignment) {
-  //     this.addError(
-  //       ctx,
-  //       `Expression inside while loop cannot be set as a boolean expression (got ${foundExpression.tableName})`
-  //     );
-  //     this.next(ctx);
-  //   }
-  //   return this.findTable("Object")!;
-  // };
+  visitWhile = (ctx: WhileContext) => {
+    return visitWhile(this, ctx);
+  };
 
   visitBlock = (ctx: BlockContext) => {
     return visitBlock(this, ctx);
@@ -285,51 +203,69 @@ export class YaplVisitor
     return visitIsvoid(this, ctx);
   };
 
-  visitMultiply = (ctx: MultiplyContext) => {};
+  visitMultiply = (ctx: MultiplyContext) => { 
+    return visitMultiply(this, ctx);
+  };
 
-  visitDivision = (ctx: DivisionContext) => {};
-  visitAdd = (ctx: AddContext) => {};
-  visitMinus = (ctx: MinusContext) => {};
+  visitDivision = (ctx: DivisionContext) => { 
+    return visitDivision(this, ctx);
+  };
+  visitAdd = (ctx: AddContext) => { 
+    return visitAdd(this, ctx);
+  };
+  visitMinus = (ctx: MinusContext) => { 
+    return visitMinus(this, ctx);
+  };
 
   // Less thans return booleans.
-  visitLessThan = (ctx: LessThanContext) => {};
+  visitLessThan = (ctx: LessThanContext) => { 
+    return visitLessThan(this, ctx);
+  };
 
-  visitLessEqual = (ctx: LessEqualContext) => {};
-  visitEqual = (ctx: EqualContext) => {};
+  visitLessEqual = (ctx: LessEqualContext) => { 
+    return visitLessEqual(this, ctx);
+  };
+  visitEqual = (ctx: EqualContext) => { 
+    return visitEqual(this, ctx);
+  };
 
-  visitParentheses = (ctx: ParenthesesContext) => {};
+  visitParentheses = (ctx: ParenthesesContext) => { 
+    return visitParentheses(this, ctx);
+  };
 
-  visitId = (ctx: IdContext) => {};
+  visitId = (ctx: IdContext) => { 
+    return visitId(this, ctx);
+  };
 
-  visitInt = (ctx: IntContext): CompositionComponent => {};
+  visitInt = (ctx: IntContext) => { 
+    return visitInt(this, ctx);
+  };
 
-  visitString = (ctx: StringContext): CompositionComponent => {};
+  visitString = (ctx: StringContext) => { 
+    return visitString(this, ctx);
+  };
 
-  visitTrue = (_ctx: TrueContext): CompositionComponent => {};
+  visitTrue = (ctx: TrueContext) => { 
+    return visitTrue(this, ctx);
+  };
 
-  visitFalse = (_ctx: FalseContext): CompositionComponent => {};
+  visitFalse = (ctx: FalseContext) => { 
+    return visitFalse(this, ctx);
+  };
 
-  visitAssignment = (ctx: AssignmentContext) => {};
+  visitAssignment = (ctx: AssignmentContext) => { 
+    return visitAssignment(this, ctx);
+  };
 
-  visitMethod = (ctx: MethodContext) => {};
+  visitMethod = (ctx: MethodContext) => { 
+    return visitMethod(this, ctx);
+  };
 
-  visitProperty = (p_ctx: PropertyContext) => {};
+  visitProperty = (ctx: PropertyContext) => { 
+    return visitProperty(this, ctx);
+  };
 
-  visitFormal = (ctx: FormalContext) => {
-    const paramName = ctx.IDENTIFIER();
-    const dataType = ctx.TYPE();
-    const foundTable: CompositionComponent | null | undefined = this.findTable(dataType)?.copy();
-
-    // ERROR: The type is not yet defined
-    if (!foundTable) {
-      this.addError(ctx, `Type ${dataType.text} is not (yet?) defined`);
-      return new EmptyComponent();
-    }
-    const newSymbol = new SymbolElement({
-      name: paramName.text,
-      type: foundTable,
-      ...lineAndColumn(ctx),
-    });
-    return newSymbol;
+  visitFormal = (ctx: FormalContext) => { 
+    return visitFormal(this, ctx);
   };
 }
