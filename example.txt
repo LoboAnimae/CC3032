@@ -4,6 +4,7 @@ class A {
 
 class B inherits A {
     a(): Int { 1 };
+    b(): Int { a(); }
 };
 
 class Something {

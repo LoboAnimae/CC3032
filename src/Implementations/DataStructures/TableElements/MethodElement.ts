@@ -1,4 +1,4 @@
-import { BasicInfoComponent, CompositionComponent } from '../../Components';
+import { BasicInfoComponent, CompositionComponent, PositioningComponent, TypeComponent } from '../../Components';
 import ComponentInformation from '../../Components/ComponentInformation';
 import TableComponent from '../../Components/Table';
 import SymbolElement, { SymbolElementParams } from './SymbolElement';
@@ -18,6 +18,16 @@ export default class MethodElement extends TableElement {
     tableComponent.add(...parameters);
 
     return this;
+  }
+
+  getTable(): TableComponent<SymbolElement> {
+    const { Table } = ComponentInformation.components;
+    return this.getComponent<TableComponent<SymbolElement>>({ componentType: Table.type })!;
+  }
+
+  getParameters(): SymbolElement[] {
+    const tableComponent = this.getTable();
+    return tableComponent.getAll();
   }
 
   clone(): CompositionComponent {

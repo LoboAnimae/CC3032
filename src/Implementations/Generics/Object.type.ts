@@ -1,5 +1,11 @@
 import { MethodElement, SymbolElement, TableElementType } from '../DataStructures/TableElements';
-import { BasicInfoComponent, CompositionComponent, TableComponent, TypeComponent } from '../Components';
+import {
+  BasicInfoComponent,
+  CompositionComponent,
+  ITableGetOptions,
+  TableComponent,
+  TypeComponent,
+} from '../Components';
 import ComponentInformation from '../Components/ComponentInformation';
 
 import StringType from './String.type';
@@ -94,6 +100,33 @@ export class ClassType extends ObjectType {
 
     const tableComponent = this.getComponent<TableComponent<TableElement>>({ componentType: Table.type })!;
     tableComponent.parent = parentTable;
+  }
+
+  getType(): TypeComponent {
+    const { Type } = ComponentInformation.components;
+    return this.getComponent<TypeComponent>({ componentType: Type.type })!;
+  }
+
+  getBasicInfo(): BasicInfoComponent {
+    const { BasicInfo } = ComponentInformation.components;
+    return this.getComponent<BasicInfoComponent>({ componentType: BasicInfo.type })!;
+  }
+
+  getName(): string {
+    const basicInfoComponent = this.getBasicInfo();
+    return basicInfoComponent.getName() ?? 'Unknown Class Name';
+  }
+
+  getTable(): TableComponent<TableElementType> {
+    const { Table } = ComponentInformation.components;
+    return this.getComponent<TableComponent<TableElementType>>({ componentType: Table.type })!;
+  }
+
+  getElement(name: string, options?: ITableGetOptions): TableElement | null {
+    const { Table } = ComponentInformation.components;
+    const tableComponent = this.getComponent<TableComponent<TableElementType>>({ componentType: Table.type });
+    if (!tableComponent) return null;
+    return tableComponent.get(name, options);
   }
 
   clone(): CompositionComponent {

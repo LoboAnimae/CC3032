@@ -1,6 +1,10 @@
 import { CompositionComponent } from './index';
 import ComponentInformation from './ComponentInformation';
 
+export function isEmptyComponent(inComponent?: CompositionComponent | null) {
+  return !!inComponent?.children.length;
+}
+
 export default class EmptyComponent extends CompositionComponent {
   constructor() {
     super();

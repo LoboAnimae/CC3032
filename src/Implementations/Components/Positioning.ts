@@ -6,6 +6,12 @@ export interface PositioningParams {
   column: number;
 }
 
+export function extractPositioning(inComponent?: Composition | null) {
+  if (!inComponent) return null;
+  const { Positioning } = ComponentInformation.components;
+  return inComponent.getComponent<PositioningComponent>({ componentType: Positioning.type });
+}
+
 //#region Interfaces
 /**
  * If something implements this, then positions can be stored

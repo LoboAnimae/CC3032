@@ -5,7 +5,13 @@ export interface ValueHolderparams {
   value: any;
 }
 
-class ValueHolder extends Composition {
+export function extractValueComponent(inComponent?: Composition | null) {
+  if (!inComponent) return null;
+  const { ValueHolder } = ComponentInformation.components;
+  return inComponent.getComponent<ValueComponent>({ componentType: ValueHolder.type });
+}
+
+class ValueComponent extends Composition {
   public value?: any;
 
   constructor(options?: Partial<ValueHolderparams>) {
@@ -22,8 +28,8 @@ class ValueHolder extends Composition {
     this.value = value;
   };
   clone(): Composition {
-    return new ValueHolder({ value: this.value });
+    return new ValueComponent({ value: this.value });
   }
 }
 
-export default ValueHolder;
+export default ValueComponent;

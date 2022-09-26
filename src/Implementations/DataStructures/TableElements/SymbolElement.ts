@@ -3,7 +3,7 @@ import {
   CompositionComponent,
   PositioningComponent,
   TypeComponent,
-  ValueHolder,
+  ValueComponent,
 } from '../../Components';
 import ComponentInformation from '../../Components/ComponentInformation';
 import TableElement from './TableElement';

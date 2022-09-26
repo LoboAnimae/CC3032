@@ -17,6 +17,12 @@ export interface TypeInstance {
   createChild: () => TypeComponent;
 }
 
+export function extractTypeComponent(inComponent?: Composition | null) {
+  if (!inComponent) return null;
+  const { Type } = ComponentInformation.components;
+  return inComponent.getComponent<TypeComponent>({ componentType: Type.type });
+}
+
 /**
  * A type component is a component that describes a type. It is the main component of a type system.
  */

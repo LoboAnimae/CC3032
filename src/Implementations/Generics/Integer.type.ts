@@ -1,5 +1,5 @@
 import ComponentInformation from '../Components/ComponentInformation';
-import { BasicInfoComponent, CompositionComponent, TypeComponent, ValueHolder } from '../Components/index';
+import { BasicInfoComponent, CompositionComponent, TypeComponent, ValueComponent } from '../Components/index';
 import { Primitive } from './Primitive.type';
 
 export default class IntType extends Primitive {
@@ -37,11 +37,11 @@ export default class IntType extends Primitive {
     } else if (value?.componentName === Bool.name) {
       const ValueHolderType = ComponentInformation.components.ValueHolder.type;
       const newInt = new IntType();
-      const foundValue = value.getComponent<ValueHolder>({
+      const foundValue = value.getComponent<ValueComponent>({
         componentType: ValueHolderType,
       });
       if (foundValue) {
-        newInt.addComponent(new ValueHolder({ value: Number(foundValue.getValue()) }));
+        newInt.addComponent(new ValueComponent({ value: Number(foundValue.getValue()) }));
       }
       return newInt;
     }

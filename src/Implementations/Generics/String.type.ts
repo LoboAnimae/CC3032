@@ -5,7 +5,7 @@ import {
   TableInstance,
   TypeComponent,
   TypeInstance,
-  ValueHolder,
+  ValueComponent,
 } from '../Components';
 import ComponentInformation from '../Components/ComponentInformation';
 import { MethodElement, SymbolElement } from '../DataStructures/TableElements';
@@ -60,11 +60,11 @@ export class StringType extends Primitive {
     const { Type, ValueHolder: ValueHolderInfo } = ComponentInformation.components;
 
     const incomingValueTypeComponent = value?.getComponent<TypeComponent>({ componentType: Type.name });
-    const incomingValueComponent = value?.getComponent<ValueHolder>({ componentType: ValueHolderInfo.name });
+    const incomingValueComponent = value?.getComponent<ValueComponent>({ componentType: ValueHolderInfo.name });
     if (!incomingValueTypeComponent || !incomingValueComponent) return null;
 
     const newValue = new StringType();
-    newValue.addComponent(new ValueHolder({ value: '' + incomingValueComponent.value }));
+    newValue.addComponent(new ValueComponent({ value: '' + incomingValueComponent.value }));
     return newValue;
   };
 

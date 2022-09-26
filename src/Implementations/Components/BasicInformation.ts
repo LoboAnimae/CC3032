@@ -5,6 +5,12 @@ export interface Params {
   name: string;
 }
 
+export function extractBasicInformation(inComponent?: Composition | null) {
+  if (!inComponent) return null;
+  const { BasicInfo } = ComponentInformation.components;
+  return inComponent.getComponent<BasicInfoComponent>({ componentType: BasicInfo.type });
+}
+
 class BasicInfoComponent extends Composition {
   public name?: string;
   constructor(options?: Partial<Params>) {

@@ -1,6 +1,7 @@
 import BasicInfoComponent from '../Components/BasicInformation';
 import ComponentInformation from '../Components/ComponentInformation';
 import TypeComponent from '../Components/Type';
+import ValueComponent from '../Components/ValueHolder';
 
 export abstract class Primitive extends TypeComponent {
   readonly parent = null;
@@ -12,6 +13,15 @@ export abstract class Primitive extends TypeComponent {
     const basicInfo = new BasicInfoComponent({ name: options.name });
     this.addComponent(basicInfo);
   }
+
+  getValue = (): any => {
+    const { ValueHolder: ValueHolderInfo } = ComponentInformation.components;
+    return (
+      this.getComponent<ValueComponent>({ componentType: ValueHolderInfo.type })?.getValue() ??
+      this.defaultValue ??
+      null
+    );
+  };
 
   createChild: () => TypeComponent = () => {
     throw new Error('Cannot create child of primitive type');

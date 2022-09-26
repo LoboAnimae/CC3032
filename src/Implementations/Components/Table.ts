@@ -7,11 +7,21 @@ export interface TableParams<T extends CompositionComponent> {
   parent: TableComponent<T> | null;
 }
 
+export interface ITableGetOptions {
+  inCurrentScope?: boolean;
+}
+
 export interface TableInstance<T extends CompositionComponent> {
   get: (key: string) => T | null;
   add: (value: T) => void;
   [Symbol.iterator]: () => any;
   createChild: () => TableComponent<T>;
+}
+
+export function extractTableComponent<T extends CompositionComponent>(inComponent?: Composition | null) {
+  if (!inComponent) return null;
+  const { Table } = ComponentInformation.components;
+  return inComponent.getComponent<TableComponent<T>>({ componentType: Table.type });
 }
 
 class TableComponent<T extends CompositionComponent> extends Composition {
@@ -34,7 +44,8 @@ class TableComponent<T extends CompositionComponent> extends Composition {
    * @param options
    * @returns The symbol or null
    */
-  get(key: string, options?: { inCurrentScope: boolean }): T | null {
+  get(p_key: any, options?: ITableGetOptions): T | null {
+    const key = p_key.toString();
     const { BasicInfo } = ComponentInformation.components;
     const foundComponent = this.elements.find((element: T) => {
       const basicInfo = element.getComponent<BasicInfoComponent>({
@@ -47,6 +58,10 @@ class TableComponent<T extends CompositionComponent> extends Composition {
       return (foundComponent as T) ?? null;
     }
     return (foundComponent ?? this.parent?.get(key) ?? null) as T;
+  }
+
+  getAll(): T[] {
+    return [...this.elements];
   }
 
   /**

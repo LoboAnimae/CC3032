@@ -1,4 +1,4 @@
-import { BasicInfoComponent, CompositionComponent, TableComponent, TypeComponent, ValueHolder } from '../Components';
+import { BasicInfoComponent, CompositionComponent, TableComponent, TypeComponent, ValueComponent } from '../Components';
 import ComponentInformation from '../Components/ComponentInformation';
 import { Primitive } from './Primitive.type';
 
@@ -47,11 +47,11 @@ export default class BoolType extends Primitive {
       const newBool = new BoolType();
 
       const valueHolderType = ComponentInformation.components.ValueHolder.type;
-      const foundValue = value!.getComponent<ValueHolder>({
+      const foundValue = value!.getComponent<ValueComponent>({
         componentType: valueHolderType,
       });
       if (foundValue) {
-        newBool.addComponent(new ValueHolder({ value: !!foundValue.getValue() }));
+        newBool.addComponent(new ValueComponent({ value: !!foundValue.getValue() }));
       }
       return newBool;
     }
