@@ -1,101 +1,75 @@
-import { MethodCallContext } from "../../antlr/yaplParser";
-import { extractTableComponent } from "../Components/Table";
-import TypeComponent from "../Components/Type";
-import MethodElement from "../DataStructures/TableElements/MethodElement";
-import SymbolElement from "../DataStructures/TableElements/SymbolElement";
-import { ClassType } from "../Generics/Object.type";
-import { Scope, YaplVisitor } from "./meta";
+import { MethodCallContext } from '../../antlr/yaplParser';
+import CompositionComponent from '../Components/Composition';
+import EmptyComponent from '../Components/EmptyComponent';
+import { extractTableComponent } from '../Components/Table';
+import TypeComponent, { extractTypeComponent } from '../Components/Type';
+import MethodElement from '../DataStructures/TableElements/MethodElement';
+import SymbolElement from '../DataStructures/TableElements/SymbolElement';
+import { ClassType } from '../Generics/Object.type';
+import { PossibleScope, Scope, ScopePosition, YaplVisitor } from './meta';
 
 export default function visitMethodCall(visitor: YaplVisitor, ctx: MethodCallContext) {
-    const methodType = ctx.TYPE();
-    const methodName = ctx.IDENTIFIER();
-    const currentScope = visitor.getCurrentScope() as ClassType;
-    const existingTable = visitor.findTable(methodType);
-    const tableInScope = extractTableComponent(currentScope);
+  const methodHolderClassName = ctx.TYPE()!;
+  const methodName = ctx.IDENTIFIER();
+  const [calledVariable, ...parameters] = ctx.expression();
+
+  const currentMethod = visitor.getCurrentScope(ScopePosition.Method) as MethodElement;
+  const currentClass = visitor.getCurrentScope(ScopePosition.Class) as ClassType;
+  const classThatHoldsMethod = visitor.findTable(methodHolderClassName);
+
+  if (!classThatHoldsMethod) {
+    visitor.addError(ctx, `Trying to access non-existent class ${methodHolderClassName.text}`);
+    return visitor.next(ctx);
+  }
+
+  const allowsAssignmentOf = classThatHoldsMethod.allowsAssignmentOf(currentClass);
+
+  if (!allowsAssignmentOf) {
+    visitor.addError(ctx, `${currentClass.toString()} is trying to access non-inherited class ${classThatHoldsMethod.toString()}`);
+    return visitor.next(ctx);
+  }
+
+  // Get the type of the gotten variable
+  const varType = extractTypeComponent(classThatHoldsMethod.getTable().get(calledVariable.text));
+
+  if (!varType) {
+    visitor.addError(ctx, `Could not find ${calledVariable.text}`);
+    return visitor.next(ctx);
+  }
+  const originalClassTable = extractTableComponent(varType);
+  const referencedMethodInOriginalClass = extractTableComponent(originalClassTable?.get(methodName.text));
+
+  if (!referencedMethodInOriginalClass) {
+    visitor.addError(ctx, `Could not find method ${methodName.text} in desired class`);
+    return visitor.next(ctx);
+  }
 
 
-    const [variableName, ...methodParametersRaw] = ctx.expression();
-    const methodParameters: SymbolElement[] = methodParametersRaw.map((p: any) => visitor.visit(p));
-    const variable = visitor.visit(variableName);
+  const paramNum = parameters.length;
+  const requiredParams = referencedMethodInOriginalClass.getAll();
+  const requiredParamsNum = requiredParams.length;
+  if (paramNum !== requiredParamsNum) {
+    visitor.addError(ctx, `Incorrect number of parameters (expected ${requiredParamsNum} but found ${paramNum})`);
+    return visitor.next(ctx)
+  }
 
-    // ERROR: Variable is not defined
-    if (!variable) {
-        return visitor.next(ctx);
+  for (let i = 0; i < paramNum; ++i) {
+    const param = visitor.visit(parameters[i]);
+    const requiredParam = requiredParams[i];
+
+    const givenParamType = extractTypeComponent(param);
+    const requiredParamType = extractTypeComponent(requiredParam)!;
+
+    if (!givenParamType) {
+      visitor.addError(ctx, `Can't resolve type of ${parameters[i].text}`);
+      continue;
     }
 
-
-    let methodHoldingClass: TypeComponent;
-
-    if (variableName.text.toLocaleLowerCase() === 'self') {
-        methodHoldingClass = currentScope;
-    } else if (existingTable) {
-        methodHoldingClass = existingTable;
-    } else {
-        const foundClassType = tableInScope?.get(variableName) as ClassType;
-        methodHoldingClass = foundClassType?.getType();
+    if (!requiredParamType.allowsAssignmentOf(givenParamType)) {
+      visitor.addError(ctx, `Can't assign parameter type`);
     }
+  }
 
 
-
-    // ERROR: The method holding the class does not exist
-    if (!methodHoldingClass) {
-        visitor.addError(
-            ctx,
-            `Attempting to call method from non-existing class (class ${ctx.TYPE()} does not exist or is not yet defined)`,
-        );
-        return visitor.next(ctx);
-    }
-
-
-    const allowsAssignment = methodHoldingClass?.allowsAssignmentOf(variable);
-
-    // ERROR: A class is able to call only its own methods or it's parents methods
-    // if (!allowsAssignment) {
-    //     visitor.addError(
-    //         ctx,
-    //         // `Attempting to call method from class ${methodHoldingClass.tableName} from class ${variable.tableName}, but ${variable.tableName} is not a child of ${methodHoldingClass.tableName}`,
-    //         `Can't call method ${methodName.toString()} from this class`
-    //     );
-    // }
-
-    const methodHoldingClassTable = extractTableComponent(methodHoldingClass);
-    const referencedMethod = methodHoldingClassTable?.get(methodName.text) as MethodElement;
-
-    // ERROR: The method does not exist in the class (self or not)
-    if (!referencedMethod) {
-        visitor.addError(
-            ctx,
-            // `Attempting to call non-existing method ${calledMethod.text} from class ${methodHoldingClass.tableName}`,
-            `Error in MethodCalls: No referenced method exists`
-        );
-        return visitor.next(ctx);
-    }
-
-    const requiredMethodParameters: SymbolElement[] = referencedMethod.getParameters() ?? [];
-    const sameNumberOfParameters = requiredMethodParameters.length === methodParameters.length;
-
-    // ERROR: The method is called with a different number of parameters than it requires
-    if (!sameNumberOfParameters) {
-        visitor.addError(
-            ctx,
-            // `Incorrect number of parameters for method ${calledMethod.text} from class ${methodHoldingClass.tableName} (expected ${requiredMethodParameters.length}, got ${methodParameters.length})`,
-            `Incorrect number of parameters in method call`
-        );
-        return visitor.next(ctx);
-    }
-
-    for (let i = 0; i < requiredMethodParameters.length; i++) {
-        const requiredParameterType = requiredMethodParameters[i].getType();
-        const methodParameterType = methodParameters[i];
-        const allowed = requiredParameterType.allowsAssignmentOf(methodParameterType);
-        // ERROR: The parameter required is not the same as the one passed
-        if (!allowed) {
-            visitor.addError(
-                ctx,
-                // `Incorrect type of parameter ${requiredMethodParameters[i].name} for method ${calledMethod.text} from class ${methodHoldingClass.tableName} (expected ${requiredParameterType.tableName}, got ${methodParameterType.tableName})`,
-                `Incorrect parameter type`
-            );
-        }
-    }
-    return referencedMethod.getType();
+  return extractTypeComponent(referencedMethodInOriginalClass)!;
 }

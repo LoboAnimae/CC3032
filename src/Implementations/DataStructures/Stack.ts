@@ -25,6 +25,9 @@ export class Stack<T> implements IStack<T> {
   }
 
   getItem(index: number): T {
+    if (index + 1 > this.size()) {
+      return this.items[this.size() - 1];
+    }
     return this.items[index];
   }
 }

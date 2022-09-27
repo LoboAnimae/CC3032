@@ -25,13 +25,19 @@ export interface ParseTreeProperties {
   errors: BasicStorage<IError>;
 }
 
+export enum ScopePosition {
+  Global,
+  Class,
+  Method,
+}
+
 export interface HelperFunctions {
   addError: (ctx: any, errorMessage: string) => void;
   findTable: (name: string | TypeComponent | any) => ClassType | null;
   returnToScope: (scope: Scope) => void;
   next: (ctx: any) => any;
   returnToGlobalScope: () => void;
-  getCurrentScope: <T = ClassType | MethodElement>() => T;
+  getCurrentScope: <T = ClassType | MethodElement>(offset?: ScopePosition) => T;
 }
 
 export type PossibleScope = ClassType | MethodElement;

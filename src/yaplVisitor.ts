@@ -9,6 +9,7 @@ import {
   FalseContext,
   FormalContext,
   IdContext,
+  IfContext,
   IntContext,
   IsvoidContext,
   LessEqualContext,
@@ -24,13 +25,10 @@ import {
   PropertyContext,
   StringContext,
   TrueContext,
-  WhileContext
+  WhileContext,
 } from './antlr/yaplParser';
 import { yaplVisitor } from './antlr/yaplVisitor';
-import {
-  CompositionComponent, TableComponent,
-  TypeComponent
-} from './Implementations/Components/index';
+import { CompositionComponent, TableComponent, TypeComponent } from './Implementations/Components/index';
 import { Stack } from './Implementations/DataStructures/Stack';
 import { MethodElement, SymbolElement } from './Implementations/DataStructures/TableElements/index';
 import { BasicStorage, IError } from './Implementations/Errors/Errors';
@@ -48,11 +46,12 @@ import visitEqual from './Implementations/visitorFunctions/equal';
 import visitFalse from './Implementations/visitorFunctions/false';
 import visitFormal from './Implementations/visitorFunctions/formal';
 import visitId from './Implementations/visitorFunctions/id';
+import visitIf from './Implementations/visitorFunctions/if';
 import visitInt from './Implementations/visitorFunctions/int';
 import visitIsvoid from './Implementations/visitorFunctions/isVoid';
 import visitLessEqual from './Implementations/visitorFunctions/lessEqual';
 import visitLessThan from './Implementations/visitorFunctions/lessThan';
-import { HelperFunctions, ParseTreeProperties } from './Implementations/visitorFunctions/meta';
+import { HelperFunctions, ParseTreeProperties, ScopePosition } from './Implementations/visitorFunctions/meta';
 import visitMethod from './Implementations/visitorFunctions/method';
 import visitMethodCall from './Implementations/visitorFunctions/methodCall';
 import visitMinus from './Implementations/visitorFunctions/minus';
@@ -78,7 +77,8 @@ export const lineAndColumn = (ctx: any): { line: number; column: number } => ({
 
 export class YaplVisitor
   extends AbstractParseTreeVisitor<any>
-  implements yaplVisitor<any>, HelperFunctions, ParseTreeProperties {
+  implements yaplVisitor<any>, HelperFunctions, ParseTreeProperties
+{
   public scopeStack: Stack<CompositionComponent>;
   public symbolsTable: TableComponent<TypeComponent>;
   public mainExists: boolean = false;
@@ -137,8 +137,8 @@ export class YaplVisitor
   }
 
   // The second scope in the stack is always a class
-  getCurrentScope<T = ClassType | MethodElement>(): T {
-    return this.scopeStack.getItem(this.scopeStack.size() - 1) as T;
+  getCurrentScope<T = ClassType | MethodElement>(p_offset?: ScopePosition): T {
+    return this.scopeStack.getItem(p_offset ?? this.scopeStack.size() - 1) as T;
   }
 
   //#endregion
@@ -148,40 +148,17 @@ export class YaplVisitor
   };
 
   visitMethodCall = (ctx: MethodCallContext) => {
-    return visitMethodCall(this, ctx); 
+    return visitMethodCall(this, ctx);
   };
 
   visitOwnMethodCall = (ctx: OwnMethodCallContext) => {
     return visitOwnMethodCall(this, ctx);
   };
 
-  // // The first if (the one on top of the stack) defines the type, the others follow it
-  // visitIf = (ctx: IfContext) => {
-  //   // Empty bodies are disallowed by the parser in itself
-  //   const [condition, body, elses] = ctx.expression();
-  //   const conditionType = this.visit(condition);
-  //   const boolTable: Table<boolean> = this.findTable("Bool")!;
-
-  //   // ERROR: Condition can't be resolved to boolean
-  //   if (!boolTable.allowsAssignmentOf(conditionType)) {
-  //     this.addError(
-  //       ctx,
-  //       `Condition in if statement can't be resolved to boolean (got ${conditionType.tableName})`
-  //     );
-  //   }
-  //   const thisIfType = this.visit(body);
-  //   const elseBodiesType = this.visit(elses);
-  //   // ERROR: If and else bodies don't have the same type
-  //   const [allowsAssignment] = thisIfType.allowsAssignmentOf(elseBodiesType);
-  //   const isAncestor = thisIfType.isAncestorOf(elseBodiesType);
-  //   if (!allowsAssignment && !isAncestor) {
-  //     this.addError(
-  //       ctx,
-  //       `If and else bodies don't have the same type (got ${thisIfType.tableName} and ${elseBodiesType.tableName})`
-  //     );
-  //   }
-  //   return thisIfType;
-  // };
+  // The first if (the one on top of the stack) defines the type, the others follow it
+  visitIf = (ctx: IfContext) => {
+    return visitIf(this, ctx);
+  };
 
   visitWhile = (ctx: WhileContext) => {
     return visitWhile(this, ctx);
@@ -203,69 +180,69 @@ export class YaplVisitor
     return visitIsvoid(this, ctx);
   };
 
-  visitMultiply = (ctx: MultiplyContext) => { 
+  visitMultiply = (ctx: MultiplyContext) => {
     return visitMultiply(this, ctx);
   };
 
-  visitDivision = (ctx: DivisionContext) => { 
+  visitDivision = (ctx: DivisionContext) => {
     return visitDivision(this, ctx);
   };
-  visitAdd = (ctx: AddContext) => { 
+  visitAdd = (ctx: AddContext) => {
     return visitAdd(this, ctx);
   };
-  visitMinus = (ctx: MinusContext) => { 
+  visitMinus = (ctx: MinusContext) => {
     return visitMinus(this, ctx);
   };
 
   // Less thans return booleans.
-  visitLessThan = (ctx: LessThanContext) => { 
+  visitLessThan = (ctx: LessThanContext) => {
     return visitLessThan(this, ctx);
   };
 
-  visitLessEqual = (ctx: LessEqualContext) => { 
+  visitLessEqual = (ctx: LessEqualContext) => {
     return visitLessEqual(this, ctx);
   };
-  visitEqual = (ctx: EqualContext) => { 
+  visitEqual = (ctx: EqualContext) => {
     return visitEqual(this, ctx);
   };
 
-  visitParentheses = (ctx: ParenthesesContext) => { 
+  visitParentheses = (ctx: ParenthesesContext) => {
     return visitParentheses(this, ctx);
   };
 
-  visitId = (ctx: IdContext) => { 
+  visitId = (ctx: IdContext) => {
     return visitId(this, ctx);
   };
 
-  visitInt = (ctx: IntContext) => { 
+  visitInt = (ctx: IntContext) => {
     return visitInt(this, ctx);
   };
 
-  visitString = (ctx: StringContext) => { 
+  visitString = (ctx: StringContext) => {
     return visitString(this, ctx);
   };
 
-  visitTrue = (ctx: TrueContext) => { 
+  visitTrue = (ctx: TrueContext) => {
     return visitTrue(this, ctx);
   };
 
-  visitFalse = (ctx: FalseContext) => { 
+  visitFalse = (ctx: FalseContext) => {
     return visitFalse(this, ctx);
   };
 
-  visitAssignment = (ctx: AssignmentContext) => { 
+  visitAssignment = (ctx: AssignmentContext) => {
     return visitAssignment(this, ctx);
   };
 
-  visitMethod = (ctx: MethodContext) => { 
+  visitMethod = (ctx: MethodContext) => {
     return visitMethod(this, ctx);
   };
 
-  visitProperty = (ctx: PropertyContext) => { 
+  visitProperty = (ctx: PropertyContext) => {
     return visitProperty(this, ctx);
   };
 
-  visitFormal = (ctx: FormalContext) => { 
+  visitFormal = (ctx: FormalContext) => {
     return visitFormal(this, ctx);
   };
 }

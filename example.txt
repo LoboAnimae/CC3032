@@ -1,18 +1,13 @@
-class C {
-    idsomething(): Int {
-        1
-    };
-};
-
 class A {
-    ab: C <- new C; 
-    x: Int <-1;
-    a(x: Int): Int { 1 };
+};
+class B inherits A {
 };
 
-class B inherits A {
-    x: Int <- 2;
-    b(): Int {{  
-        ab@A.idsomething();
-    }};
+class C {
+    getA(): B {
+        IF true
+        THEN new A
+        ELSE new B
+        FI
+    };
 };
