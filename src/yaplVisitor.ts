@@ -51,7 +51,7 @@ import visitInt from './Implementations/visitorFunctions/int';
 import visitIsvoid from './Implementations/visitorFunctions/isVoid';
 import visitLessEqual from './Implementations/visitorFunctions/lessEqual';
 import visitLessThan from './Implementations/visitorFunctions/lessThan';
-import { HelperFunctions, ParseTreeProperties, ScopePosition } from './Implementations/visitorFunctions/meta';
+import { HelperFunctions, ParseTreeProperties, Scope, ScopePosition } from './Implementations/visitorFunctions/meta';
 import visitMethod from './Implementations/visitorFunctions/method';
 import visitMethodCall from './Implementations/visitorFunctions/methodCall';
 import visitMinus from './Implementations/visitorFunctions/minus';
@@ -65,10 +65,6 @@ import visitString from './Implementations/visitorFunctions/string';
 import visitTrue from './Implementations/visitorFunctions/true';
 import visitWhile from './Implementations/visitorFunctions/while';
 
-export enum Scope {
-  Global = 1,
-  General,
-}
 
 export const lineAndColumn = (ctx: any): { line: number; column: number } => ({
   line: ctx.start?.line ?? 0,
@@ -124,7 +120,7 @@ export class YaplVisitor
     return this.symbolsTable.get(name.toString(), { inCurrentScope: true }) as ClassType;
   }
 
-  returnToScope(scope: Scope) {
+  returnToScope(scope: Scope): void {
     while (this.scopeStack.size() > scope) {
       this.scopeStack.pop();
     }

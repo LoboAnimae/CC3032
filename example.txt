@@ -1,13 +1,3 @@
 class A {
-};
-class B inherits A {
-};
-
-class C {
-    getA(): B {
-        IF true
-        THEN new A
-        ELSE new B
-        FI
-    };
+    x: Bool <- false;
 };
