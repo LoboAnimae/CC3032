@@ -49,6 +49,10 @@ const ComponentInformation = {
       name: 'Class',
       type: 'Class',
     },
+    Quadruple: {
+      name: 'Quadruple',
+      type: 'Quadruple',
+    },
   },
 };
 

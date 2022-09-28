@@ -51,7 +51,7 @@ export default function visitOwnMethodCall(visitor: YaplVisitor, ctx: OwnMethodC
         ctx,
         `Incorrect type of parameter ${requiredMethodParameters[
           i
-        ].getName()} for method ${methodIdentifier.toString()} from class ${methodHoldingClass.getName()}`,
+          ].getName()} for method ${methodIdentifier.toString()} from class ${methodHoldingClass.getName()}`,
       );
     }
   }

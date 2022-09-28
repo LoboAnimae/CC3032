@@ -1,12 +1,8 @@
 import { MethodCallContext } from '../../antlr/yaplParser';
-import CompositionComponent from '../Components/Composition';
-import EmptyComponent from '../Components/EmptyComponent';
-import { extractTableComponent } from '../Components/Table';
-import TypeComponent, { extractTypeComponent } from '../Components/Type';
+import { extractTableComponent, extractTypeComponent } from '../Components';
 import MethodElement from '../DataStructures/TableElements/MethodElement';
-import SymbolElement from '../DataStructures/TableElements/SymbolElement';
 import { ClassType } from '../Generics/Object.type';
-import { PossibleScope, Scope, ScopePosition, YaplVisitor } from './meta';
+import { ScopePosition, YaplVisitor } from './meta';
 
 export default function visitMethodCall(visitor: YaplVisitor, ctx: MethodCallContext) {
   const methodHolderClassName = ctx.TYPE()!;
@@ -50,7 +46,7 @@ export default function visitMethodCall(visitor: YaplVisitor, ctx: MethodCallCon
   const requiredParamsNum = requiredParams.length;
   if (paramNum !== requiredParamsNum) {
     visitor.addError(ctx, `Incorrect number of parameters (expected ${requiredParamsNum} but found ${paramNum})`);
-    return visitor.next(ctx)
+    return visitor.next(ctx);
   }
 
   for (let i = 0; i < paramNum; ++i) {

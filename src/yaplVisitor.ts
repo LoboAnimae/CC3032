@@ -77,8 +77,7 @@ export const lineAndColumn = (ctx: any): { line: number; column: number } => ({
 
 export class YaplVisitor
   extends AbstractParseTreeVisitor<any>
-  implements yaplVisitor<any>, HelperFunctions, ParseTreeProperties
-{
+  implements yaplVisitor<any>, HelperFunctions, ParseTreeProperties {
   public scopeStack: Stack<CompositionComponent>;
   public symbolsTable: TableComponent<TypeComponent>;
   public mainExists: boolean = false;
@@ -101,6 +100,7 @@ export class YaplVisitor
     this.scopeStack.push(new ObjectType());
     this.symbolsTable.add(objectType, intType, stringType, boolType, ioType);
   }
+
   defaultResult(): any {
     return [];
   }
