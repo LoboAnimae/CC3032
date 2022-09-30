@@ -1,10 +1,6 @@
 import { v4 as uuid } from 'uuid';
 import ComponentInformation from './ComponentInformation';
 
-export interface CompositionParams {
-  componentName: string;
-}
-
 export enum CompositionErrors {
   DUPLICATE_COMPONENT = 'Duplicate component',
 }
@@ -106,7 +102,6 @@ abstract class CompositionComponent {
   copy(): CompositionComponent {
     const returnValue = this.clone();
     for (const component of this.children) {
-
       const elementExists = !!returnValue.getComponent({ componentType: component.componentType });
       if (elementExists) continue;
       returnValue.addComponent(component.copy());

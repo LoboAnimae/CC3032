@@ -19,7 +19,7 @@ export default class SimpleAssignment extends TripletElement {
   }
 
   toString(): string {
-    return `{${this.getAssigned()}} = ${this.getValue()};`;
+    return `${this.getAssigned()} = ${this.getValue()};`;
   }
 
   clone() {

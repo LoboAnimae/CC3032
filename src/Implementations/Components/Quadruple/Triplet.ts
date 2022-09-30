@@ -13,7 +13,7 @@ export function extractTriplet(inComponent?: Composition | null): TripletElement
 export abstract class TripletElement extends Composition {
   readonly id: string;
   operator: string | null;
-  elements: [string | null, string | null];
+  elements: [any, any];
 
   constructor() {
     super();
@@ -71,7 +71,7 @@ export default class Triplet extends Composition {
     const stringResults = [];
     for (const triple of this._elements) {
       const [operator, Operand1, Operand2] = triple.getTuple();
-      stringResults.push({operator, Operand1, Operand2});
+      stringResults.push({operator, Operand1: Operand1?.toString(), Operand2: Operand2?.toString()});
     }
     console.table(stringResults)
   }

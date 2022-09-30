@@ -23,15 +23,15 @@ export class StringType extends Primitive {
     const tableComponent = new TableComponent();
     this.addComponent(tableComponent);
 
-    const lengthMethod = new MethodElement({ name: 'length', type: new Integer() });
+    const lengthMethod = new MethodElement({ name: 'length', type: new Integer(), scopeName: this.componentName });
 
-    const concatMethod = new MethodElement({ name: 'concat', type: this });
-    concatMethod.addParameters(new SymbolElement({ name: 's', type: this }));
+    const concatMethod = new MethodElement({ name: 'concat', type: this, scopeName: this.componentName });
+    concatMethod.addParameters(new SymbolElement({ name: 's', type: this, scopeName: this.componentName }));
 
-    const substrMethod = new MethodElement({ name: 'substr', type: this });
+    const substrMethod = new MethodElement({ name: 'substr', type: this, scopeName: this.componentName });
     substrMethod.addParameters(
-      new SymbolElement({ name: 'i', type: new Integer() }),
-      new SymbolElement({ name: 'l', type: new Integer() }),
+      new SymbolElement({ name: 'i', type: new Integer(), scopeName: this.componentName }),
+      new SymbolElement({ name: 'l', type: new Integer(), scopeName: this.componentName }),
     );
 
     tableComponent.add(lengthMethod, concatMethod, substrMethod);

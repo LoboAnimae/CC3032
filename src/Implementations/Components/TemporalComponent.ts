@@ -1,4 +1,5 @@
 import Composition from './Composition';
+import { SymbolElement } from '../DataStructures/TableElements';
 
 
 export function isTemporalComponent(component?: Composition) {
@@ -6,12 +7,18 @@ export function isTemporalComponent(component?: Composition) {
 }
 
 export default class TemporalComponent extends Composition {
-  constructor() {
+  referencedElement: SymbolElement;
+  constructor(references: SymbolElement) {
     super();
+    this.referencedElement = references;
     this.componentType = 'TemporalComponent';
   }
 
   clone() {
-    return new TemporalComponent();
+    return new TemporalComponent(this.referencedElement);
+  }
+
+  toString(): string {
+    return `${this.referencedElement.scopeName}.${this.referencedElement.getName()}`;
   }
 }

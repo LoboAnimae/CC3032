@@ -13,6 +13,7 @@ export interface SymbolElementParams {
   value?: any;
   line?: number;
   column?: number;
+  scopeName: string;
 }
 
 export default class SymbolElement extends TableElement {

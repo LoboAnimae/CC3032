@@ -3,11 +3,12 @@ import CompositionComponent from '../Components/Composition';
 import EmptyComponent from '../Components/EmptyComponent';
 import SymbolElement from '../DataStructures/TableElements/SymbolElement';
 import { lineAndColumn, YaplVisitor } from './meta';
+import { ClassType } from '../Generics/Object.type';
 
 export default function visitFormal(visitor: YaplVisitor, ctx: FormalContext) {
   const paramName = ctx.IDENTIFIER();
   const dataType = ctx.TYPE();
-  const foundTable: CompositionComponent | null | undefined = visitor.findTable(dataType)?.copy();
+  const foundTable: ClassType | null | undefined = visitor.findTable(dataType)?.copy() as ClassType;
 
   // ERROR: The type is not yet defined
   if (!foundTable) {
@@ -17,6 +18,7 @@ export default function visitFormal(visitor: YaplVisitor, ctx: FormalContext) {
   const newSymbol = new SymbolElement({
     name: paramName.text,
     type: foundTable,
+    scopeName: foundTable.getName(),
     ...lineAndColumn(ctx),
   });
   return newSymbol;

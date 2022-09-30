@@ -13,15 +13,18 @@ export interface TableElementParams {
   value?: any;
   line?: number;
   column?: number;
+  scopeName: string; // Just to help us
 }
 
 export default abstract class TableElement extends CompositionComponent {
   referentialID: string;
+  scopeName: string;
   constructor(options?: TableElementParams) {
     super();
     this.referentialID = uuid();
     this.componentType = 'TableElement';
     this.unique = false;
+    this.scopeName = options?.scopeName ?? 'Unknown Scope'
 
     const basicInfo = new BasicInfoComponent({ name: options?.name });
     this.addComponent(basicInfo);

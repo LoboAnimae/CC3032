@@ -10,6 +10,7 @@ import ComponentInformation from '../Components/ComponentInformation';
 
 import StringType from './String.type';
 import TableElement from '../DataStructures/TableElements/TableElement';
+
 interface ClassTypeParams {
   name: string;
   parentType?: TypeComponent | null;
@@ -31,9 +32,13 @@ export class ObjectType extends TypeComponent {
     this.addComponent(basicInfo);
     const tableComponent = new TableComponent<TableElementType>();
 
-    const abortMethod = new MethodElement({ name: 'abort', type: this });
-    const typeNameMethod = new MethodElement({ name: 'type_name', type: new StringType() });
-    const copyMethod = new MethodElement({ name: 'copy', type: this });
+    const abortMethod = new MethodElement({ name: 'abort', type: this, scopeName: this.componentName });
+    const typeNameMethod = new MethodElement({
+      name: 'type_name',
+      type: new StringType(),
+      scopeName: this.componentName,
+    });
+    const copyMethod = new MethodElement({ name: 'copy', type: this, scopeName: this.componentName });
 
     tableComponent.add(abortMethod, typeNameMethod, copyMethod);
     this.addComponent(tableComponent);
@@ -136,6 +141,7 @@ export class ClassType extends ObjectType {
   getSize(): number {
     return this.sizeInBytes || 1;
   }
+
   toString(): string {
     const { type } = ComponentInformation.components.BasicInfo;
     return `<${this.componentName}> ${this.getComponent<BasicInfoComponent>({ componentType: type })?.getName()}`;
