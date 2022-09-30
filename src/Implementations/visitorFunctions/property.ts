@@ -1,12 +1,12 @@
 import { PropertyContext } from '../../antlr/yaplParser';
 import CompositionComponent from '../Components/Composition';
-import { extractTableComponent } from '../Components/Table';
+import { extractTableComponent, extractValueComponent, QuadrupleComponent } from '../Components';
 import TypeComponent from '../Components/Type';
-import { extractValueComponent } from '../Components/ValueHolder';
 import MethodElement from '../DataStructures/TableElements/MethodElement';
 import SymbolElement from '../DataStructures/TableElements/SymbolElement';
 import { ClassType } from '../Generics/Object.type';
 import { lineAndColumn, YaplVisitor } from './meta';
+import SimpleAssignment from '../Components/Quadruple/SimpleAssignment';
 
 export default function visitProperty(visitor: YaplVisitor, ctx: PropertyContext) {
   // Previous table
@@ -27,6 +27,8 @@ export default function visitProperty(visitor: YaplVisitor, ctx: PropertyContext
     type: propertyTypeClass,
     ...lineAndColumn(ctx),
   });
+  const quadrupleElement = new SimpleAssignment();
+  const quadrupleComponent = new QuadrupleComponent()
 
   if (propertyAssignmentExpression) {
     const assignmentResolvesTo: CompositionComponent = visitor.visit(propertyAssignmentExpression);
@@ -45,6 +47,10 @@ export default function visitProperty(visitor: YaplVisitor, ctx: PropertyContext
 
     const valueHolder = extractValueComponent(assignmentResolvesTo);
     newTableElement.addComponent(valueHolder?.copy());
+  } else {
+    const propertyDefaultValue = propertyTypeClass.defaultValue
+    quadrupleElement.elements = [newTableElement.referentialID, propertyDefaultValue.toString()];
+    console.log()
   }
 
   const currentScope: ClassType | MethodElement = visitor.getCurrentScope();
@@ -57,6 +63,9 @@ export default function visitProperty(visitor: YaplVisitor, ctx: PropertyContext
     return visitor.next(ctx);
   }
 
+  quadrupleComponent.merge(quadrupleElement)
+  quadrupleComponent.printTable()
+  newTableElement.addComponent(quadrupleComponent)
   // Case 2: Declaration of a new property
   currentScopeTable.add(newTableElement);
   return visitor.next(ctx);

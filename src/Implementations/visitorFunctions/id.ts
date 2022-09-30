@@ -1,8 +1,7 @@
 import { IdContext } from '../../antlr/yaplParser';
-import { extractBasicInformation } from '../Components/BasicInformation';
+import { extractBasicInformation, extractTableComponent } from '../Components';
 import EmptyComponent from '../Components/EmptyComponent';
-import { extractTableComponent } from '../Components/Table';
-import { TableElementType } from '../DataStructures/TableElements/index';
+import { TableElementType } from '../DataStructures/TableElements';
 import { YaplVisitor } from './meta';
 
 export default function visitId(visitor: YaplVisitor, ctx: IdContext) {
@@ -26,6 +25,7 @@ export default function visitId(visitor: YaplVisitor, ctx: IdContext) {
     visitor.addError(ctx, `Symbol '${name.toString()}' is not defined in scope '${basicInfo!.name}'`);
     return new EmptyComponent();
   }
+
 
   return foundComponent;
 }

@@ -6,6 +6,7 @@ import {
   ValueComponent,
 } from '../../Components';
 import ComponentInformation from '../../Components/ComponentInformation';
+import {v4 as uuid} from 'uuid'
 export interface TableElementParams {
   name?: string;
   type?: CompositionComponent;
@@ -15,8 +16,10 @@ export interface TableElementParams {
 }
 
 export default abstract class TableElement extends CompositionComponent {
+  referentialID: string;
   constructor(options?: TableElementParams) {
     super();
+    this.referentialID = uuid();
     this.componentType = 'TableElement';
     this.unique = false;
 

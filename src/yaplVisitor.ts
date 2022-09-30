@@ -30,7 +30,7 @@ import {
 import { yaplVisitor } from './antlr/yaplVisitor';
 import { CompositionComponent, TableComponent, TypeComponent } from './Implementations/Components/index';
 import { Stack } from './Implementations/DataStructures/Stack';
-import { MethodElement, SymbolElement } from './Implementations/DataStructures/TableElements/index';
+import { MethodElement } from './Implementations/DataStructures/TableElements/index';
 import { BasicStorage, IError } from './Implementations/Errors/Errors';
 import Bool from './Implementations/Generics/Boolean.type';
 import { default as IntType } from './Implementations/Generics/Integer.type';
@@ -190,7 +190,7 @@ export class YaplVisitor
     return visitMinus(this, ctx);
   };
 
-  // Less thans return booleans.
+  // Less than return booleans.
   visitLessThan = (ctx: LessThanContext) => {
     return visitLessThan(this, ctx);
   };

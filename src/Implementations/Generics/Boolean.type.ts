@@ -1,9 +1,9 @@
-import { BasicInfoComponent, CompositionComponent, TableComponent, TypeComponent, ValueComponent } from '../Components';
+import { CompositionComponent, TableComponent, TypeComponent, ValueComponent } from '../Components';
 import ComponentInformation from '../Components/ComponentInformation';
 import { Primitive } from './Primitive.type';
 
 export default class BoolType extends Primitive {
-  defaultValue: boolean = false;
+  defaultValue: number = 0;
   constructor() {
     const { Bool } = ComponentInformation.type;
     super({ name: Bool.name });

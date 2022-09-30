@@ -32,6 +32,7 @@ export abstract class TypeComponent extends Composition implements DownUpHierarc
   sizeInBytes?: number;
   parent: TypeComponent | null;
   allowsNegation: boolean;
+  defaultValue: any;
 
   constructor(options?: Partial<TypeParams> & Partial<TypeInstance>) {
     super();
@@ -41,6 +42,7 @@ export abstract class TypeComponent extends Composition implements DownUpHierarc
     this.sizeInBytes = options?.sizeInBytes;
     this.parent = options?.parent ?? null;
     this.allowsNegation = false;
+    this.defaultValue = null;
   }
 
   readonly getHierarchy = (): TypeComponent[] => {
@@ -49,7 +51,7 @@ export abstract class TypeComponent extends Composition implements DownUpHierarc
 
   readonly isAncestorOf = (incomingType?: Composition) => {
     const typeComponent = incomingType?.getComponent<TypeComponent>(
-      { componentType: incomingType.componentType },
+      { componentType: incomingType?.componentType },
       { currentScope: true },
     );
     if (!typeComponent) return false;

@@ -1,3 +1,4 @@
 class A {
-    x: Bool <- false;
+    x: Bool;
+    y: Int <- x + 1;
 };

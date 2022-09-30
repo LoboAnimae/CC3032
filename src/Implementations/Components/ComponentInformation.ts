@@ -52,6 +52,7 @@ const ComponentInformation = {
     Quadruple: {
       name: 'Quadruple',
       type: 'Quadruple',
+      element: 'QuadrupleElement'
     },
   },
 };

@@ -2,19 +2,16 @@ import { FalseContext } from '../../antlr/yaplParser';
 import ValueComponent from '../Components/ValueHolder';
 import BoolType from '../Generics/Boolean.type';
 import { YaplVisitor } from './meta';
-import { QuadrupleComponent, QuadrupleElement } from '../Components';
 
-export default function visitFalse(visitor: YaplVisitor, ctx: FalseContext) {
+export default function visitFalse(_visitor: YaplVisitor, _ctx: FalseContext) {
   const newBool = new BoolType();
-  const boolValue = new ValueComponent({ value: false });
+  const boolValue = new ValueComponent({ value: 0 });
   newBool.addComponent(boolValue);
-
-  const representingQuadruple = new QuadrupleElement({
-    id: newBool.id,
-    elements: ['0', null],
-  });
-  const quadrupleComponent = new QuadrupleComponent({ initialValues: [representingQuadruple] });
-
-  newBool.addComponent(quadrupleComponent);
+  /*
+  Why does this component not have a quadrupleElement representation, you ask?
+    1. It holds no memory representation.
+    2. It can be hardcoded.
+    3. It is a terminal node that holds no variable value, such as Integers and Strings
+   */
   return newBool;
 }
