@@ -3,11 +3,10 @@ import Composition from '../Composition';
 import CompositionComponent from '../Composition';
 import { v4 as uuid } from 'uuid';
 
-
 export function extractTriplet(inComponent?: Composition | null): TripletElement | null {
   if (!inComponent) return null;
-  const { Quadruple } = ComponentInformation.components;
-  return inComponent.getComponent<TripletElement>({ componentType: Quadruple.element });
+  const { Triplet } = ComponentInformation.components;
+  return inComponent.getComponent<TripletElement>({ componentType: Triplet.element });
 }
 
 export abstract class TripletElement extends Composition {
@@ -17,12 +16,11 @@ export abstract class TripletElement extends Composition {
 
   constructor() {
     super();
-    this.componentType = ComponentInformation.components.Quadruple.element;
+    this.componentType = ComponentInformation.components.Triplet.element;
     this.id = uuid();
     this.operator = null;
     this.elements = [null, null];
   }
-
 
   ID = () => this.id;
 
@@ -34,13 +32,13 @@ export abstract class TripletElement extends Composition {
 }
 
 export default class Triplet extends Composition {
-
   private readonly _elements: TripletElement[];
-
 
   constructor() {
     super();
     this._elements = [];
+    this.componentName = 'TripletComponent';
+    this.componentType = 'Triplet';
   }
 
   copyElements(): TripletElement[] {
@@ -71,12 +69,12 @@ export default class Triplet extends Composition {
     const stringResults = [];
     for (const triple of this._elements) {
       const [operator, Operand1, Operand2] = triple.getTuple();
-      stringResults.push({operator, Operand1: Operand1?.toString(), Operand2: Operand2?.toString()});
+      stringResults.push({ operator, Operand1: Operand1?.toString(), Operand2: Operand2?.toString() });
     }
-    console.table(stringResults)
+    console.table(stringResults);
   }
 
   clone(): CompositionComponent {
-    throw new Error('Can\'t clone a triplet');
+    throw new Error("Can't clone a triplet");
   }
 }

@@ -38,6 +38,7 @@ export interface HelperFunctions {
   next: (ctx: any) => any;
   returnToGlobalScope: () => void;
   getCurrentScope: <T = ClassType | MethodElement>(offset?: ScopePosition) => T;
+  register: () => number;
 }
 
 export type PossibleScope = ClassType | MethodElement;

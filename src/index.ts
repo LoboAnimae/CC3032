@@ -26,11 +26,11 @@ async function main(input: string) {
   for (const foundSymbol of symbolsTable) {
     const str = foundSymbol?.toString();
     if (!str) continue;
-    allSizeTableValues.push(foundSymbol);
+    console.log(str);
   }
-  console.table(allSizeTableValues, ['Table Name', 'Size in Bytes', 'Line', 'Column', 'Inherits From']);
-  console.table(errors);
-  console.log('-----------------------END Errors-----------------------\n\n');
+  // console.table(allSizeTableValues, ['Table Name', 'Size in Bytes', 'Line', 'Column', 'Inherits From']);
+  // console.table(errors);
+  // console.log('-----------------------END Errors-----------------------\n\n');
 }
 
 const pathToFileURL = path.join(__dirname, '..', 'example.txt');

@@ -1,14 +1,13 @@
 import Composition from './Composition';
 import { SymbolElement } from '../DataStructures/TableElements';
 
-
 export function isTemporalComponent(component?: Composition) {
   return component?.componentType === 'TemporalComponent';
 }
 
 export default class TemporalComponent extends Composition {
-  referencedElement: SymbolElement;
-  constructor(references: SymbolElement) {
+  referencedElement?: SymbolElement;
+  constructor(references?: SymbolElement) {
     super();
     this.referencedElement = references;
     this.componentType = 'TemporalComponent';
@@ -19,6 +18,8 @@ export default class TemporalComponent extends Composition {
   }
 
   toString(): string {
-    return `${this.referencedElement.scopeName}.${this.referencedElement.getName()}`;
+    return `${this.referencedElement?.scopeName ?? 'TemporalScope'}.${
+      this.referencedElement?.getName() ?? 'TemporalName'
+    }`;
   }
 }

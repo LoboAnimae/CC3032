@@ -1,17 +1,12 @@
 import { PropertyContext } from '../../antlr/yaplParser';
 import CompositionComponent from '../Components/Composition';
-import {
-  extractBasicInformation,
-  extractTableComponent,
-  extractValueComponent,
-  QuadrupleComponent,
-} from '../Components';
+import { extractBasicInformation, extractTableComponent, extractValueComponent, TripletComponent } from '../Components';
 import TypeComponent from '../Components/Type';
 import MethodElement from '../DataStructures/TableElements/MethodElement';
 import SymbolElement from '../DataStructures/TableElements/SymbolElement';
 import { ClassType } from '../Generics/Object.type';
 import { lineAndColumn, YaplVisitor } from './meta';
-import SimpleAssignment from '../Components/Quadruple/SimpleAssignment';
+import SimpleAssignment from '../Components/Triplet/SimpleAssignment';
 import TemporalComponent from '../Components/TemporalComponent';
 
 export default function visitProperty(visitor: YaplVisitor, ctx: PropertyContext) {
@@ -34,9 +29,10 @@ export default function visitProperty(visitor: YaplVisitor, ctx: PropertyContext
     type: propertyTypeClass,
     scopeName: (propertyTypeClass.getName || extractBasicInformation(currentScope)!.getName)(),
     ...lineAndColumn(ctx),
+    memoryAddress: visitor.register(),
   });
-  const quadrupleElement = new SimpleAssignment();
-  const quadrupleComponent = new QuadrupleComponent();
+  const tripletElement = new SimpleAssignment();
+  const tripletComponent = new TripletComponent();
 
   if (propertyAssignmentExpression) {
     const assignmentResolvesTo: CompositionComponent = visitor.visit(propertyAssignmentExpression);
@@ -58,7 +54,7 @@ export default function visitProperty(visitor: YaplVisitor, ctx: PropertyContext
   } else {
     const referentialTemporalValue = new TemporalComponent(newTableElement);
     const propertyDefaultValue = propertyTypeClass.defaultValue;
-    quadrupleElement.elements = [referentialTemporalValue, propertyDefaultValue.toString()];
+    tripletElement.elements = [referentialTemporalValue, propertyDefaultValue.toString()];
     console.log();
   }
 
@@ -71,9 +67,9 @@ export default function visitProperty(visitor: YaplVisitor, ctx: PropertyContext
     return visitor.next(ctx);
   }
 
-  quadrupleComponent.merge(quadrupleElement);
-  quadrupleComponent.printTable();
-  newTableElement.addComponent(quadrupleComponent);
+  tripletComponent.merge(tripletElement);
+  tripletComponent.printTable();
+  newTableElement.addComponent(tripletComponent);
   // Case 2: Declaration of a new property
   currentScopeTable.add(newTableElement);
   return visitor.next(ctx);

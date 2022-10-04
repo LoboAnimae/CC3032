@@ -20,14 +20,38 @@ export class IOType extends Primitive {
 
     const tableComponent = new TableComponent();
 
-    const outStringMethod = new MethodElement({ name: 'out_string', type: this, scopeName: this.componentName });
-    outStringMethod.addParameters(new SymbolElement({ name: 'x', type: new StringType(), scopeName: this.componentName }));
+    const outStringMethod = new MethodElement({
+      name: 'out_string',
+      type: this,
+      scopeName: this.componentName,
+      memoryAddress: -1,
+    });
+    outStringMethod.addParameters(
+      new SymbolElement({ name: 'x', type: new StringType(), scopeName: this.componentName, memoryAddress: -1 }),
+    );
 
-    const outIntMethod = new MethodElement({ name: 'out_int', type: this, scopeName: this.componentName });
-    outIntMethod.addParameters(new SymbolElement({ name: 'x', type: new Integer(), scopeName: this.componentName }));
+    const outIntMethod = new MethodElement({
+      name: 'out_int',
+      type: this,
+      scopeName: this.componentName,
+      memoryAddress: -1,
+    });
+    outIntMethod.addParameters(
+      new SymbolElement({ name: 'x', type: new Integer(), scopeName: this.componentName, memoryAddress: -1 }),
+    );
 
-    const inStringMethod = new MethodElement({ name: 'in_string', type: new StringType(), scopeName: this.componentName });
-    const inIntMethod = new MethodElement({ name: 'in_int', type: new Integer(), scopeName: this.componentName });
+    const inStringMethod = new MethodElement({
+      name: 'in_string',
+      type: new StringType(),
+      scopeName: this.componentName,
+      memoryAddress: -1,
+    });
+    const inIntMethod = new MethodElement({
+      name: 'in_int',
+      type: new Integer(),
+      scopeName: this.componentName,
+      memoryAddress: -1,
+    });
 
     tableComponent.add(outStringMethod, outIntMethod, inStringMethod, inIntMethod);
 

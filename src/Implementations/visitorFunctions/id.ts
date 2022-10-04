@@ -26,6 +26,5 @@ export default function visitId(visitor: YaplVisitor, ctx: IdContext) {
     return new EmptyComponent();
   }
 
-
   return foundComponent;
 }

@@ -1,4 +1,13 @@
 class A {
-    x: Bool;
+    x: Int;
+    y: Int <- x + 1;
+    a(x: Int, y: Int): Int {
+        x + y
+    };
+};
+
+class B {
+    x: Int;
     y: Int <- x + 1;
 };
+

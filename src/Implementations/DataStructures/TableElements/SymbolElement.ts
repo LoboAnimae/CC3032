@@ -14,12 +14,14 @@ export interface SymbolElementParams {
   line?: number;
   column?: number;
   scopeName: string;
+  memoryAddress: number;
 }
 
 export default class SymbolElement extends TableElement {
   constructor(options?: SymbolElementParams) {
     super(options);
     this.componentName = 'SymbolElement';
+    this.memoryAddress = options?.memoryAddress ?? 0;
   }
 
   clone(): CompositionComponent {
@@ -28,6 +30,7 @@ export default class SymbolElement extends TableElement {
 
   toString(): string {
     const { BasicInfo } = ComponentInformation.components;
-    return `<Symbol> ${this.getComponent<BasicInfoComponent>({ componentType: BasicInfo.type })!.getName()}`;
+    const basicInfo = this.getComponent<BasicInfoComponent>({ componentType: BasicInfo.type })!;
+    return `<*${this.memoryAddress}> ${basicInfo.getName()}`;
   }
 }

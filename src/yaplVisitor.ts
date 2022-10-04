@@ -65,7 +65,6 @@ import visitString from './Implementations/visitorFunctions/string';
 import visitTrue from './Implementations/visitorFunctions/true';
 import visitWhile from './Implementations/visitorFunctions/while';
 
-
 export const lineAndColumn = (ctx: any): { line: number; column: number } => ({
   line: ctx.start?.line ?? 0,
   column: ctx.start?.charPositionInLine ?? 0,
@@ -73,12 +72,14 @@ export const lineAndColumn = (ctx: any): { line: number; column: number } => ({
 
 export class YaplVisitor
   extends AbstractParseTreeVisitor<any>
-  implements yaplVisitor<any>, HelperFunctions, ParseTreeProperties {
+  implements yaplVisitor<any>, HelperFunctions, ParseTreeProperties
+{
   public scopeStack: Stack<CompositionComponent>;
   public symbolsTable: TableComponent<TypeComponent>;
   public mainExists: boolean = false;
   public mainMethodExists: boolean = false;
   public errors: BasicStorage<IError>;
+  public memoryCounter: number = 0;
 
   //#region Metadata
 
@@ -96,6 +97,8 @@ export class YaplVisitor
     this.scopeStack.push(new ObjectType());
     this.symbolsTable.add(objectType, intType, stringType, boolType, ioType);
   }
+
+  register = () => this.memoryCounter++;
 
   defaultResult(): any {
     return [];

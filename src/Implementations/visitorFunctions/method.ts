@@ -26,8 +26,9 @@ export default function visitMethod(visitor: YaplVisitor, ctx: MethodContext) {
   const newMethod = new MethodElement({
     name: methodName,
     type: methodType,
-    scopeName: methodTable?.getName() ?? 'Unknown name',
+    scopeName: visitor.getCurrentScope().getName() ?? 'Unknown name',
     ...lineAndColumn(ctx),
+    memoryAddress: -1,
   });
 
   const currentTable: ClassType = visitor.getCurrentScope();

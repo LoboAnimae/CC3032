@@ -18,8 +18,9 @@ export default function visitFormal(visitor: YaplVisitor, ctx: FormalContext) {
   const newSymbol = new SymbolElement({
     name: paramName.text,
     type: foundTable,
-    scopeName: foundTable.getName(),
+    scopeName: visitor.getCurrentScope().getName(),
     ...lineAndColumn(ctx),
+    memoryAddress: visitor.register(), // TODO: Add pass-by-reference or pass-by-value logic with memory addresses
   });
   return newSymbol;
 }

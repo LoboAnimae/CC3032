@@ -2,6 +2,7 @@ import { MethodElement, SymbolElement, TableElementType } from '../DataStructure
 import {
   BasicInfoComponent,
   CompositionComponent,
+  extractTableComponent,
   ITableGetOptions,
   TableComponent,
   TypeComponent,
@@ -32,13 +33,24 @@ export class ObjectType extends TypeComponent {
     this.addComponent(basicInfo);
     const tableComponent = new TableComponent<TableElementType>();
 
-    const abortMethod = new MethodElement({ name: 'abort', type: this, scopeName: this.componentName });
+    const abortMethod = new MethodElement({
+      name: 'abort',
+      type: this,
+      scopeName: this.componentName,
+      memoryAddress: -1,
+    });
     const typeNameMethod = new MethodElement({
       name: 'type_name',
       type: new StringType(),
       scopeName: this.componentName,
+      memoryAddress: -1,
     });
-    const copyMethod = new MethodElement({ name: 'copy', type: this, scopeName: this.componentName });
+    const copyMethod = new MethodElement({
+      name: 'copy',
+      type: this,
+      scopeName: this.componentName,
+      memoryAddress: -1,
+    });
 
     tableComponent.add(abortMethod, typeNameMethod, copyMethod);
     this.addComponent(tableComponent);
@@ -144,6 +156,20 @@ export class ClassType extends ObjectType {
 
   toString(): string {
     const { type } = ComponentInformation.components.BasicInfo;
-    return `<${this.componentName}> ${this.getComponent<BasicInfoComponent>({ componentType: type })?.getName()}`;
+    const basicInfo = this.getComponent<BasicInfoComponent>({ componentType: type })!;
+    const prepender = `<${this.componentName}>`;
+    const name = basicInfo.getName();
+    const thisTable = extractTableComponent(this)!;
+    const elements = thisTable.elements
+      .filter((el) => el.componentName === 'SymbolElement')
+      .map((el) => el.toString())
+      .join('\n\t');
+    const methods: string = thisTable.elements
+      .filter((el) => el.componentName === 'MethodElement')
+      .map((el) => el.toString())
+      .join('\n\t');
+    const elementsString = elements.length ? `\n\t${elements}` : '';
+    const methodsString = methods.length ? `\n\t${methods}` : '';
+    return `${prepender} ${name}${elementsString}${methodsString}`;
   }
 }

@@ -1,6 +1,6 @@
 import { BasicInfoComponent, CompositionComponent, PositioningComponent, TypeComponent } from '../../Components';
 import ComponentInformation from '../../Components/ComponentInformation';
-import TableComponent from '../../Components/Table';
+import TableComponent, { extractTableComponent } from '../../Components/Table';
 import SymbolElement, { SymbolElementParams } from './SymbolElement';
 import TableElement from './TableElement';
 
@@ -35,7 +35,21 @@ export default class MethodElement extends TableElement {
   }
 
   toString(): string {
-    const { BasicInfo } = ComponentInformation.components;
-    return `<Method> ${this.getComponent<BasicInfoComponent>({ componentType: BasicInfo.type })!.getName()}`;
+    const { type } = ComponentInformation.components.BasicInfo;
+    const basicInfo = this.getComponent<BasicInfoComponent>({ componentType: type })!;
+    const prepender = `<${this.componentName}>`;
+    const name = basicInfo.getName();
+    const thisTable = extractTableComponent(this)!;
+    const elements = thisTable.elements
+      .filter((el) => el.componentName === 'SymbolElement')
+      .map((el) => el.toString())
+      .join('\n\t\t');
+    const methods: string = thisTable.elements
+      .filter((el) => el.componentName === this.componentName)
+      .map((el) => el.toString())
+      .join('\n\t\t');
+    const elementsString = elements.length ? `\n\t\t${elements}` : '';
+    const methodsString = methods.length ? `\n\t\t${methods}` : '';
+    return `${prepender} ${name}${elementsString}${methodsString}`;
   }
 }
