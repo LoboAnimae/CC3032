@@ -1,11 +1,11 @@
 import CompositionComponent from '../Composition';
-import { TripletElement } from '../index';
+import { QuadrupletElement } from '../index';
 
 export interface SimpleOperationOptions {
   assigningTo: any;
 }
 
-export default abstract class SimpleOperation extends TripletElement {
+export default abstract class SimpleOperation extends QuadrupletElement {
   assigningTo?: CompositionComponent;
   constructor() {
     super();
@@ -19,6 +19,6 @@ export default abstract class SimpleOperation extends TripletElement {
   }
 
   toString(): string {
-    return `${this.assigningTo} = ${this.OPERAND1()} ${this.operator} ${this.OPERAND2()}`;
+    return `AddOperation{ OPERAND1{ ${this.OPERAND1().toString()} }, OPERAND2{ ${this.OPERAND2().toString()} } }`;
   }
 }

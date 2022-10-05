@@ -1,12 +1,18 @@
 import { PropertyContext } from '../../antlr/yaplParser';
 import CompositionComponent from '../Components/Composition';
-import { extractBasicInformation, extractTableComponent, extractValueComponent, TripletComponent } from '../Components';
+import {
+  extractBasicInformation,
+  extractTableComponent,
+  extractValueComponent,
+  QuadrupletComponent,
+  ValueComponent,
+} from '../Components';
 import TypeComponent from '../Components/Type';
 import MethodElement from '../DataStructures/TableElements/MethodElement';
 import SymbolElement from '../DataStructures/TableElements/SymbolElement';
 import { ClassType } from '../Generics/Object.type';
 import { lineAndColumn, YaplVisitor } from './meta';
-import SimpleAssignment from '../Components/Triplet/SimpleAssignment';
+import SimpleAssignment from '../Components/Quadruple/SimpleAssignment';
 import TemporalComponent from '../Components/TemporalComponent';
 
 export default function visitProperty(visitor: YaplVisitor, ctx: PropertyContext) {
@@ -31,8 +37,6 @@ export default function visitProperty(visitor: YaplVisitor, ctx: PropertyContext
     ...lineAndColumn(ctx),
     memoryAddress: visitor.register(),
   });
-  const tripletElement = new SimpleAssignment();
-  const tripletComponent = new TripletComponent();
 
   if (propertyAssignmentExpression) {
     const assignmentResolvesTo: CompositionComponent = visitor.visit(propertyAssignmentExpression);
@@ -52,10 +56,7 @@ export default function visitProperty(visitor: YaplVisitor, ctx: PropertyContext
     const valueHolder = extractValueComponent(assignmentResolvesTo);
     newTableElement.addComponent(valueHolder?.copy());
   } else {
-    const referentialTemporalValue = new TemporalComponent(newTableElement);
-    const propertyDefaultValue = propertyTypeClass.defaultValue;
-    tripletElement.elements = [referentialTemporalValue, propertyDefaultValue.toString()];
-    console.log();
+    newTableElement.addComponent(new ValueComponent({ value: propertyTypeClass.defaultValue }));
   }
 
   const currentScopeTable = extractTableComponent(currentScope)!;
@@ -66,10 +67,6 @@ export default function visitProperty(visitor: YaplVisitor, ctx: PropertyContext
     visitor.addError(ctx, `Property ${propertyName.text} is already declared in ${currentScope.toString()}`);
     return visitor.next(ctx);
   }
-
-  tripletComponent.merge(tripletElement);
-  tripletComponent.printTable();
-  newTableElement.addComponent(tripletComponent);
   // Case 2: Declaration of a new property
   currentScopeTable.add(newTableElement);
   return visitor.next(ctx);

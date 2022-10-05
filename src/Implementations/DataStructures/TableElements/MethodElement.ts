@@ -50,6 +50,6 @@ export default class MethodElement extends TableElement {
       .join('\n\t\t');
     const elementsString = elements.length ? `\n\t\t${elements}` : '';
     const methodsString = methods.length ? `\n\t\t${methods}` : '';
-    return `${prepender} ${name}${elementsString}${methodsString}`;
+    return `MethodComponent{${name}${elementsString}${methodsString}${elementsString || methodsString ? '\t\n' : ''}}`;
   }
 }

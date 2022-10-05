@@ -1,6 +1,6 @@
-import { TripletElement } from './Triplet';
+import { QuadrupletElement } from './Quadruple';
 
-export default class SimpleAssignment extends TripletElement {
+export default class SimpleAssignment extends QuadrupletElement {
   constructor() {
     super();
     this.operator = '=';
@@ -19,7 +19,7 @@ export default class SimpleAssignment extends TripletElement {
   }
 
   toString(): string {
-    return `${this.getAssigned()} = ${this.getValue()};`;
+    return `SimpleAssignment{ ${this.getValue()} }`;
   }
 
   clone() {
@@ -27,5 +27,9 @@ export default class SimpleAssignment extends TripletElement {
     const [assigned, _operator, value] = this.getTuple();
     newSimpleAssigment.elements = [assigned, value];
     return newSimpleAssigment;
+  }
+
+  toCode(): string {
+    return `${this.getTemporal()} ${this.operator} ${this.getValue()}`;
   }
 }

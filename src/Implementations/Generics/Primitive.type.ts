@@ -29,6 +29,6 @@ export abstract class Primitive extends TypeComponent {
 
   toString(): string {
     const { type } = ComponentInformation.components.BasicInfo;
-    return `<Primitive> ${this.getComponent<BasicInfoComponent>({ componentType: type })?.getName()}`;
+    return `Primitive{ ${this.getComponent<BasicInfoComponent>({ componentType: type })?.getName()} }`;
   }
 }

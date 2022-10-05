@@ -1,6 +1,8 @@
 class A {
-    x: Int;
-    y: Int <- x + 1;
+    a: Int;
+    b: Int;
+    c: Int;
+    y: Int <- a + b + c;
     a(x: Int, y: Int): Int {
         x + y
     };

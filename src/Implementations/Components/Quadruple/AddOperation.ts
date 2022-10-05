@@ -13,4 +13,8 @@ export default class AddOperation extends SimpleOperation {
     newAddOperationInstance.elements[1] = this.OPERAND2;
     return newAddOperationInstance;
   }
+
+  toCode(): string {
+    return `${this.getTemporal()} = ${this.OPERAND1()} + ${this.OPERAND2}`;
+  }
 }

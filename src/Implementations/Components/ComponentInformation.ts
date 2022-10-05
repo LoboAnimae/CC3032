@@ -49,10 +49,10 @@ const ComponentInformation = {
       name: 'Class',
       type: 'Class',
     },
-    Triplet: {
-      name: 'Triplet',
-      type: 'TripletComponent',
-      element: 'TripletElement',
+    Quadruplet: {
+      name: 'Quadruplet',
+      type: 'QuadrupletComponent',
+      element: 'QuadrupletElement',
     },
   },
 };

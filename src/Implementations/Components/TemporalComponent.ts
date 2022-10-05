@@ -18,8 +18,6 @@ export default class TemporalComponent extends Composition {
   }
 
   toString(): string {
-    return `${this.referencedElement?.scopeName ?? 'TemporalScope'}.${
-      this.referencedElement?.getName() ?? 'TemporalName'
-    }`;
+    return `TemporalComponent{${this.id}}`;
   }
 }

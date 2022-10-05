@@ -2,24 +2,27 @@ import ComponentInformation from '../ComponentInformation';
 import Composition from '../Composition';
 import CompositionComponent from '../Composition';
 import { v4 as uuid } from 'uuid';
+import TemporalComponent from '../TemporalComponent';
 
-export function extractTriplet(inComponent?: Composition | null): TripletElement | null {
+export function extractQuadruplet(inComponent?: Composition | null): QuadrupletElement | null {
   if (!inComponent) return null;
-  const { Triplet } = ComponentInformation.components;
-  return inComponent.getComponent<TripletElement>({ componentType: Triplet.element });
+  const { Quadruplet } = ComponentInformation.components;
+  return inComponent.getComponent<QuadrupletElement>({ componentType: Quadruplet.element });
 }
 
-export abstract class TripletElement extends Composition {
+export abstract class QuadrupletElement extends Composition {
   readonly id: string;
   operator: string | null;
+  temporal: TemporalComponent;
   elements: [any, any];
 
   constructor() {
     super();
-    this.componentType = ComponentInformation.components.Triplet.element;
+    this.componentType = ComponentInformation.components.Quadruplet.element;
     this.id = uuid();
     this.operator = null;
     this.elements = [null, null];
+    this.temporal = new TemporalComponent();
   }
 
   ID = () => this.id;
@@ -29,10 +32,12 @@ export abstract class TripletElement extends Composition {
   }
 
   abstract getTuple(): any[];
+  getTemporal = () => this.temporal;
+  abstract toCode(): string;
 }
 
-export default class Triplet extends Composition {
-  private readonly _elements: TripletElement[];
+export default class Quadruplet extends Composition {
+  private readonly _elements: QuadrupletElement[];
 
   constructor() {
     super();
@@ -41,17 +46,17 @@ export default class Triplet extends Composition {
     this.componentType = 'Triplet';
   }
 
-  copyElements(): TripletElement[] {
-    return this._elements.map((el: TripletElement) => el.copy()) as TripletElement[];
+  copyElements(): QuadrupletElement[] {
+    return this._elements.map((el: QuadrupletElement) => el.copy()) as QuadrupletElement[];
   }
 
-  add(...quadruples: TripletElement[]): void {
+  add(...quadruples: QuadrupletElement[]): void {
     this._elements.push(...quadruples);
   }
 
   merge(...components: Composition[]): void {
     for (const component of components) {
-      const tripletComponent: TripletElement | null = extractTriplet(component);
+      const tripletComponent: QuadrupletElement | null = extractQuadruplet(component);
       if (!tripletComponent) continue;
       this._elements.push(tripletComponent);
     }

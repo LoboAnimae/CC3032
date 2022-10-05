@@ -31,6 +31,6 @@ export default class SymbolElement extends TableElement {
   toString(): string {
     const { BasicInfo } = ComponentInformation.components;
     const basicInfo = this.getComponent<BasicInfoComponent>({ componentType: BasicInfo.type })!;
-    return `<*${this.memoryAddress}> ${basicInfo.getName()}`;
+    return `SymbolElement{ memoryAddress{${this.memoryAddress}}, name{${basicInfo.getName()}} }`;
   }
 }
