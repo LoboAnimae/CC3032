@@ -32,5 +32,7 @@ export default function visitAssignment(visitor: YaplVisitor, ctx: AssignmentCon
       `Cannot assign ${assignmentValueBasicInfo?.getName()} to ${symbolBasicInformation?.getName()}`,
     );
   }
+
+  // TODO: Add an assignment in here
   return new EmptyComponent(); // Assignments don't return anything
 }
