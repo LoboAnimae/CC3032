@@ -6,16 +6,23 @@ export default class SimpleAssignment extends QuadrupletElement {
     this.operator = '=';
   }
 
-  getAssigned() {
-    return this.elements[0];
-  }
-
   getValue() {
     return this.elements[1];
   }
 
+  setValue(newVal: any) {
+    this.elements[1] = newVal;
+  }
+
+  getAssigningTo() {
+    return this.elements[0] ?? this.getTemporal()
+  }
+  setAssigningTo(assigningTo: any) {
+    this.elements[0] = assigningTo;
+  }
+
   getTuple() {
-    return [this.operator, this.getAssigned(), this.getValue()];
+    return [this.operator, this.getTemporal(), this.getValue()];
   }
 
   toString(): string {
@@ -30,6 +37,13 @@ export default class SimpleAssignment extends QuadrupletElement {
   }
 
   toCode(): string {
-    return `${this.getTemporal()} ${this.operator} ${this.getValue()}`;
+
+    if (process.env.DEBUG) {
+      return `AddOperation{ OPERAND1{ ${this.getAssigningTo().toString()} }, OPERAND2{ ${this.getValue().toString()} } }`;
+    }
+    const val = this.getValue();
+    const value = val.getTemporal?.() ?? val.toCode?.() ?? val.toString?.(); 
+
+    return `${this.getAssigningTo().toCode()} ${this.operator} ${value}`;
   }
 }

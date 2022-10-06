@@ -1,19 +1,16 @@
 import { PropertyContext } from '../../antlr/yaplParser';
-import CompositionComponent from '../Components/Composition';
 import {
   extractBasicInformation,
+  extractQuadruplet,
   extractTableComponent,
-  extractValueComponent,
-  QuadrupletComponent,
-  ValueComponent,
+  extractValueComponent, ValueComponent
 } from '../Components';
-import TypeComponent from '../Components/Type';
+import CompositionComponent from '../Components/Composition';
+import SimpleAssignment from '../Components/Quadruple/SimpleAssignment';
 import MethodElement from '../DataStructures/TableElements/MethodElement';
 import SymbolElement from '../DataStructures/TableElements/SymbolElement';
 import { ClassType } from '../Generics/Object.type';
 import { lineAndColumn, YaplVisitor } from './meta';
-import SimpleAssignment from '../Components/Quadruple/SimpleAssignment';
-import TemporalComponent from '../Components/TemporalComponent';
 
 export default function visitProperty(visitor: YaplVisitor, ctx: PropertyContext) {
   // Previous table
@@ -37,6 +34,16 @@ export default function visitProperty(visitor: YaplVisitor, ctx: PropertyContext
     ...lineAndColumn(ctx),
     memoryAddress: visitor.register(),
   });
+  const currentScopeTable = extractTableComponent(currentScope)!;
+
+  const previousDeclared = currentScopeTable.get(propertyName.text, { inCurrentScope: true });
+  // // Case 1: Overriding (It does nothing)
+  if (previousDeclared) {
+    visitor.addError(ctx, `Property ${propertyName.text} is already declared in ${currentScope.toString()}`);
+    return visitor.next(ctx);
+  }
+
+  const simpleAssignment = new SimpleAssignment();
 
   if (propertyAssignmentExpression) {
     const assignmentResolvesTo: CompositionComponent = visitor.visit(propertyAssignmentExpression);
@@ -55,18 +62,18 @@ export default function visitProperty(visitor: YaplVisitor, ctx: PropertyContext
 
     const valueHolder = extractValueComponent(assignmentResolvesTo);
     newTableElement.addComponent(valueHolder?.copy());
+    const resolvingToAssignment = extractQuadruplet(assignmentResolvesTo)
+    simpleAssignment.setValue(resolvingToAssignment);
+    simpleAssignment.setAssigningTo(newTableElement)
+    visitor.addQuadruple(simpleAssignment)
   } else {
+    simpleAssignment.setValue(propertyTypeClass.defaultValue);
+    simpleAssignment.setAssigningTo(newTableElement)
+    visitor.addQuadruple(simpleAssignment)
     newTableElement.addComponent(new ValueComponent({ value: propertyTypeClass.defaultValue }));
   }
 
-  const currentScopeTable = extractTableComponent(currentScope)!;
 
-  const previousDeclared = currentScopeTable.get(propertyName.text, { inCurrentScope: true });
-  // // Case 1: Overriding (It does nothing)
-  if (previousDeclared) {
-    visitor.addError(ctx, `Property ${propertyName.text} is already declared in ${currentScope.toString()}`);
-    return visitor.next(ctx);
-  }
   // Case 2: Declaration of a new property
   currentScopeTable.add(newTableElement);
   return visitor.next(ctx);

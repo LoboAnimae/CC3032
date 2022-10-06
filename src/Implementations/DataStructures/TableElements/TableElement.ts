@@ -78,4 +78,6 @@ export default abstract class TableElement extends CompositionComponent {
     const basicInfo = this.getBasicInfo();
     return basicInfo.getName() ?? 'Unknown name';
   }
+
+  abstract toCode(): string;
 }

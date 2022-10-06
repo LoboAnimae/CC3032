@@ -1,6 +1,7 @@
 import { AbstractParseTreeVisitor } from 'antlr4ts/tree/AbstractParseTreeVisitor';
 import { yaplVisitor } from '../../antlr/yaplVisitor';
 import CompositionComponent from '../Components/Composition';
+import { QuadrupletElement } from '../Components/index';
 import TableComponent from '../Components/Table';
 import TypeComponent from '../Components/Type';
 import { Stack } from '../DataStructures/Stack';
@@ -39,6 +40,7 @@ export interface HelperFunctions {
   returnToGlobalScope: () => void;
   getCurrentScope: <T = ClassType | MethodElement>(offset?: ScopePosition) => T;
   register: () => number;
+  addQuadruple: (newQuadruple: QuadrupletElement) => void;
 }
 
 export type PossibleScope = ClassType | MethodElement;

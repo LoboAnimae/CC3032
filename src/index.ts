@@ -22,6 +22,7 @@ async function main(input: string) {
   const symbolsTable = visitor.symbolsTable;
   const errors = visitor.errors.getAll();
 
+  console.log(visitor.quadrupleArr.map((q) => q.toCode()).join('\n'))
   const allSizeTableValues: any[] = [];
   for (const foundSymbol of symbolsTable) {
     const str = foundSymbol?.toString();

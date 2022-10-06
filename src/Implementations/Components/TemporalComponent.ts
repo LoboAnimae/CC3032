@@ -18,6 +18,6 @@ export default class TemporalComponent extends Composition {
   }
 
   toString(): string {
-    return `TemporalComponent{${this.id}}`;
+    return `TemporalComponent{${this.referencedElement ?? this.id}}`;
   }
 }

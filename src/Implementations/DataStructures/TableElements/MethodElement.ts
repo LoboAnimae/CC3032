@@ -52,4 +52,8 @@ export default class MethodElement extends TableElement {
     const methodsString = methods.length ? `\n\t\t${methods}` : '';
     return `MethodComponent{${name}${elementsString}${methodsString}${elementsString || methodsString ? '\t\n' : ''}}`;
   }
+
+  toCode() {
+    return `goto ${this.getName()}`
+  }
 }

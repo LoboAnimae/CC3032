@@ -21,6 +21,10 @@ export default class SimpleHolder extends QuadrupletElement {
   }
 
   toString(): string {
-    return `SimpleHolder{ ${this.elements[0]} }`;
+    return `SimpleHolder{ ${this.elements[0].memoryAddress?.() ?? this.elements[0].toString()} }`;
+  }
+
+  toCode(): string {
+    return `${this.getTemporal()} ${this.operator} ${this.elements[0]}`
   }
 }

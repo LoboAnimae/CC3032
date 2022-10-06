@@ -1,15 +1,18 @@
 import { MultiplyContext } from '../../antlr/yaplParser';
-import { EmptyComponent, extractTypeComponent, TypeComponent } from '../Components/index';
+import { EmptyComponent, extractQuadruplet, extractTypeComponent, TypeComponent } from '../Components/index';
+import MultOperation from '../Components/Quadruple/MultOperation';
 import { YaplVisitor } from './meta';
 
 export default function visitMultiply(visitor: YaplVisitor, ctx: MultiplyContext) {
-  // TODO: Add value
-  // Must be done between two possible integers
   const [leftChild, rightChild] = ctx.expression();
-  const boolTable = visitor.findTable('Bool')!.copy();
+  const intTable = visitor.findTable('Int')!.copy();
 
-  const lExpr = extractTypeComponent(visitor.visit(leftChild));
-  const rExpr = extractTypeComponent(visitor.visit(rightChild));
+  const leftElement = visitor.visit(leftChild);
+  const rightElement = visitor.visit(rightChild);
+
+  const lExpr = extractTypeComponent(leftElement);
+  const rExpr = extractTypeComponent(rightElement);
+
   if (!lExpr || !rExpr) {
     visitor.addError(ctx, `One of the expressions is not a type`);
     return new EmptyComponent();
@@ -22,5 +25,13 @@ export default function visitMultiply(visitor: YaplVisitor, ctx: MultiplyContext
     visitor.addError(ctx, `Invalid Comparison: ${leftChild.toString()} = ${rightChild.toString()}`);
     return new EmptyComponent();
   }
-  return boolTable;
+
+  // Quadruplet
+  const quadrupletElement = new MultOperation();
+  const lValueComponent = extractQuadruplet(leftElement);
+  const rValueComponent = extractQuadruplet(rightElement);
+  quadrupletElement.elements = [lValueComponent, rValueComponent];
+  intTable.addComponent(quadrupletElement);
+  visitor.addQuadruple(quadrupletElement);
+  return intTable;
 }

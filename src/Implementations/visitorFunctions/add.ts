@@ -9,7 +9,7 @@ export default function visitAdd(visitor: YaplVisitor, ctx: AddContext) {
   // TODO: Add value
   // Must be done between two possible integers
   const [leftChild, rightChild] = ctx.expression();
-  const boolTable = visitor.findTable('Bool')!.copy();
+  const intTable = visitor.findTable('Int')!.copy();
 
   const leftElement = visitor.visit(leftChild);
   const rightElement = visitor.visit(rightChild);
@@ -35,6 +35,7 @@ export default function visitAdd(visitor: YaplVisitor, ctx: AddContext) {
   const lValueComponent = extractQuadruplet(leftElement);
   const rValueComponent = extractQuadruplet(rightElement);
   quadrupletElement.elements = [lValueComponent, rValueComponent];
-  boolTable.addComponent(quadrupletElement);
-  return boolTable;
+  intTable.addComponent(quadrupletElement);
+  visitor.addQuadruple(quadrupletElement);
+  return intTable;
 }

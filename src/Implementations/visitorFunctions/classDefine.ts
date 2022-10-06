@@ -3,32 +3,38 @@ import { extractBasicInformation } from '../Components/BasicInformation';
 import ComponentInformation from '../Components/ComponentInformation';
 import { extractTypeComponent } from '../Components/Type';
 import { ClassType } from '../Generics/Object.type';
+import Pipeline from '../Pipeline';
 import { YaplVisitor } from './meta';
 
-export default function visitClassDefine(visitor: YaplVisitor, ctx: ClassDefineContext) {
+
+
+
+function semantic(visitor: YaplVisitor, ctx: ClassDefineContext): boolean | void {
   visitor.returnToGlobalScope();
   const { Object } = ComponentInformation.type;
   const [cls, inheritsFrom = Object.name] = ctx.TYPE();
+
+
   // ERROR: Class inherits from itself
-  if (cls.toString() === inheritsFrom) {
-    return visitor.next(ctx);
-  }
+  if (cls.toString() === inheritsFrom) return visitor.addError(ctx, `A class can't inherit from itself`);
+
+
+
   const classTable = visitor.findTable(cls);
   // ERROR: Class already exists
   if (classTable) {
-    const typeComponent = extractTypeComponent(classTable)!;
-    if (typeComponent.isGeneric) {
-      visitor.addError(ctx, `Generic class ${cls} can't be redefined`);
-    } else {
-      visitor.addError(ctx, `Redefinition of class ${cls}`);
-    }
-    return visitor.next(ctx);
+    const { isGeneric } = extractTypeComponent(classTable)!;
+    if (isGeneric) return visitor.addError(ctx, `Generic class ${cls} can't be redefined`);
+    return visitor.addError(ctx, `Redefinition of class ${cls}`);
   }
-  let parentTable: ClassType | null = visitor.findTable(inheritsFrom);
+
+
+
+  let parentTable = visitor.findTable(inheritsFrom) as ClassType;
   const typeTableComponent = extractTypeComponent(parentTable);
   // ERROR: Trying to inherit from a non-existing class
   if (!parentTable) {
-    visitor.addError(ctx, `Class ${cls} is trying to inherit from class ${inheritsFrom}, which does not exist`);
+    visitor.addError(ctx, `Class ${cls} inherits from non-existing class ${inheritsFrom}`);
     parentTable = visitor.findTable(Object.name)!; // Shift back to Object as a failsafe
   }
   // ERROR: The table can't be inherited
@@ -58,5 +64,11 @@ export default function visitClassDefine(visitor: YaplVisitor, ctx: ClassDefineC
   // Push the table to the stack and the table to the list of tables
   visitor.symbolsTable.add(newTable);
   visitor.scopeStack.push(newTable);
+  return true;
+}
+
+export default function visitClassDefine(visitor: YaplVisitor, ctx: ClassDefineContext) {
+  semantic(visitor, ctx);
   return visitor.next(ctx);
+
 }

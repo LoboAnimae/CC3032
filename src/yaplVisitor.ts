@@ -28,7 +28,7 @@ import {
   WhileContext,
 } from './antlr/yaplParser';
 import { yaplVisitor } from './antlr/yaplVisitor';
-import { CompositionComponent, TableComponent, TypeComponent } from './Implementations/Components/index';
+import { CompositionComponent, QuadrupletElement, TableComponent, TypeComponent } from './Implementations/Components/index';
 import { Stack } from './Implementations/DataStructures/Stack';
 import { MethodElement } from './Implementations/DataStructures/TableElements/index';
 import { BasicStorage, IError } from './Implementations/Errors/Errors';
@@ -80,6 +80,11 @@ export class YaplVisitor
   public mainMethodExists: boolean = false;
   public errors: BasicStorage<IError>;
   public memoryCounter: number = 0;
+  public quadrupleArr: QuadrupletElement[] = [];
+
+  addQuadruple(newQuadruple: QuadrupletElement): void {
+    this.quadrupleArr.push(newQuadruple)
+  }
 
   //#region Metadata
 
