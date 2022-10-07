@@ -28,7 +28,12 @@ import {
   WhileContext,
 } from './antlr/yaplParser';
 import { yaplVisitor } from './antlr/yaplVisitor';
-import { CompositionComponent, QuadrupletElement, TableComponent, TypeComponent } from './Implementations/Components/index';
+import {
+  CompositionComponent,
+  QuadrupletElement,
+  TableComponent,
+  TypeComponent,
+} from './Implementations/Components/index';
 import { Stack } from './Implementations/DataStructures/Stack';
 import { MethodElement } from './Implementations/DataStructures/TableElements/index';
 import { BasicStorage, IError } from './Implementations/Errors/Errors';
@@ -83,7 +88,7 @@ export class YaplVisitor
   public quadrupleArr: QuadrupletElement[] = [];
 
   addQuadruple(newQuadruple: QuadrupletElement): void {
-    this.quadrupleArr.push(newQuadruple)
+    this.quadrupleArr.push(newQuadruple);
   }
 
   //#region Metadata
@@ -103,6 +108,14 @@ export class YaplVisitor
     this.symbolsTable.add(objectType, intType, stringType, boolType, ioType);
   }
 
+  addScope = (newScope: TypeComponent) => {
+    this.scopeStack.push(newScope);
+  };
+
+  addSymbol = (newSymbol: TypeComponent) => {
+    this.symbolsTable.add(newSymbol);
+  };
+
   register = () => this.memoryCounter++;
 
   defaultResult(): any {
@@ -116,12 +129,14 @@ export class YaplVisitor
     return [...aggregate, nextResult];
   }
 
-  addError(ctx: any, errorMessage: string) {
-    const coloredRedMessage = errorMessage.replace('{{{', '\x1b[31m').replace('}}}', '\x1b[0m');
-    const coloredBlueMessage = coloredRedMessage.replace('{{', '\x1b[34m').replace('}}', '\x1b[0m');
-    const coloredGreenMessage = coloredBlueMessage.replace('{', '\x1b[32m').replace('}', '\x1b[0m');
-    const { line, column } = lineAndColumn(ctx);
-    this.errors.add({ line, column, message: coloredGreenMessage });
+  addError(ctx: any, ...errorMessage: string[]) {
+    for (const error of errorMessage) {
+      const coloredRedMessage = error.replace('{{{', '\x1b[31m').replace('}}}', '\x1b[0m');
+      const coloredBlueMessage = coloredRedMessage.replace('{{', '\x1b[34m').replace('}}', '\x1b[0m');
+      const coloredGreenMessage = coloredBlueMessage.replace('{', '\x1b[32m').replace('}', '\x1b[0m');
+      const { line, column } = lineAndColumn(ctx);
+      this.errors.add({ line, column, message: coloredGreenMessage });
+    }
   }
 
   findTable(name: string | TypeComponent | any): ClassType | null {

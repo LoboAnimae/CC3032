@@ -1,7 +1,7 @@
 import BasicInfoComponent from './BasicInformation';
 import ComponentInformation from './ComponentInformation';
 import Composition from './Composition';
-import { CompositionComponent, TypeComponent } from './index';
+import { CompositionComponent, extractTypeComponent, TypeComponent } from './index';
 
 export interface TableParams<T extends CompositionComponent> {
   parent: TableComponent<T> | null;
@@ -27,6 +27,7 @@ export function extractTableComponent<T extends CompositionComponent>(inComponen
 class TableComponent<T extends CompositionComponent> extends Composition {
   public parent: TableComponent<T> | null;
   public elements: T[];
+  public size: number;
   constructor(options?: Partial<TableParams<T>>) {
     super();
 
@@ -36,6 +37,7 @@ class TableComponent<T extends CompositionComponent> extends Composition {
 
     this.elements = [];
     this.parent = options?.parent ?? null;
+    this.size = 0;
   }
 
   /**
@@ -70,6 +72,9 @@ class TableComponent<T extends CompositionComponent> extends Composition {
    */
   add(...values: (T | undefined)[]): void {
     for (const value of values) {
+      const typeComponent = extractTypeComponent(value);
+      const size = typeComponent?.sizeInBytes;
+      if (size) this.size += size;
       this.elements.push(value as T);
     }
   }

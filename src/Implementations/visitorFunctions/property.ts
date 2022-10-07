@@ -3,7 +3,8 @@ import {
   extractBasicInformation,
   extractQuadruplet,
   extractTableComponent,
-  extractValueComponent, ValueComponent
+  extractValueComponent,
+  ValueComponent,
 } from '../Components';
 import CompositionComponent from '../Components/Composition';
 import SimpleAssignment from '../Components/Quadruple/SimpleAssignment';
@@ -62,17 +63,16 @@ export default function visitProperty(visitor: YaplVisitor, ctx: PropertyContext
 
     const valueHolder = extractValueComponent(assignmentResolvesTo);
     newTableElement.addComponent(valueHolder?.copy());
-    const resolvingToAssignment = extractQuadruplet(assignmentResolvesTo)
+    const resolvingToAssignment = extractQuadruplet(assignmentResolvesTo);
     simpleAssignment.setValue(resolvingToAssignment);
-    simpleAssignment.setAssigningTo(newTableElement)
-    visitor.addQuadruple(simpleAssignment)
+    simpleAssignment.setAssigningTo(newTableElement);
+    visitor.addQuadruple(simpleAssignment);
   } else {
     simpleAssignment.setValue(propertyTypeClass.defaultValue);
-    simpleAssignment.setAssigningTo(newTableElement)
-    visitor.addQuadruple(simpleAssignment)
+    simpleAssignment.setAssigningTo(newTableElement);
+    visitor.addQuadruple(simpleAssignment);
     newTableElement.addComponent(new ValueComponent({ value: propertyTypeClass.defaultValue }));
   }
-
 
   // Case 2: Declaration of a new property
   currentScopeTable.add(newTableElement);

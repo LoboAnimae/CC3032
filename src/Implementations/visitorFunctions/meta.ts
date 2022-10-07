@@ -33,7 +33,7 @@ export enum ScopePosition {
 }
 
 export interface HelperFunctions {
-  addError: (ctx: any, errorMessage: string) => void;
+  addError: (ctx: any, ...errorMessage: string[]) => void;
   findTable: (name: string | TypeComponent | any) => ClassType | null;
   returnToScope: (scope: Scope) => void;
   next: (ctx: any) => any;
@@ -41,6 +41,8 @@ export interface HelperFunctions {
   getCurrentScope: <T = ClassType | MethodElement>(offset?: ScopePosition) => T;
   register: () => number;
   addQuadruple: (newQuadruple: QuadrupletElement) => void;
+  addScope: (newScope: TypeComponent) => void;
+  addSymbol: (newSymbol: TypeComponent) => void;
 }
 
 export type PossibleScope = ClassType | MethodElement;
