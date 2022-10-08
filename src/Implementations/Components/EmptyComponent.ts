@@ -1,16 +1,16 @@
 import { CompositionComponent } from './index';
-import ComponentInformation from './ComponentInformation';
 
 export function isEmptyComponent(inComponent?: CompositionComponent | null) {
   return !!inComponent?.children.length;
 }
 
 export default class EmptyComponent extends CompositionComponent {
+  static Name = 'EmptyComponent';
+  static Type = CompositionComponent.Type
   constructor() {
     super();
-    const { EmptyComponent } = ComponentInformation.components;
-    this.componentName = EmptyComponent.name;
-    this.componentType = EmptyComponent.type;
+    this.componentName = EmptyComponent.Name;
+    this.componentType = EmptyComponent.Type;
   }
   clone(): CompositionComponent {
     return new EmptyComponent();

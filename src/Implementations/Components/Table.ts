@@ -1,5 +1,4 @@
 import BasicInfoComponent from './BasicInformation';
-import ComponentInformation from './ComponentInformation';
 import Composition from './Composition';
 import { CompositionComponent, extractTypeComponent, TypeComponent } from './index';
 
@@ -20,24 +19,23 @@ export interface TableInstance<T extends CompositionComponent> {
 
 export function extractTableComponent<T extends CompositionComponent>(inComponent?: Composition | null) {
   if (!inComponent) return null;
-  const { Table } = ComponentInformation.components;
-  return inComponent.getComponent<TableComponent<T>>({ componentType: Table.type });
+  return inComponent.getComponent<TableComponent<T>>({ componentType: TableComponent.Type });
 }
 
 class TableComponent<T extends CompositionComponent> extends Composition {
+  static Name = 'Table'
+  static Type = 'Table'
+
   public parent: TableComponent<T> | null;
   public elements: T[];
-  public size: number;
   constructor(options?: Partial<TableParams<T>>) {
     super();
 
-    const { Table } = ComponentInformation.components;
-    this.componentName = Table.name;
-    this.componentType = Table.type;
+    this.componentName = TableComponent.Name;
+    this.componentType = TableComponent.Type;
 
     this.elements = [];
     this.parent = options?.parent ?? null;
-    this.size = 0;
   }
 
   /**
@@ -48,10 +46,9 @@ class TableComponent<T extends CompositionComponent> extends Composition {
    */
   get(p_key: any, options?: ITableGetOptions): T | null {
     const key = p_key.toString();
-    const { BasicInfo } = ComponentInformation.components;
     const foundComponent = this.elements.find((element: T) => {
       const basicInfo = element.getComponent<BasicInfoComponent>({
-        componentType: BasicInfo.type,
+        componentType: BasicInfoComponent.Type,
       });
       return basicInfo?.getName() === key;
     });
@@ -72,9 +69,6 @@ class TableComponent<T extends CompositionComponent> extends Composition {
    */
   add(...values: (T | undefined)[]): void {
     for (const value of values) {
-      const typeComponent = extractTypeComponent(value);
-      const size = typeComponent?.sizeInBytes;
-      if (size) this.size += size;
       this.elements.push(value as T);
     }
   }

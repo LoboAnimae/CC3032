@@ -1,13 +1,15 @@
 import { CompositionComponent, TableComponent, TypeComponent, ValueComponent } from '../Components';
-import ComponentInformation from '../Components/ComponentInformation';
+import { IntegerType } from './index';
 import { Primitive } from './Primitive.type';
 
 export default class BoolType extends Primitive {
+  static Name = 'Bool';
+  static Type = 'Bool';
   defaultValue: number = 0;
   constructor() {
-    const { Bool } = ComponentInformation.type;
-    super({ name: Bool.name });
-    this.componentName = Bool.name;
+
+    super({ name: BoolType.Name });
+    this.componentName = BoolType.Name;
     this.sizeInBytes = 1;
     this.allowsNegation = true;
     this.addComponent(new TableComponent());
@@ -18,38 +20,25 @@ export default class BoolType extends Primitive {
   }
 
   allowsAssignmentOf = function (value?: CompositionComponent): boolean {
-    const { type } = ComponentInformation.components.Type;
-    const typeComponent = value?.getComponent<TypeComponent>({ componentType: type });
+    const typeComponent = value?.getComponent<TypeComponent>({ componentType: TypeComponent.Type });
     if (!typeComponent) return false;
-
-    const { Integer, Bool } = ComponentInformation.type;
-    return [Integer.name, Bool.name].includes(typeComponent.componentName);
+    return [IntegerType.Name, BoolType.Name].includes(typeComponent.componentName);
   };
 
   allowsComparisonTo = function (value?: CompositionComponent): boolean {
-    const { type } = ComponentInformation.components.Type;
-    const typeComponent = value?.getComponent<TypeComponent>({ componentType: type });
+    const typeComponent = value?.getComponent<TypeComponent>({ componentType: TypeComponent.Type });
     if (!typeComponent) return false;
-
-    const { Integer, Bool } = ComponentInformation.type;
-    return [Integer.name, Bool.name].includes(typeComponent.componentName);
+    return [IntegerType.Name, BoolType.Name].includes(typeComponent.componentName);
   };
 
   coherseType = function (value?: CompositionComponent): BoolType | null {
-    const { type } = ComponentInformation.components.Type;
-    const typeComponent = value?.getComponent<TypeComponent>({ componentType: type });
+    const typeComponent = value?.getComponent<TypeComponent>({ componentType: TypeComponent.Type });
     if (!typeComponent) return null;
-
-    const { Integer, Bool } = ComponentInformation.type;
-    if (typeComponent.componentName === Bool.name) {
+    if (typeComponent.componentName === BoolType.Name) {
       return value as BoolType;
-    } else if (typeComponent.componentName === Integer.name) {
+    } else if (typeComponent.componentName === IntegerType.Name) {
       const newBool = new BoolType();
-
-      const valueHolderType = ComponentInformation.components.ValueHolder.type;
-      const foundValue = value!.getComponent<ValueComponent>({
-        componentType: valueHolderType,
-      });
+      const foundValue = value!.getComponent<ValueComponent>({ componentType: ValueComponent.Type });
       if (foundValue) {
         newBool.addComponent(new ValueComponent({ value: !!foundValue.getValue() }));
       }

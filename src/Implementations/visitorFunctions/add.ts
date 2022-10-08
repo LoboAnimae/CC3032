@@ -3,13 +3,14 @@ import EmptyComponent from '../Components/EmptyComponent';
 import { extractQuadruplet, extractValueComponent, QuadrupletComponent } from '../Components/index';
 import AddOperation from '../Components/Quadruple/AddOperation';
 import { extractTypeComponent } from '../Components/Type';
+import IntegerType from '../Generics/Integer.type';
 import { YaplVisitor } from './meta';
 
 export default function visitAdd(visitor: YaplVisitor, ctx: AddContext) {
   // TODO: Add value
   // Must be done between two possible integers
   const [leftChild, rightChild] = ctx.expression();
-  const intTable = visitor.findTable('Int')!.copy();
+  const intTable = visitor.findTable(IntegerType.Name)!.copy();
 
   const leftElement = visitor.visit(leftChild);
   const rightElement = visitor.visit(rightChild);

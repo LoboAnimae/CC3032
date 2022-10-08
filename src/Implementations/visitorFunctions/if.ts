@@ -1,13 +1,12 @@
 import { IfContext } from '../../antlr/yaplParser';
-import ComponentInformation from '../Components/ComponentInformation';
+import BoolType from '../Generics/Boolean.type';
 import { ClassType } from '../Generics/Object.type';
 import { YaplVisitor } from './meta';
 
 export default function visitIf(visitor: YaplVisitor, ctx: IfContext) {
   // Empty bodies are disallowed by the parser in itself
   const [condition, body, elses] = ctx.expression();
-  const { Bool } = ComponentInformation.type;
-  const boolTable: ClassType = visitor.findTable(Bool.name)!;
+  const boolTable: ClassType = visitor.findTable(BoolType.Name)!;
 
   const conditionType = visitor.visit(condition);
   // ERROR: Condition can't be resolved to boolean

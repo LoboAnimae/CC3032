@@ -1,13 +1,14 @@
 import { EqualContext } from '../../antlr/yaplParser';
 import EmptyComponent from '../Components/EmptyComponent';
 import { extractTypeComponent } from '../Components/Type';
+import BoolType from '../Generics/Boolean.type';
 import { YaplVisitor } from './meta';
 
 export default function visitEqual(visitor: YaplVisitor, ctx: EqualContext) {
   // TODO: Add value
   // Must be done between two possible integers
   const [leftChild, rightChild] = ctx.expression();
-  const boolTable = visitor.findTable('Bool')!.copy();
+  const boolTable = visitor.findTable(BoolType.Name)!.copy();
 
   const lExpr = extractTypeComponent(visitor.visit(leftChild));
   const rExpr = extractTypeComponent(visitor.visit(rightChild));

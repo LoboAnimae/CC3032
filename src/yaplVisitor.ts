@@ -35,7 +35,7 @@ import {
   TypeComponent,
 } from './Implementations/Components/index';
 import { Stack } from './Implementations/DataStructures/Stack';
-import { MethodElement } from './Implementations/DataStructures/TableElements/index';
+import { MethodElement, SymbolElement } from './Implementations/DataStructures/TableElements/index';
 import { BasicStorage, IError } from './Implementations/Errors/Errors';
 import Bool from './Implementations/Generics/Boolean.type';
 import { default as IntType } from './Implementations/Generics/Integer.type';
@@ -70,25 +70,37 @@ import visitString from './Implementations/visitorFunctions/string';
 import visitTrue from './Implementations/visitorFunctions/true';
 import visitWhile from './Implementations/visitorFunctions/while';
 
-export const lineAndColumn = (ctx: any): { line: number; column: number } => ({
+export const lineAndColumn = (ctx: any): { line: number; column: number; } => ({
   line: ctx.start?.line ?? 0,
   column: ctx.start?.charPositionInLine ?? 0,
 });
 
 export class YaplVisitor
   extends AbstractParseTreeVisitor<any>
-  implements yaplVisitor<any>, HelperFunctions, ParseTreeProperties
-{
+  implements yaplVisitor<any>, HelperFunctions, ParseTreeProperties {
   public scopeStack: Stack<CompositionComponent>;
   public symbolsTable: TableComponent<TypeComponent>;
   public mainExists: boolean = false;
   public mainMethodExists: boolean = false;
   public errors: BasicStorage<IError>;
-  public memoryCounter: number = 0;
   public quadrupleArr: QuadrupletElement[] = [];
+  public quadrupleArrMain: QuadrupletElement[] = [];
+  private m_inMain: boolean = false;
+  private memoryCounter: number = 0;
 
   addQuadruple(newQuadruple: QuadrupletElement): void {
+    if (this.m_inMain) {
+      this.quadrupleArrMain.push(newQuadruple);
+      return;
+    }
     this.quadrupleArr.push(newQuadruple);
+  }
+
+  enterMainScope() {
+    this.m_inMain = true;
+  }
+  exitMainScope() {
+    this.m_inMain = false;
   }
 
   //#region Metadata
@@ -107,6 +119,11 @@ export class YaplVisitor
     this.scopeStack.push(new ObjectType());
     this.symbolsTable.add(objectType, intType, stringType, boolType, ioType);
   }
+  registerMemory: (size: number) => number = (size: number) => {
+    const starterPointer = this.memoryCounter;
+    this.memoryCounter += size;
+    return starterPointer;
+  };
 
   addScope = (newScope: TypeComponent) => {
     this.scopeStack.push(newScope);
@@ -116,7 +133,8 @@ export class YaplVisitor
     this.symbolsTable.add(newSymbol);
   };
 
-  register = () => this.memoryCounter++;
+  getMemory = () => this.memoryCounter;
+  moveInMemory = (offset: number) => { this.memoryCounter += offset; return this.getMemory(); };
 
   defaultResult(): any {
     return [];

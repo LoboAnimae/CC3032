@@ -1,11 +1,12 @@
-import { BasicInfoComponent, CompositionComponent, TableComponent } from '../Components';
-import ComponentInformation from '../Components/ComponentInformation';
+import { CompositionComponent, TableComponent } from '../Components';
 import { MethodElement, SymbolElement } from '../DataStructures/TableElements';
 import Integer from './Integer.type';
 import { Primitive } from './Primitive.type';
 import StringType from './String.type';
 
 export class IOType extends Primitive {
+  static Name = 'IO';
+  static Type = 'IO';
   defaultValue: null = null;
   allowsAssignmentOf = (_incomingType?: CompositionComponent | undefined) => false;
   allowsComparisonTo = (_incomingType?: CompositionComponent | undefined) => false;
@@ -13,9 +14,8 @@ export class IOType extends Primitive {
     throw new Error('Cannot coherse IOType');
   };
   constructor() {
-    const { IO } = ComponentInformation.type;
-    super({ name: IO.name });
-    this.componentName = IO.name;
+    super({ name: IOType.Name });
+    this.componentName = IOType.Name;
     this.sizeInBytes = 1;
 
     const tableComponent = new TableComponent();

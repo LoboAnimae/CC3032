@@ -1,4 +1,3 @@
-import ComponentInformation from './ComponentInformation';
 import Composition from './Composition';
 import { DownUpHierarchy } from './Hierarchy';
 
@@ -19,15 +18,16 @@ export interface TypeInstance {
 
 export function extractTypeComponent(inComponent?: Composition | null) {
   if (!inComponent) return null;
-  const { Type } = ComponentInformation.components;
-  return inComponent.getComponent<TypeComponent>({ componentType: Type.type });
+  return inComponent.getComponent<TypeComponent>({ componentType: TypeComponent.Type });
 }
 
 /**
  * A type component is a component that describes a type. It is the main component of a type system.
  */
 export abstract class TypeComponent extends Composition implements DownUpHierarchy<TypeComponent> {
-  readonly componentType = ComponentInformation.components.Type.type;
+  static Name = 'Type';
+  static Type = 'Type';
+  readonly componentType = TypeComponent.Type;
   isGeneric?: boolean;
   sizeInBytes?: number;
   parent: TypeComponent | null;
@@ -36,8 +36,7 @@ export abstract class TypeComponent extends Composition implements DownUpHierarc
 
   constructor(options?: Partial<TypeParams> & Partial<TypeInstance>) {
     super();
-    const { Type } = ComponentInformation.components;
-    this.componentName = Type.name;
+    this.componentName = TypeComponent.Name;
     this.isGeneric = options?.isGeneric ?? false;
     this.sizeInBytes = options?.sizeInBytes;
     this.parent = options?.parent ?? null;
@@ -65,7 +64,7 @@ export abstract class TypeComponent extends Composition implements DownUpHierarc
 
     // Don't grab only in the current scope because inherited types are allowed
     const incomingTypeComponent = incomingType?.getComponent<TypeComponent>({
-      componentType: ComponentInformation.components.Type.type,
+      componentType: TypeComponent.Type,
     })?.componentName;
 
     return hierarchyChainNames.includes(incomingTypeComponent ?? '');

@@ -1,28 +1,29 @@
-import { BasicInfoComponent, CompositionComponent, PositioningComponent, TypeComponent } from '../../Components';
-import ComponentInformation from '../../Components/ComponentInformation';
+import { BasicInfoComponent, CompositionComponent } from '../../Components';
+import Table from '../../Components/Table';
 import TableComponent, { extractTableComponent } from '../../Components/Table';
 import SymbolElement, { SymbolElementParams } from './SymbolElement';
 import TableElement from './TableElement';
 
 export default class MethodElement extends TableElement {
+  static Name = 'MethodElement';
   constructor(options?: SymbolElementParams) {
     super(options);
-    this.componentName = 'MethodElement';
+    this.componentName = MethodElement.Name;
     const newTableComponent = new TableComponent();
     this.addComponent(newTableComponent);
   }
 
   addParameters(...parameters: SymbolElement[]): MethodElement {
-    const { Table } = ComponentInformation.components;
-    const tableComponent = this.getComponent<TableComponent<SymbolElement>>({ componentType: Table.type })!;
+
+    const tableComponent = this.getComponent<TableComponent<SymbolElement>>({ componentType: Table.Type })!;
     tableComponent.add(...parameters);
 
     return this;
   }
 
   getTable(): TableComponent<SymbolElement> {
-    const { Table } = ComponentInformation.components;
-    return this.getComponent<TableComponent<SymbolElement>>({ componentType: Table.type })!;
+
+    return this.getComponent<TableComponent<SymbolElement>>({ componentType: Table.Type })!;
   }
 
   getParameters(): SymbolElement[] {
@@ -35,9 +36,8 @@ export default class MethodElement extends TableElement {
   }
 
   toString(): string {
-    const { type } = ComponentInformation.components.BasicInfo;
-    const basicInfo = this.getComponent<BasicInfoComponent>({ componentType: type })!;
-    const prepender = `<${this.componentName}>`;
+
+    const basicInfo = this.getComponent<BasicInfoComponent>({ componentType: BasicInfoComponent.Type })!;
     const name = basicInfo.getName();
     const thisTable = extractTableComponent(this)!;
     const elements = thisTable.elements
@@ -54,6 +54,6 @@ export default class MethodElement extends TableElement {
   }
 
   toCode() {
-    return `goto ${this.getName()}`
+    return `goto ${this.getName()}`;
   }
 }

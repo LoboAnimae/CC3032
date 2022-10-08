@@ -1,4 +1,3 @@
-import ComponentInformation from './ComponentInformation';
 import Composition from './Composition';
 
 export interface PositioningParams {
@@ -8,8 +7,7 @@ export interface PositioningParams {
 
 export function extractPositioning(inComponent?: Composition | null) {
   if (!inComponent) return null;
-  const { Positioning } = ComponentInformation.components;
-  return inComponent.getComponent<PositioningComponent>({ componentType: Positioning.type });
+  return inComponent.getComponent<PositioningComponent>({ componentType: PositioningComponent.Type });
 }
 
 //#region Interfaces
@@ -17,13 +15,14 @@ export function extractPositioning(inComponent?: Composition | null) {
  * If something implements this, then positions can be stored
  */
 class PositioningComponent extends Composition {
+  static Name = "Positioning"
+  static Type = "Positioning"
   public line?: number;
   public column?: number;
   constructor(options?: Partial<PositioningParams>) {
     super();
-    const { Positioning } = ComponentInformation.components;
-    this.componentName = Positioning.name;
-    this.componentType = Positioning.type;
+    this.componentName = PositioningComponent.Name;
+    this.componentType = PositioningComponent.Type;
     this.line = options?.line;
     this.column = options?.column;
   }

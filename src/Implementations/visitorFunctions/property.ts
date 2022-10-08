@@ -33,7 +33,6 @@ export default function visitProperty(visitor: YaplVisitor, ctx: PropertyContext
     type: propertyTypeClass,
     scopeName: (propertyTypeClass.getName || extractBasicInformation(currentScope)!.getName)(),
     ...lineAndColumn(ctx),
-    memoryAddress: visitor.register(),
   });
   const currentScopeTable = extractTableComponent(currentScope)!;
 

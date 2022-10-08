@@ -7,17 +7,17 @@ import {
   TypeInstance,
   ValueComponent,
 } from '../Components';
-import ComponentInformation from '../Components/ComponentInformation';
 import { MethodElement, SymbolElement } from '../DataStructures/TableElements';
 import Integer from './Integer.type';
 import { Primitive } from './Primitive.type';
 
 export class StringType extends Primitive {
+  static Name = 'String';
+  static Type = 'String';
   defaultValue: string = '';
   constructor() {
-    const { String } = ComponentInformation.type;
-    super({ name: String.name });
-    this.componentName = String.name;
+    super({ name: StringType.Name });
+    this.componentName = StringType.Name;
     this.sizeInBytes = 24;
 
     const tableComponent = new TableComponent();
@@ -55,29 +55,24 @@ export class StringType extends Primitive {
   }
 
   allowsAssignmentOf = function (value?: CompositionComponent): boolean {
-    const { String } = ComponentInformation.type;
-    const { Type } = ComponentInformation.components;
-    const incomingValueComponent = value?.getComponent<TypeComponent>({ componentType: Type.name });
+    const incomingValueComponent = value?.getComponent<TypeComponent>({ componentType: TypeComponent.Name });
 
     if (!incomingValueComponent) return false;
 
-    return [String.name].includes(incomingValueComponent.componentName);
+    return [StringType.Name].includes(incomingValueComponent.componentName);
   };
   allowsComparisonTo = function (value?: CompositionComponent): boolean {
-    const { String } = ComponentInformation.type;
-    const { Type } = ComponentInformation.components;
-    const incomingValueComponent = value?.getComponent<TypeComponent>({ componentType: Type.name });
+    const incomingValueComponent = value?.getComponent<TypeComponent>({ componentType: TypeComponent.Name });
 
     if (!incomingValueComponent) return false;
 
-    return [String.name].includes(incomingValueComponent.componentName);
+    return [StringType.Name].includes(incomingValueComponent.componentName);
   };
 
   coherseType = function (value?: CompositionComponent): StringType | null {
-    const { Type, ValueHolder: ValueHolderInfo } = ComponentInformation.components;
 
-    const incomingValueTypeComponent = value?.getComponent<TypeComponent>({ componentType: Type.name });
-    const incomingValueComponent = value?.getComponent<ValueComponent>({ componentType: ValueHolderInfo.name });
+    const incomingValueTypeComponent = value?.getComponent<TypeComponent>({ componentType: TypeComponent.Name });
+    const incomingValueComponent = value?.getComponent<ValueComponent>({ componentType: ValueComponent.Name });
     if (!incomingValueTypeComponent || !incomingValueComponent) return null;
 
     const newValue = new StringType();

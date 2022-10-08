@@ -1,11 +1,10 @@
 import { ClassDefineContext } from '../../antlr/yaplParser';
 import { extractBasicInformation } from '../Components/BasicInformation';
-import ComponentInformation from '../Components/ComponentInformation';
 import CompositionComponent from '../Components/Composition';
 import TableComponent, { extractTableComponent } from '../Components/Table';
 import { extractTypeComponent } from '../Components/Type';
-import { TableElementType } from '../DataStructures/TableElements/index';
-import { ClassType } from '../Generics/Object.type';
+import { SymbolElement, TableElementType } from '../DataStructures/TableElements/index';
+import { ClassType, ObjectType } from '../Generics/Object.type';
 import Pipeline from '../Pipeline';
 import { YaplVisitor } from './meta';
 
@@ -17,13 +16,12 @@ import { YaplVisitor } from './meta';
  */
 function semantic(p_visitor: YaplVisitor, p_ctx: ClassDefineContext, p_errors: string[]): ClassType | void {
   p_visitor.returnToGlobalScope();
-  const { Object } = ComponentInformation.type;
-  let [cls, inheritsFrom = Object.name] = p_ctx.TYPE();
+  let [cls, inheritsFrom = ObjectType.Name] = p_ctx.TYPE();
 
   // ERROR: Class inherits from itself
   if (cls.toString() === inheritsFrom.toString()) {
     p_errors.push(`Class ${cls.toString()} can't inherit from itself`);
-    inheritsFrom = Object.name; // FAILSAFE: If something inherits from itself, make it inherit from Object
+    inheritsFrom = ObjectType.Name; // FAILSAFE: If something inherits from itself, make it inherit from ObjectType
   }
 
   const classTable = p_visitor.findTable(cls);
@@ -55,16 +53,17 @@ function semantic(p_visitor: YaplVisitor, p_ctx: ClassDefineContext, p_errors: s
   }
 
   if (defaultInheritance) {
-    parentTable = p_visitor.findTable(Object.name)!; // Shift back to Object as a failsafe instead of failing
+    parentTable = p_visitor.findTable(ObjectType.Name)!; // Shift back to ObjectType as a failsafe instead of failing
   }
 
   const inMainClass = cls.toString() === 'Main';
   if (inMainClass) {
+    p_visitor.enterMainScope();
     p_visitor.mainExists = true;
     // ERROR: Main class is trying to inherit from another class, which is not allowed
-    if (parentTable?.componentName !== Object.name) {
+    if (parentTable?.componentName !== ObjectType.Name) {
       p_errors.push(`Main class can't inherit from any class`);
-      parentTable = p_visitor.findTable(Object.name)!;
+      parentTable = p_visitor.findTable(ObjectType.Name)!;
     }
   }
 
@@ -75,12 +74,13 @@ function semantic(p_visitor: YaplVisitor, p_ctx: ClassDefineContext, p_errors: s
   return newTable;
 }
 
-function memory(p_classSize: number, p_table: TableComponent<TableElementType>) {
-  let offset = 0;
+function memory(visitor: YaplVisitor, p_table: TableComponent<TableElementType>) {
+  let memoryOffset = 0;
   for (const element of p_table.getAll()) {
+    if (element.componentName !== SymbolElement.Name) continue;
     const typeComponent = extractTypeComponent(element)!;
-    offset += typeComponent.sizeInBytes ?? 0;
-    console.log(element);
+    element.setAddress(memoryOffset)
+    memoryOffset += typeComponent.sizeInBytes!;
   }
 }
 
@@ -98,8 +98,9 @@ export default function visitClassDefine(p_visitor: YaplVisitor, p_ctx: ClassDef
   const _children = p_visitor.visitChildren(p_ctx);
 
   const classTable: TableComponent<TableElementType> = extractTableComponent(newTable)!;
-  const classSize: number = classTable.size;
-  memory(classSize, classTable);
+  memory(p_visitor, classTable);
+
+  p_visitor.exitMainScope();
 
   return p_visitor.next(p_ctx);
 }

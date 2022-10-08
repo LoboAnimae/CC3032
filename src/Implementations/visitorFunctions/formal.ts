@@ -19,8 +19,7 @@ export default function visitFormal(visitor: YaplVisitor, ctx: FormalContext) {
     name: paramName.text,
     type: foundTable,
     scopeName: visitor.getCurrentScope().getName(),
-    ...lineAndColumn(ctx),
-    memoryAddress: visitor.register(), // TODO: Add pass-by-reference or pass-by-value logic with memory addresses
+    ...lineAndColumn(ctx), // TODO: Add pass-by-reference or pass-by-value logic with memory addresses
   });
   return newSymbol;
 }

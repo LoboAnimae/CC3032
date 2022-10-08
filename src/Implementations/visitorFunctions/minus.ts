@@ -1,11 +1,12 @@
 import { MinusContext } from '../../antlr/yaplParser';
 import { EmptyComponent, extractQuadruplet, extractTypeComponent } from '../Components/index';
 import SubOperation from '../Components/Quadruple/SubOperation';
+import IntType from '../Generics/Integer.type';
 import { YaplVisitor } from './meta';
 
 export default function visitMinus(visitor: YaplVisitor, ctx: MinusContext) {
   const [leftChild, rightChild] = ctx.expression();
-  const intTable = visitor.findTable('Int')!.copy();
+  const intTable = visitor.findTable(IntType.Name)!.copy();
 
   const leftElement = visitor.visit(leftChild);
   const rightElement = visitor.visit(rightChild);

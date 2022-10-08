@@ -66,3 +66,21 @@ Something.x   =   Something.y   +   2
 Something.y   =   Something.x   +   Something.y
 
 
+
+<	PROGRAM STRUCTURE ARM	>
+ _______________
+|				|
+|				|
+|	  MAIN 		|
+|				|
+|_______________|
+|				|
+|				|
+|	  DATA		|
+|				|
+|_______________|
+|				|
+|				|
+|	 METHODS	|
+|				|
+|_______________|

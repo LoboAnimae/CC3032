@@ -1,11 +1,12 @@
 import { v4 as uuid } from 'uuid';
-import ComponentInformation from './ComponentInformation';
 
 export enum CompositionErrors {
   DUPLICATE_COMPONENT = 'Duplicate component',
 }
 
 abstract class CompositionComponent {
+  static Name = 'CompositionComponent';
+  static Type = 'CompositionComponent'
   id: string;
   unique: boolean;
   /** Managed by members */
@@ -18,9 +19,8 @@ abstract class CompositionComponent {
   children: CompositionComponent[];
   constructor() {
     this.id = uuid();
-    const { Composition } = ComponentInformation.components;
-    this.componentName = Composition.name;
-    this.componentType = Composition.type;
+    this.componentName = CompositionComponent.Name;
+    this.componentType = CompositionComponent.Type;
     this.unique = true;
     this.children = [];
   }

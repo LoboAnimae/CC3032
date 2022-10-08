@@ -1,4 +1,3 @@
-import ComponentInformation from './ComponentInformation';
 import Composition from './Composition';
 
 export interface ValueHolderparams {
@@ -7,19 +6,19 @@ export interface ValueHolderparams {
 
 export function extractValueComponent(inComponent?: Composition | null) {
   if (!inComponent) return null;
-  const { ValueHolder } = ComponentInformation.components;
-  return inComponent.getComponent<ValueComponent>({ componentType: ValueHolder.type });
+  return inComponent.getComponent<ValueComponent>({ componentType: ValueComponent.Type });
 }
 
 class ValueComponent extends Composition {
   public value?: any;
+  static Name = 'ValueHolder';
+  static Type = 'ValueHolder';
 
   constructor(options?: Partial<ValueHolderparams>) {
     super();
 
-    const ValueHolderInfo = ComponentInformation.components.ValueHolder;
-    this.componentName = ValueHolderInfo.name;
-    this.componentType = ValueHolderInfo.type;
+    this.componentName = ValueComponent.Name;
+    this.componentType = ValueComponent.Type;
     this.value = options?.value ?? null;
   }
 

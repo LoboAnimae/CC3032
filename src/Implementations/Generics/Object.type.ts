@@ -7,7 +7,6 @@ import {
   TableComponent,
   TypeComponent,
 } from '../Components';
-import ComponentInformation from '../Components/ComponentInformation';
 
 import StringType from './String.type';
 import TableElement from '../DataStructures/TableElements/TableElement';
@@ -20,16 +19,17 @@ interface ClassTypeParams {
 }
 
 export class ObjectType extends TypeComponent {
+  static Name = 'Object';
+  static Type = 'Object';
   constructor(options?: Partial<ClassTypeParams>) {
     super();
 
-    const { Object: ObjectType } = ComponentInformation.type;
-    this.componentName = ObjectType.name;
+    this.componentName = ObjectType.Name;
     this.sizeInBytes = 1;
     this.isGeneric = false;
     this.parent = null;
 
-    const basicInfo = new BasicInfoComponent({ name: ObjectType.name });
+    const basicInfo = new BasicInfoComponent({ name: ObjectType.Name });
     this.addComponent(basicInfo);
     const tableComponent = new TableComponent<TableElementType>();
 
@@ -67,25 +67,22 @@ export class ObjectType extends TypeComponent {
 
   createChild: () => ClassType = () => {
     const newObject = new ClassType();
-    const { Type, Table } = ComponentInformation.components;
-    const tableComponent = newObject.getComponent<TableComponent<TableElementType>>({ componentType: Table.name })!;
-    const typeComponent = newObject.getComponent<TypeComponent>({ componentType: Type.name })!;
-    tableComponent.parent = this.getComponent<TableComponent<TableElementType>>({ componentType: Table.name })!;
-    typeComponent.parent = this.getComponent<TypeComponent>({ componentType: Type.name })!;
+    const tableComponent = newObject.getComponent<TableComponent<TableElementType>>({ componentType: TableComponent.Name })!;
+    const typeComponent = newObject.getComponent<TypeComponent>({ componentType: TypeComponent.Name })!;
+    tableComponent.parent = this.getComponent<TableComponent<TableElementType>>({ componentType: TableComponent.Name })!;
+    typeComponent.parent = this.getComponent<TypeComponent>({ componentType: TypeComponent.Name })!;
     return newObject;
   };
 
   allowsAssignmentOf = (value?: CompositionComponent): boolean => {
-    const { type } = ComponentInformation.components.Type;
-    const typeComponent = value?.getComponent<TypeComponent>({ componentType: type });
+    const typeComponent = value?.getComponent<TypeComponent>({ componentType: TypeComponent.Type });
     if (!typeComponent) return false;
     const entireHierarchyComponents = typeComponent.getHierarchy();
-    const { BasicInfo } = ComponentInformation.components;
     const entireHierarchyNames = entireHierarchyComponents
-      .map((t) => t.getComponent<BasicInfoComponent>({ componentType: BasicInfo.type })?.getName())
+      .map((t) => t.getComponent<BasicInfoComponent>({ componentType: BasicInfoComponent.Type })?.getName())
       .filter((n) => !!n);
     return entireHierarchyNames.includes(
-      this.getComponent<BasicInfoComponent>({ componentType: BasicInfo.type })?.getName(),
+      this.getComponent<BasicInfoComponent>({ componentType: BasicInfoComponent.Type })?.getName(),
     );
   };
 
@@ -94,39 +91,37 @@ export class ObjectType extends TypeComponent {
   }
 
   toString(): string {
-    const { type } = ComponentInformation.components.BasicInfo;
-    return `<Primitive> ${this.getComponent<BasicInfoComponent>({ componentType: type })?.getName()}`;
+    return `<Primitive> ${this.getComponent<BasicInfoComponent>({ componentType: BasicInfoComponent.Type })?.getName()}`;
   }
 }
 
 export class ClassType extends ObjectType {
+  static Name = 'Class';
+  static Type = 'Class';
+
   constructor(options?: Partial<ClassTypeParams>) {
     super();
-    const { Class, BasicInfo } = ComponentInformation.components;
-    this.componentName = Class.name;
+    this.componentName = ClassType.Name;
     this.parent = options?.parentType ?? null;
     this.isGeneric = false;
     this.sizeInBytes = 0;
 
-    const { Table } = ComponentInformation.components;
     const parentTable =
-      options?.parentType?.getComponent<TableComponent<TableElement>>({ componentType: Table.type }) ?? null;
+      options?.parentType?.getComponent<TableComponent<TableElement>>({ componentType: TableComponent.Type }) ?? null;
 
-    const basicInfo = this.getComponent<BasicInfoComponent>({ componentType: BasicInfo.type })!;
-    basicInfo.setName(options?.name ?? Class.name);
+    const basicInfo = this.getComponent<BasicInfoComponent>({ componentType: BasicInfoComponent.Type })!;
+    basicInfo.setName(options?.name ?? ClassType.Name);
 
-    const tableComponent = this.getComponent<TableComponent<TableElement>>({ componentType: Table.type })!;
+    const tableComponent = this.getComponent<TableComponent<TableElement>>({ componentType: TableComponent.Type })!;
     tableComponent.parent = parentTable;
   }
 
   getType(): TypeComponent {
-    const { Type } = ComponentInformation.components;
-    return this.getComponent<TypeComponent>({ componentType: Type.type })!;
+    return this.getComponent<TypeComponent>({ componentType: TypeComponent.Type })!;
   }
 
   getBasicInfo(): BasicInfoComponent {
-    const { BasicInfo } = ComponentInformation.components;
-    return this.getComponent<BasicInfoComponent>({ componentType: BasicInfo.type })!;
+    return this.getComponent<BasicInfoComponent>({ componentType: BasicInfoComponent.Type })!;
   }
 
   getName(): string {
@@ -135,13 +130,11 @@ export class ClassType extends ObjectType {
   }
 
   getTable(): TableComponent<TableElementType> {
-    const { Table } = ComponentInformation.components;
-    return this.getComponent<TableComponent<TableElementType>>({ componentType: Table.type })!;
+    return this.getComponent<TableComponent<TableElementType>>({ componentType: TableComponent.Type })!;
   }
 
   getElement(name: string, options?: ITableGetOptions): TableElement | null {
-    const { Table } = ComponentInformation.components;
-    const tableComponent = this.getComponent<TableComponent<TableElementType>>({ componentType: Table.type });
+    const tableComponent = this.getComponent<TableComponent<TableElementType>>({ componentType: TableComponent.Type });
     if (!tableComponent) return null;
     return tableComponent.get(name, options);
   }
@@ -155,8 +148,7 @@ export class ClassType extends ObjectType {
   }
 
   toString(): string {
-    const { type } = ComponentInformation.components.BasicInfo;
-    const basicInfo = this.getComponent<BasicInfoComponent>({ componentType: type })!;
+    const basicInfo = this.getComponent<BasicInfoComponent>({ componentType: BasicInfoComponent.Type })!;
     const prepender = `<${this.componentName}>`;
     const name = basicInfo.getName();
     const thisTable = extractTableComponent(this)!;

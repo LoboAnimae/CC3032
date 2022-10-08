@@ -1,11 +1,7 @@
 import {
   BasicInfoComponent,
-  CompositionComponent,
-  PositioningComponent,
-  TypeComponent,
-  ValueComponent,
+  CompositionComponent
 } from '../../Components';
-import ComponentInformation from '../../Components/ComponentInformation';
 import TableElement from './TableElement';
 export interface SymbolElementParams {
   name?: string;
@@ -14,14 +10,14 @@ export interface SymbolElementParams {
   line?: number;
   column?: number;
   scopeName: string;
-  memoryAddress: number;
+  memoryAddress?: number;
 }
 
 export default class SymbolElement extends TableElement {
+  static Name = 'SymbolElement';
   constructor(options?: SymbolElementParams) {
     super(options);
-    this.componentName = 'SymbolElement';
-    this.memoryAddress = options?.memoryAddress ?? 0;
+    this.componentName = SymbolElement.Name;
   }
 
   clone(): CompositionComponent {
@@ -29,12 +25,14 @@ export default class SymbolElement extends TableElement {
   }
 
   toString(): string {
-    const { BasicInfo } = ComponentInformation.components;
-    const basicInfo = this.getComponent<BasicInfoComponent>({ componentType: BasicInfo.type })!;
-    return `SymbolElement{ memoryAddress{${this.memoryAddress}}, name{${basicInfo.getName()}} }`;
+    const basicInfo = this.getComponent<BasicInfoComponent>({ componentType: BasicInfoComponent.Type })!;
+    return `SymbolElement{ scope{ ${this.scopeName} }, name{ ${basicInfo.getName()} } }`;
   }
 
   toCode(): string {
-    return `[*${this.memoryAddress}]`
+    const basicInfo = this.getComponent<BasicInfoComponent>({ componentType: BasicInfoComponent.Type })!;
+    const scope = this.scopeName;
+    const name = basicInfo.getName();
+    return `${scope}.${name}`;
   }
 }

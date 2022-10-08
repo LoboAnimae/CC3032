@@ -1,4 +1,3 @@
-import ComponentInformation from './ComponentInformation';
 import Composition from './Composition';
 
 export interface Params {
@@ -8,20 +7,18 @@ export interface Params {
 
 export function extractBasicInformation(inComponent?: Composition | null) {
   if (!inComponent) return null;
-  const { BasicInfo } = ComponentInformation.components;
-  return inComponent.getComponent<BasicInfoComponent>({ componentType: BasicInfo.type });
+  return inComponent.getComponent<BasicInfoComponent>({ componentType: BasicInfoComponent.Type });
 }
 
 class BasicInfoComponent extends Composition {
+  static Name = 'BasicInformation';
+  static Type = 'BasicInformation';
   public name?: string;
-  public address: number;
   constructor(options?: Partial<Params>) {
     super();
-    const { BasicInfo } = ComponentInformation.components;
-    this.componentName = BasicInfo.name;
-    this.componentType = BasicInfo.type;
+    this.componentName = BasicInfoComponent.Name;
+    this.componentType = BasicInfoComponent.Type;
     this.name = options?.name;
-    this.address = options?.address ?? -1;
   }
 
   getName = () => this.name;
@@ -29,10 +26,6 @@ class BasicInfoComponent extends Composition {
     this.name = newName;
   };
 
-  getAddress = () => this.address;
-  setAddress = (newAddress: number) => {
-    this.address = newAddress;
-  };
 
   clone(): BasicInfoComponent {
     return new BasicInfoComponent({ name: this.name });

@@ -5,7 +5,6 @@ import {
   TypeComponent,
   ValueComponent,
 } from '../../Components';
-import ComponentInformation from '../../Components/ComponentInformation';
 import { v4 as uuid } from 'uuid';
 export interface TableElementParams {
   name?: string;
@@ -19,20 +18,18 @@ export interface TableElementParams {
 export default abstract class TableElement extends CompositionComponent {
   referentialID: string;
   scopeName: string;
-  public memoryAddress: number;
+  memoryAddress: number = -1;
   constructor(options?: TableElementParams) {
     super();
-    this.memoryAddress = -1;
     this.referentialID = uuid();
     this.componentType = 'TableElement';
     this.unique = false;
     this.scopeName = options?.scopeName ?? 'Unknown Scope';
-
+    this.memoryAddress = -1;
     const basicInfo = new BasicInfoComponent({ name: options?.name });
     this.addComponent(basicInfo);
 
-    const { Type } = ComponentInformation.components;
-    const typeComponent = options?.type?.getComponent<TypeComponent>({ componentType: Type.type });
+    const typeComponent = options?.type?.getComponent<TypeComponent>({ componentType: TypeComponent.Type });
     if (!typeComponent) throw new Error('Trying to instantiate with non-existent type');
     this.addComponent(typeComponent);
 
@@ -45,23 +42,19 @@ export default abstract class TableElement extends CompositionComponent {
   }
 
   getBasicInfo(): BasicInfoComponent {
-    const { BasicInfo } = ComponentInformation.components;
-    return this.getComponent<BasicInfoComponent>({ componentType: BasicInfo.type })!;
+    return this.getComponent<BasicInfoComponent>({ componentType: BasicInfoComponent.Type })!;
   }
 
   getType(): TypeComponent {
-    const { Type } = ComponentInformation.components;
-    return this.getComponent<TypeComponent>({ componentType: Type.type })!;
+    return this.getComponent<TypeComponent>({ componentType: TypeComponent.Type })!;
   }
 
   getValueHolder(): ValueComponent | null {
-    const { ValueHolder } = ComponentInformation.components;
-    return this.getComponent<ValueComponent>({ componentType: ValueHolder.type });
+    return this.getComponent<ValueComponent>({ componentType: ValueComponent.Type });
   }
 
   getPositioning(): PositioningComponent {
-    const { Positioning } = ComponentInformation.components;
-    return this.getComponent<PositioningComponent>({ componentType: Positioning.type })!;
+    return this.getComponent<PositioningComponent>({ componentType: PositioningComponent.Type })!;
   }
 
   getLine(): number {
@@ -77,6 +70,15 @@ export default abstract class TableElement extends CompositionComponent {
   getName(): string {
     const basicInfo = this.getBasicInfo();
     return basicInfo.getName() ?? 'Unknown name';
+  }
+
+  setAddress(newAddress: number): void {
+    this.memoryAddress = newAddress;
+  }
+
+  offsetAddressBy(p_offset: number): number {
+    this.memoryAddress += p_offset;
+    return this.memoryAddress;
   }
 
   abstract toCode(): string;

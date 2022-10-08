@@ -1,4 +1,4 @@
-import ComponentInformation from '../ComponentInformation';
+
 import Composition from '../Composition';
 import CompositionComponent from '../Composition';
 import { v4 as uuid } from 'uuid';
@@ -6,11 +6,12 @@ import TemporalComponent from '../TemporalComponent';
 
 export function extractQuadruplet(inComponent?: Composition | null): QuadrupletElement | null {
   if (!inComponent) return null;
-  const { Quadruplet } = ComponentInformation.components;
-  return inComponent.getComponent<QuadrupletElement>({ componentType: Quadruplet.element });
+  return inComponent.getComponent<QuadrupletElement>({ componentType: QuadrupletElement.Type });
 }
 
 export abstract class QuadrupletElement extends Composition {
+  static Name = 'QuadrupletElement';
+  static Type = 'QuadrupletElement';
   readonly id: string;
   operator: string | null;
   temporal: TemporalComponent;
@@ -18,7 +19,7 @@ export abstract class QuadrupletElement extends Composition {
 
   constructor() {
     super();
-    this.componentType = ComponentInformation.components.Quadruplet.element;
+    this.componentType = QuadrupletElement.Type;
     this.id = uuid();
     this.operator = null;
     this.elements = [null, null];
@@ -37,13 +38,15 @@ export abstract class QuadrupletElement extends Composition {
 }
 
 export default class Quadruplet extends Composition {
+  static Name = 'Quadruplet';
+  static Type = 'QuadrupletComponent';
   private readonly _elements: QuadrupletElement[];
 
   constructor() {
     super();
     this._elements = [];
-    this.componentName = 'TripletComponent';
-    this.componentType = 'Triplet';
+    this.componentName = Quadruplet.Name;
+    this.componentType = Quadruplet.Type;
   }
 
   copyElements(): QuadrupletElement[] {

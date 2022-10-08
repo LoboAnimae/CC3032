@@ -1,5 +1,4 @@
 import BasicInfoComponent from '../Components/BasicInformation';
-import ComponentInformation from '../Components/ComponentInformation';
 import TypeComponent from '../Components/Type';
 import ValueComponent from '../Components/ValueHolder';
 
@@ -15,9 +14,8 @@ export abstract class Primitive extends TypeComponent {
   }
 
   getValue = (): any => {
-    const { ValueHolder: ValueHolderInfo } = ComponentInformation.components;
     return (
-      this.getComponent<ValueComponent>({ componentType: ValueHolderInfo.type })?.getValue() ??
+      this.getComponent<ValueComponent>({ componentType: ValueComponent.Type })?.getValue() ??
       this.defaultValue ??
       null
     );
@@ -28,7 +26,6 @@ export abstract class Primitive extends TypeComponent {
   };
 
   toString(): string {
-    const { type } = ComponentInformation.components.BasicInfo;
-    return `Primitive{ ${this.getComponent<BasicInfoComponent>({ componentType: type })?.getName()} }`;
+    return `Primitive{ ${this.getComponent<BasicInfoComponent>({ componentType: BasicInfoComponent.Type })?.getName()} }`;
   }
 }

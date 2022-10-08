@@ -8,7 +8,7 @@ import { Stack } from '../DataStructures/Stack';
 import MethodElement from '../DataStructures/TableElements/MethodElement';
 import { BasicStorage, IError } from '../Errors/Errors';
 import { ClassType } from '../Generics/Object.type';
-export const lineAndColumn = (ctx: any): { line: number; column: number } => ({
+export const lineAndColumn = (ctx: any): { line: number; column: number; } => ({
   line: ctx.start?.line ?? 0,
   column: ctx.start?.charPositionInLine ?? 0,
 });
@@ -39,10 +39,12 @@ export interface HelperFunctions {
   next: (ctx: any) => any;
   returnToGlobalScope: () => void;
   getCurrentScope: <T = ClassType | MethodElement>(offset?: ScopePosition) => T;
-  register: () => number;
   addQuadruple: (newQuadruple: QuadrupletElement) => void;
   addScope: (newScope: TypeComponent) => void;
   addSymbol: (newSymbol: TypeComponent) => void;
+  enterMainScope: () => void;
+  exitMainScope: () => void;
+  registerMemory: (size: number) => number;
 }
 
 export type PossibleScope = ClassType | MethodElement;
