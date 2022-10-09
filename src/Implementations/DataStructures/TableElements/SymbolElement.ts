@@ -1,7 +1,5 @@
-import {
-  BasicInfoComponent,
-  CompositionComponent
-} from '../../Components';
+import { BasicInfoComponent, CompositionComponent, extractTypeComponent } from '../../Components';
+import { ClassType } from '../../Generics/Object.type';
 import TableElement from './TableElement';
 export interface SymbolElementParams {
   name?: string;
@@ -28,6 +26,11 @@ export default class SymbolElement extends TableElement {
     const basicInfo = this.getComponent<BasicInfoComponent>({ componentType: BasicInfoComponent.Type })!;
     return `SymbolElement{ scope{ ${this.scopeName} }, name{ ${basicInfo.getName()} } }`;
   }
+
+  getSize = (): number => {
+    const typeComponent = extractTypeComponent(this);
+    return (typeComponent as ClassType)?.getSize?.() ?? typeComponent?.sizeInBytes!;
+  };
 
   toCode(): string {
     const basicInfo = this.getComponent<BasicInfoComponent>({ componentType: BasicInfoComponent.Type })!;

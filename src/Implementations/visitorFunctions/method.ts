@@ -6,7 +6,9 @@ import ValueComponent, { extractValueComponent } from '../Components/ValueHolder
 import { TableElementType } from '../DataStructures/TableElements/index';
 import MethodElement from '../DataStructures/TableElements/MethodElement';
 import { ClassType } from '../Generics/Object.type';
-import { lineAndColumn, YaplVisitor } from './meta';
+import { lineAndColumn } from './meta';
+import { YaplVisitor } from '../../yaplVisitor';
+import ContextHolder from '../Components/ContextHolder';
 
 export default function visitMethod(visitor: YaplVisitor, ctx: MethodContext) {
   const methodName = ctx.IDENTIFIER().text;
@@ -30,6 +32,8 @@ export default function visitMethod(visitor: YaplVisitor, ctx: MethodContext) {
     ...lineAndColumn(ctx),
     memoryAddress: -1,
   });
+  const methodContext = newMethod.getComponent<ContextHolder<MethodContext>>({ componentType: ContextHolder.Type });
+  methodContext?.setContext(ctx);
 
   const currentTable: ClassType = visitor.getCurrentScope();
   const classTableComponent = extractTableComponent<TableElementType>(currentTable)!;
@@ -45,7 +49,8 @@ export default function visitMethod(visitor: YaplVisitor, ctx: MethodContext) {
     newMethod.addParameters(newParam);
   }
 
-  const expressionResult: CompositionComponent = visitor.visit(methodBody);
+  const expressionResultRaw: CompositionComponent = visitor.visit(methodBody);
+  const expressionResult = Array.isArray(expressionResultRaw) ? expressionResultRaw[0] : expressionResultRaw;
   const expressionType = extractTypeComponent(expressionResult);
   const expressionValue = extractValueComponent(expressionResult);
 
@@ -63,15 +68,6 @@ export default function visitMethod(visitor: YaplVisitor, ctx: MethodContext) {
       `Cannot assign ${expressionType.componentName} to method of type ${methodType.componentName}`,
     );
     return visitor.next(ctx);
-  }
-
-  if (expressionValue) {
-    const methodTypeValue = extractValueComponent(methodType);
-    if (methodTypeValue) {
-      methodTypeValue.value = expressionValue.value;
-    } else {
-      methodType.addComponent(new ValueComponent({ value: expressionValue.value }));
-    }
   }
 
   visitor.scopeStack.pop();

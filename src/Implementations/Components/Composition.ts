@@ -6,7 +6,7 @@ export enum CompositionErrors {
 
 abstract class CompositionComponent {
   static Name = 'CompositionComponent';
-  static Type = 'CompositionComponent'
+  static Type = 'CompositionComponent';
   id: string;
   unique: boolean;
   /** Managed by members */
@@ -99,14 +99,14 @@ abstract class CompositionComponent {
   }
 
   abstract clone(): CompositionComponent;
-  copy(): CompositionComponent {
+  copy<T extends CompositionComponent>(): T {
     const returnValue = this.clone();
     for (const component of this.children) {
       const elementExists = !!returnValue.getComponent({ componentType: component.componentType });
       if (elementExists) continue;
       returnValue.addComponent(component.copy());
     }
-    return returnValue;
+    return returnValue as T;
   }
 
   toString(): string {

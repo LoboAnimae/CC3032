@@ -34,7 +34,7 @@ export default function visitId(visitor: YaplVisitor, ctx: IdContext) {
   if (!previousQuadruplet) {
     foundComponent.addComponent(quadrupletElement);
   }
-  visitor.addQuadruple(quadrupletElement)
+  // visitor.addQuadruple(quadrupletElement)
 
   return foundComponent;
 }

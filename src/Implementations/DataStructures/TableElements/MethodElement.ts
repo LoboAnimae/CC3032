@@ -1,4 +1,6 @@
+import { MethodContext } from '../../../antlr/yaplParser';
 import { BasicInfoComponent, CompositionComponent } from '../../Components';
+import ContextHolder from '../../Components/ContextHolder';
 import Table from '../../Components/Table';
 import TableComponent, { extractTableComponent } from '../../Components/Table';
 import SymbolElement, { SymbolElementParams } from './SymbolElement';
@@ -6,23 +8,22 @@ import TableElement from './TableElement';
 
 export default class MethodElement extends TableElement {
   static Name = 'MethodElement';
+
   constructor(options?: SymbolElementParams) {
     super(options);
     this.componentName = MethodElement.Name;
     const newTableComponent = new TableComponent();
     this.addComponent(newTableComponent);
+    this.addComponent(new ContextHolder<MethodContext>());
   }
 
   addParameters(...parameters: SymbolElement[]): MethodElement {
-
     const tableComponent = this.getComponent<TableComponent<SymbolElement>>({ componentType: Table.Type })!;
     tableComponent.add(...parameters);
-
     return this;
   }
 
   getTable(): TableComponent<SymbolElement> {
-
     return this.getComponent<TableComponent<SymbolElement>>({ componentType: Table.Type })!;
   }
 
@@ -36,7 +37,6 @@ export default class MethodElement extends TableElement {
   }
 
   toString(): string {
-
     const basicInfo = this.getComponent<BasicInfoComponent>({ componentType: BasicInfoComponent.Type })!;
     const name = basicInfo.getName();
     const thisTable = extractTableComponent(this)!;
@@ -52,6 +52,8 @@ export default class MethodElement extends TableElement {
     const methodsString = methods.length ? `\n\t\t${methods}` : '';
     return `MethodComponent{${name}${elementsString}${methodsString}${elementsString || methodsString ? '\t\n' : ''}}`;
   }
+
+  getSize = () => 0;
 
   toCode() {
     return `goto ${this.getName()}`;

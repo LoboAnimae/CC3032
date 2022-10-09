@@ -1,10 +1,10 @@
 import { AddContext } from '../../antlr/yaplParser';
+import { YaplVisitor } from './meta';
 import EmptyComponent from '../Components/EmptyComponent';
 import { extractQuadruplet, extractValueComponent, QuadrupletComponent } from '../Components/index';
 import AddOperation from '../Components/Quadruple/AddOperation';
 import { extractTypeComponent } from '../Components/Type';
 import IntegerType from '../Generics/Integer.type';
-import { YaplVisitor } from './meta';
 
 export default function visitAdd(visitor: YaplVisitor, ctx: AddContext) {
   // TODO: Add value
@@ -32,11 +32,11 @@ export default function visitAdd(visitor: YaplVisitor, ctx: AddContext) {
   }
 
   // Quadruplet
-  const quadrupletElement = new AddOperation();
-  const lValueComponent = extractQuadruplet(leftElement);
-  const rValueComponent = extractQuadruplet(rightElement);
-  quadrupletElement.elements = [lValueComponent, rValueComponent];
-  intTable.addComponent(quadrupletElement);
-  visitor.addQuadruple(quadrupletElement);
+  // const quadrupletElement = new AddOperation();
+  // const lValueComponent = extractQuadruplet(leftElement);
+  // const rValueComponent = extractQuadruplet(rightElement);
+  // quadrupletElement.elements = [lValueComponent, rValueComponent];
+  // intTable.addComponent(quadrupletElement);
+  // visitor.addQuadruple(quadrupletElement);
   return intTable;
 }

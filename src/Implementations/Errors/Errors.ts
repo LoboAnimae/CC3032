@@ -1,8 +1,3 @@
-export interface IError {
-  message: string;
-  line: number;
-  column: number;
-}
 type AnyObject = { [key: string]: any };
 
 export class BasicStorage<T extends AnyObject> {

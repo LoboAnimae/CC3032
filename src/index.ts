@@ -4,6 +4,8 @@ import { yaplParser } from './antlr/yaplParser';
 import path from 'path';
 import fs from 'fs';
 import { YaplVisitor } from './yaplVisitor';
+import { extractTableComponent } from './Implementations/Components/Table';
+import { MemoryVisitor } from './Implementations/DataStructures/Memory';
 
 async function main(input: string) {
   // ScreenListener.emit(lineActions.clear);
@@ -18,11 +20,31 @@ async function main(input: string) {
   let tree = parser.program();
 
   const visitor = new YaplVisitor();
-  const result = visitor.visit(tree);
+  // Semantic
+  visitor.visit(tree);
   const symbolsTable = visitor.symbolsTable;
-  const errors = visitor.errors.getAll();
+  const errors = visitor.errorComponent().getAll();
+  if (errors.length) {
+    console.log('Errors found, aborting');
+    return;
+  }
+  // Memory
+  const mainClass = symbolsTable.get('Main')!;
+  if (!mainClass) {
+    console.log('Main method not found, aborting');
+    return;
+  }
+  const mainTable = extractTableComponent(mainClass)!;
+  const mainMethod = mainTable.get('main')!;
+  if (!mainMethod) {
+    console.log('Main method not found, aborting');
+    return;
+  }
 
-  console.log(visitor.quadrupleArr.map((q) => q.toCode()).join('\n'))
+  const memory = new MemoryVisitor(symbolsTable, visitor.mainBranch!);
+  memory.visit(visitor.mainBranch!);
+
+  console.log(memory.quadruples.join('\n'));
   const allSizeTableValues: any[] = [];
   for (const foundSymbol of symbolsTable) {
     const str = foundSymbol?.toString();

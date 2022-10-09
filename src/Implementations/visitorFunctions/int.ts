@@ -11,6 +11,6 @@ export default function visitInt(visitor: YaplVisitor, ctx: IntContext) {
   const quadrupletElement = new SimpleHolder();
   quadrupletElement.setValue(parseInt(ctx.INT().text));
   newInt.addComponent(quadrupletElement);
-  visitor.addQuadruple(quadrupletElement)
+  // visitor.addQuadruple(quadrupletElement)
   return newInt;
 }

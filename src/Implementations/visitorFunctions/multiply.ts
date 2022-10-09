@@ -33,6 +33,6 @@ export default function visitMultiply(visitor: YaplVisitor, ctx: MultiplyContext
   const rValueComponent = extractQuadruplet(rightElement);
   quadrupletElement.elements = [lValueComponent, rValueComponent];
   intTable.addComponent(quadrupletElement);
-  visitor.addQuadruple(quadrupletElement);
+  // visitor.addQuadruple(quadrupletElement);
   return intTable;
 }

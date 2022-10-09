@@ -31,11 +31,11 @@ export default function visitDivision(visitor: YaplVisitor, ctx: DivisionContext
   }
 
   // Quadruplet
-  const quadrupletElement = new DivOperation();
-  const lValueComponent = extractQuadruplet(leftElement);
-  const rValueComponent = extractQuadruplet(rightElement);
-  quadrupletElement.elements = [lValueComponent, rValueComponent];
-  intTable.addComponent(quadrupletElement);
-  visitor.addQuadruple(quadrupletElement);
+  // const quadrupletElement = new DivOperation();
+  // const lValueComponent = extractQuadruplet(leftElement);
+  // const rValueComponent = extractQuadruplet(rightElement);
+  // quadrupletElement.elements = [lValueComponent, rValueComponent];
+  // intTable.addComponent(quadrupletElement);
+  // visitor.addQuadruple(quadrupletElement);
   return intTable;
 }

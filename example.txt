@@ -1,8 +1,24 @@
-class A {
-    x: Int;
-    y: Int;
+
+class Something {
+    x: Int <- 3;
+    add(): Int { 1 };
 };
 
+class A inherits Something {
+    a: Int;
+    b: Int;
+    add(c: Int, d: Int): Int {
+        a * c + b * d
+    };
+};
+
+
 class Main {
-    x: A <- new A;
+    e: Int <- 34;
+    f: Int <- 2;
+    g: A <- new A;
+    h: Int <- 2;
+    main(): Int {
+        g.add(e, f)
+    };
 };

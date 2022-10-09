@@ -33,6 +33,6 @@ export default function visitMinus(visitor: YaplVisitor, ctx: MinusContext) {
   const rValueComponent = extractQuadruplet(rightElement);
   quadrupletElement.elements = [lValueComponent, rValueComponent];
   intTable.addComponent(quadrupletElement);
-  visitor.addQuadruple(quadrupletElement);
+  // visitor.addQuadruple(quadrupletElement);
   return intTable;
 }

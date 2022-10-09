@@ -67,9 +67,13 @@ export class ObjectType extends TypeComponent {
 
   createChild: () => ClassType = () => {
     const newObject = new ClassType();
-    const tableComponent = newObject.getComponent<TableComponent<TableElementType>>({ componentType: TableComponent.Name })!;
+    const tableComponent = newObject.getComponent<TableComponent<TableElementType>>({
+      componentType: TableComponent.Name,
+    })!;
     const typeComponent = newObject.getComponent<TypeComponent>({ componentType: TypeComponent.Name })!;
-    tableComponent.parent = this.getComponent<TableComponent<TableElementType>>({ componentType: TableComponent.Name })!;
+    tableComponent.parent = this.getComponent<TableComponent<TableElementType>>({
+      componentType: TableComponent.Name,
+    })!;
     typeComponent.parent = this.getComponent<TypeComponent>({ componentType: TypeComponent.Name })!;
     return newObject;
   };
@@ -91,7 +95,9 @@ export class ObjectType extends TypeComponent {
   }
 
   toString(): string {
-    return `<Primitive> ${this.getComponent<BasicInfoComponent>({ componentType: BasicInfoComponent.Type })?.getName()}`;
+    return `<Primitive> ${this.getComponent<BasicInfoComponent>({
+      componentType: BasicInfoComponent.Type,
+    })?.getName()}`;
   }
 }
 
@@ -101,10 +107,9 @@ export class ClassType extends ObjectType {
 
   constructor(options?: Partial<ClassTypeParams>) {
     super();
-    this.componentName = ClassType.Name;
+    this.componentName = options?.name ?? ClassType.Name;
     this.parent = options?.parentType ?? null;
     this.isGeneric = false;
-    this.sizeInBytes = 0;
 
     const parentTable =
       options?.parentType?.getComponent<TableComponent<TableElement>>({ componentType: TableComponent.Type }) ?? null;
@@ -115,41 +120,46 @@ export class ClassType extends ObjectType {
     const tableComponent = this.getComponent<TableComponent<TableElement>>({ componentType: TableComponent.Type })!;
     tableComponent.parent = parentTable;
   }
-
-  getType(): TypeComponent {
+  getType = (): TypeComponent => {
     return this.getComponent<TypeComponent>({ componentType: TypeComponent.Type })!;
-  }
+  };
 
-  getBasicInfo(): BasicInfoComponent {
+  getBasicInfo = (): BasicInfoComponent => {
     return this.getComponent<BasicInfoComponent>({ componentType: BasicInfoComponent.Type })!;
-  }
+  };
 
-  getName(): string {
+  getName = (): string => {
     const basicInfoComponent = this.getBasicInfo();
     return basicInfoComponent.getName() ?? 'Unknown Class Name';
-  }
+  };
 
-  getTable(): TableComponent<TableElementType> {
+  getTable = (): TableComponent<TableElementType> => {
     return this.getComponent<TableComponent<TableElementType>>({ componentType: TableComponent.Type })!;
-  }
+  };
 
-  getElement(name: string, options?: ITableGetOptions): TableElement | null {
+  getElement = (name: string, options?: ITableGetOptions): TableElement | null => {
     const tableComponent = this.getComponent<TableComponent<TableElementType>>({ componentType: TableComponent.Type });
     if (!tableComponent) return null;
     return tableComponent.get(name, options);
-  }
+  };
 
   clone(): CompositionComponent {
     return new ClassType();
   }
 
-  getSize(): number {
-    return this.sizeInBytes || 1;
-  }
+  getSize = (): number => {
+    const tableComponent = extractTableComponent<TableElementType>(this)!;
+    const size: number = tableComponent.elements
+      .map((element: TableElementType) => {
+        return element.getSize();
+      })
+      .reduce((a, b) => a + b);
+    return size;
+  };
 
-  toString(): string {
+  toString = (): string => {
     const basicInfo = this.getComponent<BasicInfoComponent>({ componentType: BasicInfoComponent.Type })!;
-    const prepender = `<${this.componentName}>`;
+    const prepender = `<${ClassType.Name}>`;
     const name = basicInfo.getName();
     const thisTable = extractTableComponent(this)!;
     const elements = thisTable.elements
@@ -163,5 +173,5 @@ export class ClassType extends ObjectType {
     const elementsString = elements.length ? `\n\t${elements}` : '';
     const methodsString = methods.length ? `\n\t${methods}` : '';
     return `${prepender} ${name}${elementsString}${methodsString}`;
-  }
+  };
 }

@@ -11,7 +11,8 @@ import SimpleAssignment from '../Components/Quadruple/SimpleAssignment';
 import MethodElement from '../DataStructures/TableElements/MethodElement';
 import SymbolElement from '../DataStructures/TableElements/SymbolElement';
 import { ClassType } from '../Generics/Object.type';
-import { lineAndColumn, YaplVisitor } from './meta';
+import { lineAndColumn } from './meta';
+import { YaplVisitor } from '../../yaplVisitor';
 
 export default function visitProperty(visitor: YaplVisitor, ctx: PropertyContext) {
   // Previous table
@@ -31,7 +32,7 @@ export default function visitProperty(visitor: YaplVisitor, ctx: PropertyContext
   const newTableElement = new SymbolElement({
     name: propertyName.text,
     type: propertyTypeClass,
-    scopeName: (propertyTypeClass.getName || extractBasicInformation(currentScope)!.getName)(),
+    scopeName: (currentScope.getName || extractBasicInformation(currentScope)!.getName)(),
     ...lineAndColumn(ctx),
   });
   const currentScopeTable = extractTableComponent(currentScope)!;
@@ -65,11 +66,11 @@ export default function visitProperty(visitor: YaplVisitor, ctx: PropertyContext
     const resolvingToAssignment = extractQuadruplet(assignmentResolvesTo);
     simpleAssignment.setValue(resolvingToAssignment);
     simpleAssignment.setAssigningTo(newTableElement);
-    visitor.addQuadruple(simpleAssignment);
+    // visitor.addQuadruple(simpleAssignment);
   } else {
     simpleAssignment.setValue(propertyTypeClass.defaultValue);
     simpleAssignment.setAssigningTo(newTableElement);
-    visitor.addQuadruple(simpleAssignment);
+    // visitor.addQuadruple(simpleAssignment);
     newTableElement.addComponent(new ValueComponent({ value: propertyTypeClass.defaultValue }));
   }
 

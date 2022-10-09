@@ -54,10 +54,10 @@ export abstract class TypeComponent extends Composition implements DownUpHierarc
       { currentScope: true },
     );
     if (!typeComponent) return false;
-    return typeComponent.hasAsAncestor(this);
+    return typeComponent.inheritsFrom(this);
   };
 
-  readonly hasAsAncestor = (incomingType?: Composition) => {
+  readonly inheritsFrom = (incomingType?: Composition) => {
     const hierarchyChainNames = this.getHierarchy()
       .map((t) => t.componentName)
       .filter((t) => t !== this.componentName);

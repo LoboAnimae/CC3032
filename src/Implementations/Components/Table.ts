@@ -1,4 +1,4 @@
-import BasicInfoComponent from './BasicInformation';
+import BasicInfoComponent, { extractBasicInformation } from './BasicInformation';
 import Composition from './Composition';
 import { CompositionComponent, extractTypeComponent, TypeComponent } from './index';
 
@@ -23,8 +23,8 @@ export function extractTableComponent<T extends CompositionComponent>(inComponen
 }
 
 class TableComponent<T extends CompositionComponent> extends Composition {
-  static Name = 'Table'
-  static Type = 'Table'
+  static Name = 'Table';
+  static Type = 'Table';
 
   public parent: TableComponent<T> | null;
   public elements: T[];
@@ -59,8 +59,20 @@ class TableComponent<T extends CompositionComponent> extends Composition {
     return (foundComponent ?? this.parent?.get(key) ?? null) as T;
   }
 
-  getAll(): T[] {
-    return [...this.elements];
+  getAll(inScope: boolean = true): T[] {
+    if (inScope) return [...this.elements];
+    const parentElements = this.parent?.getAll() ?? [];
+    const thisElements = [...this.elements];
+    const elements = [...thisElements];
+    for (const element of parentElements) {
+      const basicInfo = extractBasicInformation(element)!;
+
+      if (elements.find((element) => extractBasicInformation(element)!.getName() === basicInfo.getName())) {
+        continue;
+      }
+      elements.push(element);
+    }
+    return elements;
   }
 
   /**
