@@ -14,11 +14,13 @@ import { Primitive } from './Primitive.type';
 export class StringType extends Primitive {
   static Name = 'String';
   static Type = 'String';
+  static Size = 24;
+
   defaultValue: string = '';
   constructor() {
     super({ name: StringType.Name });
     this.componentName = StringType.Name;
-    this.sizeInBytes = 24;
+    this.sizeInBytes = StringType.Size;
 
     const tableComponent = new TableComponent();
     this.addComponent(tableComponent);

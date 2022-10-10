@@ -1,14 +1,14 @@
 import { MethodContext } from '../../antlr/yaplParser';
+import { YaplVisitor } from '../../yaplVisitor';
 import CompositionComponent from '../Components/Composition';
+import ContextHolder from '../Components/ContextHolder';
 import { extractTableComponent } from '../Components/Table';
 import { extractTypeComponent } from '../Components/Type';
-import ValueComponent, { extractValueComponent } from '../Components/ValueHolder';
+import { extractValueComponent } from '../Components/ValueHolder';
 import { TableElementType } from '../DataStructures/TableElements/index';
 import MethodElement from '../DataStructures/TableElements/MethodElement';
 import { ClassType } from '../Generics/Object.type';
 import { lineAndColumn } from './meta';
-import { YaplVisitor } from '../../yaplVisitor';
-import ContextHolder from '../Components/ContextHolder';
 
 export default function visitMethod(visitor: YaplVisitor, ctx: MethodContext) {
   const methodName = ctx.IDENTIFIER().text;

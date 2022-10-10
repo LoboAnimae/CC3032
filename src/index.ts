@@ -45,15 +45,16 @@ async function main(input: string) {
   memory.visit(visitor.mainBranch!);
 
   console.log(memory.quadruples.join('\n'));
-  const allSizeTableValues: any[] = [];
-  for (const foundSymbol of symbolsTable) {
-    const str = foundSymbol?.toString();
-    if (!str) continue;
-    console.log(str);
-  }
+  // const allSizeTableValues: any[] = [];
+  // for (const foundSymbol of symbolsTable) {
+  //   const str = foundSymbol?.toString();
+  //   if (!str) continue;
+  //   console.log(str);
+  // }
   // console.table(allSizeTableValues, ['Table Name', 'Size in Bytes', 'Line', 'Column', 'Inherits From']);
   // console.table(errors);
   // console.log('-----------------------END Errors-----------------------\n\n');
+  return;
 }
 
 const pathToFileURL = path.join(__dirname, '..', 'example.txt');

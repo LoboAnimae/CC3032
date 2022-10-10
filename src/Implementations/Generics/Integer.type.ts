@@ -5,11 +5,13 @@ import { Primitive } from './Primitive.type';
 export default class IntType extends Primitive {
   static Name = 'Int';
   static Type = 'Int';
+  static Size = 4;
+
   defaultValue: number = 0;
   constructor() {
     super({ name: IntType.Name });
     this.componentName = IntType.Name;
-    this.sizeInBytes = 4;
+    this.sizeInBytes = IntType.Size;
     this.allowsNegation = true;
     // Don't set the type here, so that it ends up being a type itself
   }

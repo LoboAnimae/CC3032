@@ -30,7 +30,6 @@ expression:
 	| INTEGER_NEGATIVE expression		# negative
 	| ISVOID expression					# isvoid
 	| expression MULTIPLY expression	# multiply
-	| expression DIVISION expression	# division
 	| expression ADD expression			# add
 	| expression MINUS expression		# minus
 	| expression LESS_THAN expression	# lessThan

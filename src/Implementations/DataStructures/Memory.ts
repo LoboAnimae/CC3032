@@ -1,24 +1,61 @@
 import { AbstractParseTreeVisitor } from 'antlr4ts/tree/AbstractParseTreeVisitor';
 import {
   AddContext,
-  ClassDefineContext,
-  IdContext,
+  ClassDefineContext, DivisionContext, FalseContext, IdContext,
   IntContext,
-  MethodCallContext,
-  MethodContext,
-  NewContext,
+  MethodCallContext, MethodContext, MinusContext, MultiplyContext, NewContext,
   PropertyContext,
+  TrueContext
 } from '../../antlr/yaplParser';
 import { yaplVisitor } from '../../antlr/yaplVisitor';
 import CompositionComponent from '../Components/Composition';
 import TableComponent, { extractTableComponent } from '../Components/Table';
 import TypeComponent, { extractTypeComponent } from '../Components/Type';
-import IntType from '../Generics/Integer.type';
 import { ClassType } from '../Generics/Object.type';
-import { Primitive } from '../Generics/Primitive.type';
 import { TableElementType } from './TableElements/index';
 import SymbolElement from './TableElements/SymbolElement';
-import TableElement from './TableElements/TableElement';
+
+
+export class TemporalValue extends CompositionComponent {
+  static Name = 'TemporalValue';
+  static Type = 'TemporalValue';
+  constructor() {
+    super();
+    this.componentName = TemporalValue.Name;
+    this.componentType = TemporalValue.Type;
+  }
+  clone = () => (new TemporalValue());
+  toString = () => `${this.componentName}{ ${this.id.substring(0, 4)} }`;
+}
+
+
+
+
+type Quad = [any, any, any, any];
+export class Quadruplet extends CompositionComponent {
+  elements: Quad = [null, null, null, null];
+  getTemporal() {
+    return this.elements[3];
+  }
+  clone = () => {
+    const quadruplet = new Quadruplet();
+    quadruplet.elements = [...this.elements];
+    return quadruplet;
+  };
+
+  set(newQuadruplet: Quad) {
+    this.elements = newQuadruplet;
+  }
+  get = () => this.elements;
+  toString = () => {
+    const [op, first, second, temporal] = this.elements;
+    let returnString = `${temporal} = ${first}`;
+    if (second !== null) {
+      returnString += ` ${op} ${second}`;
+    }
+    return returnString;
+  };
+}
 
 export class MemoryElement extends CompositionComponent {
   referentialId: string;
@@ -54,7 +91,7 @@ export class MemoryVisitor extends AbstractParseTreeVisitor<any> implements yapl
   memorySymbolsTable: TableComponent<TableElementType>;
   memoryOffset: number = 0;
   memoryStack: any[] = [];
-  quadruples: string[] = ['.text', 'main:'];
+  quadruples: Quadruplet[] = [];
   classStack: ClassType[] = [];
   // TODO: Add a table scope
   /** Holds the memory elements */
@@ -69,8 +106,8 @@ export class MemoryVisitor extends AbstractParseTreeVisitor<any> implements yapl
   currentClass = () => this.classStack.at(-1)!;
   currentClassTable = () => extractTableComponent(this.currentClass())!;
 
-  register = (id: string, withValue: string, size: number) => {
-    const toPush = [id, withValue, this.memoryOffset, size];
+  register = (id: string, size: number) => {
+    const toPush = [id, this.memoryOffset, size];
     this.memoryStack.push(toPush);
     this.memoryOffset += size;
     return toPush;
@@ -84,8 +121,8 @@ export class MemoryVisitor extends AbstractParseTreeVisitor<any> implements yapl
     return this.visitChildren(ctx);
   };
 
-  addQuadruple = (quadruple: string) => {
-    this.quadruples.push('\t' + quadruple);
+  addQuadruple = (quadruple: Quadruplet) => {
+    this.quadruples.push(quadruple);
   };
 
   visitMethodCall = (ctx: MethodCallContext): any => {
@@ -98,42 +135,87 @@ export class MemoryVisitor extends AbstractParseTreeVisitor<any> implements yapl
   visitProperty = (ctx: PropertyContext): any => {
     const name = ctx.IDENTIFIER();
     const currentClassTable = this.currentClassTable();
-    const currentClass = this.currentClass();
-    const referencedVariable = currentClassTable.get(name)!;
-    const type = ctx.TYPE();
-    const size = this.visitChildren(ctx);
-    const expression = ctx.expression();
-
-    const varType = this.symbolsTable.get(type)!;
-    const value = expression?.text ?? varType.defaultValue;
-
-    const resulting = this.register(referencedVariable.id, '' + value, varType.sizeInBytes ?? 0);
-
-    let quadruple = `<*[${resulting[2]}]{${currentClass.getName()}.${name}}> = ${value}; \t\t\t# Assignation`;
+    const referencedVariable = currentClassTable.get(name)! as SymbolElement;
+    const result = this.visitChildren(ctx);
+    const quadruple = new Quadruplet();
+    quadruple.set(['=', result.getTemporal(), null, referencedVariable]);
     this.addQuadruple(quadruple);
-    return this.visitChildren(ctx);
+    const referencedType = extractTypeComponent(referencedVariable)!;
+    this.register(referencedVariable.id, referencedType.sizeInBytes!);
+    referencedVariable.memoryAddress = this.memoryOffset;
+    return quadruple;
+  };
+
+  basicOperation = (ctx: AddContext | MinusContext | MultiplyContext | DivisionContext) => {
+    const [leftChild, rightChild] = ctx.expression();
+    const leftChildResult = this.visit(leftChild);
+    const rightChildResult = this.visit(rightChild);
+    const leftChildTemporal = leftChildResult.getTemporal();
+    const rightChildTemporal = rightChildResult.getTemporal();
+    const temporal = new TemporalValue();
+    return [leftChildTemporal, rightChildTemporal, temporal];
   };
 
   visitAdd = (ctx: AddContext): any => {
-    return this.visitChildren(ctx);
+    const addQuadruple = new Quadruplet();
+    const [leftChildTemporal, rightChildTemporal, temporal] = this.basicOperation(ctx);
+    addQuadruple.set(['+', leftChildTemporal, rightChildTemporal, temporal]);
+    this.addQuadruple(addQuadruple);
+    return addQuadruple;
+  };
+
+  visitMinus = (ctx: MinusContext): any => {
+    const minusQuadruple = new Quadruplet();
+    const [leftChildTemporal, rightChildTemporal, temporal] = this.basicOperation(ctx);
+    minusQuadruple.set(['-', leftChildTemporal, rightChildTemporal, temporal]);
+    this.addQuadruple(minusQuadruple);
+    return minusQuadruple;
+  };
+
+  visitMultiply = (ctx: MultiplyContext) => {
+    const multQuadruple = new Quadruplet;
+    const [leftChildTemporal, rightChildTemporal, temporal] = this.basicOperation(ctx);
+    multQuadruple.set(['*', leftChildTemporal, rightChildTemporal, temporal]);
+    this.addQuadruple(multQuadruple);
+    return multQuadruple;
   };
 
   visitInt = (ctx: IntContext) => {
-    const intTable = this.symbolsTable.get(IntType.Name)!.copy() as Primitive;
-    return intTable.sizeInBytes;
+    const temporal = new TemporalValue;
+    const quadruplet = new Quadruplet();
+    quadruplet.set(['=', ctx.text, null, temporal]);
+    this.addQuadruple(quadruplet);
+    return quadruplet;
   };
+
+  visitTrue = (ctx: TrueContext) => {
+    const temporal = new TemporalValue;
+    const quadruplet = new Quadruplet();
+    quadruplet.set(['=', 1, null, temporal]);
+    this.addQuadruple(quadruplet);
+    return quadruplet;
+  };
+
+  visitFalse = (ctx: FalseContext) => {
+    const temporal = new TemporalValue;
+    const quadruplet = new Quadruplet();
+    quadruplet.set(['=', 0, null, temporal]);
+    this.addQuadruple(quadruplet);
+    return quadruplet;
+  }
 
   visitNew = (ctx: NewContext) => {
-    const referencedTable = ctx.TYPE();
-    const referencedTableType = this.symbolsTable.get(referencedTable)!;
-    const referencedTypeTable = extractTableComponent(referencedTableType)!;
-    const allSymbols = referencedTypeTable.getAll(false).filter((t) => t.componentName === SymbolElement.Name);
+    const quadruple = new Quadruplet();
+    const type = ctx.TYPE();
+    const typeComponent = this.symbolsTable.get(type.text)!;
+    const temporal = new TemporalValue();
+    quadruple.set(['=', 'new ' + type.text, null, temporal]);
 
-    for (const symbol of allSymbols) {
-      const symbolElement = symbol as SymbolElement;
-      const type = extractTypeComponent(symbolElement)!;
-      this.register(symbolElement.id, type.defaultValue, type.sizeInBytes ?? 0);
-    }
-    return this.visitChildren(ctx);
+    this.addQuadruple(quadruple);
+    return quadruple
   };
+
+  visitMethod = (ctx: MethodContext) => {
+    return this.visitChildren(ctx);
+  }
 }

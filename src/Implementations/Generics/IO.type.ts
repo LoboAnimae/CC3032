@@ -7,6 +7,7 @@ import StringType from './String.type';
 export class IOType extends Primitive {
   static Name = 'IO';
   static Type = 'IO';
+  static Size = 1;
   defaultValue: null = null;
   allowsAssignmentOf = (_incomingType?: CompositionComponent | undefined) => false;
   allowsComparisonTo = (_incomingType?: CompositionComponent | undefined) => false;
@@ -16,7 +17,7 @@ export class IOType extends Primitive {
   constructor() {
     super({ name: IOType.Name });
     this.componentName = IOType.Name;
-    this.sizeInBytes = 1;
+    this.sizeInBytes = IOType.Size;
 
     const tableComponent = new TableComponent();
 

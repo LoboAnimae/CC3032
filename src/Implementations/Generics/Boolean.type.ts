@@ -5,12 +5,14 @@ import { Primitive } from './Primitive.type';
 export default class BoolType extends Primitive {
   static Name = 'Bool';
   static Type = 'Bool';
+  static Size = 1;
+
   defaultValue: number = 0;
   constructor() {
 
     super({ name: BoolType.Name });
     this.componentName = BoolType.Name;
-    this.sizeInBytes = 1;
+    this.sizeInBytes = BoolType.Size;
     this.allowsNegation = true;
     this.addComponent(new TableComponent());
   }

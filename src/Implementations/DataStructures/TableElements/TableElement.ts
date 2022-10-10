@@ -1,11 +1,11 @@
+import { v4 as uuid } from 'uuid';
 import {
   BasicInfoComponent,
   CompositionComponent,
   PositioningComponent,
   TypeComponent,
-  ValueComponent,
+  ValueComponent
 } from '../../Components';
-import { v4 as uuid } from 'uuid';
 export interface TableElementParams {
   name?: string;
   type?: CompositionComponent;

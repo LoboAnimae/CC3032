@@ -25,7 +25,7 @@ import {
   PropertyContext,
   StringContext,
   TrueContext,
-  WhileContext,
+  WhileContext
 } from './antlr/yaplParser';
 import { yaplVisitor } from './antlr/yaplVisitor';
 import {
@@ -33,13 +33,11 @@ import {
   QuadrupletComponent,
   QuadrupletElement,
   TableComponent,
-  TypeComponent,
+  TypeComponent
 } from './Implementations/Components/index';
 import ErrorComponent from './Implementations/DataStructures/Error';
-import { MemoryVisitor } from './Implementations/DataStructures/Memory';
 import { Stack } from './Implementations/DataStructures/Stack';
-import { MethodElement, SymbolElement } from './Implementations/DataStructures/TableElements/index';
-import { BasicStorage } from './Implementations/Errors/Errors';
+import { MethodElement } from './Implementations/DataStructures/TableElements/index';
 import Bool from './Implementations/Generics/Boolean.type';
 import { default as IntType } from './Implementations/Generics/Integer.type';
 import { IOType } from './Implementations/Generics/IO.type';
@@ -64,7 +62,7 @@ import {
   ParseTreeProperties,
   Scope,
   ScopePosition,
-  YaplParserComponents,
+  YaplParserComponents
 } from './Implementations/visitorFunctions/meta';
 import visitMethod from './Implementations/visitorFunctions/method';
 import visitMethodCall from './Implementations/visitorFunctions/methodCall';

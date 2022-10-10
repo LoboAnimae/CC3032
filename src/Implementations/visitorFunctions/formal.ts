@@ -1,9 +1,8 @@
 import { FormalContext } from '../../antlr/yaplParser';
-import CompositionComponent from '../Components/Composition';
 import EmptyComponent from '../Components/EmptyComponent';
 import SymbolElement from '../DataStructures/TableElements/SymbolElement';
-import { lineAndColumn, YaplVisitor } from './meta';
 import { ClassType } from '../Generics/Object.type';
+import { lineAndColumn, YaplVisitor } from './meta';
 
 export default function visitFormal(visitor: YaplVisitor, ctx: FormalContext) {
   const paramName = ctx.IDENTIFIER();
