@@ -71,16 +71,16 @@ Something.y   =   Something.x   +   Something.y
  _______________
 |				|
 |				|
-|	  MAIN 		|
+|	  MAIN 		|		--> Stack
 |				|
 |_______________|
 |				|
 |				|
-|	  DATA		|
+|	  DATA		|		-->	Todas las clases existen en el heap cuando se instancian
 |				|
 |_______________|
 |				|
 |				|
-|	 METHODS	|
+|	 METHODS	|		--> Van en el archivo principal, en el stack
 |				|
 |_______________|

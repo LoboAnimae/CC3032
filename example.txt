@@ -1,4 +1,8 @@
 class A {
+    z: Int <- 35;
+    forIn(): Int {
+        let x: Int <- 2, y: Int, z: Int <- 3 in (x + y + z)
+    };
     a: Int;
     b: Int;
     add(c: Int, d: Int): Int {
@@ -11,6 +15,9 @@ class A {
         {a <- newA; true;}
     };
 };
+
+
+
 
 
 class Main {

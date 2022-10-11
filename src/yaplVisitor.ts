@@ -2,6 +2,7 @@ import { AbstractParseTreeVisitor } from 'antlr4ts/tree/AbstractParseTreeVisitor
 import {
   AddContext,
   AssignmentContext,
+  AssignmentExprContext,
   BlockContext,
   ClassDefineContext,
   DivisionContext,
@@ -14,6 +15,7 @@ import {
   IsvoidContext,
   LessEqualContext,
   LessThanContext,
+  LetInContext,
   MethodCallContext,
   MethodContext,
   MinusContext,
@@ -45,11 +47,13 @@ import { ClassType, ObjectType } from './Implementations/Generics/Object.type';
 import { StringType } from './Implementations/Generics/String.type';
 import visitAdd from './Implementations/visitorFunctions/add';
 import visitAssignment from './Implementations/visitorFunctions/assignment';
+import visitAssignmentExpr from './Implementations/visitorFunctions/assignmentExpr';
 import visitBlock from './Implementations/visitorFunctions/block';
 import visitClassDefine from './Implementations/visitorFunctions/classDefine';
 import visitDivision from './Implementations/visitorFunctions/division';
 import visitEqual from './Implementations/visitorFunctions/equal';
 import visitFalse from './Implementations/visitorFunctions/false';
+import visitLetIn from './Implementations/visitorFunctions/forIn';
 import visitFormal from './Implementations/visitorFunctions/formal';
 import visitId from './Implementations/visitorFunctions/id';
 import visitIf from './Implementations/visitorFunctions/if';
@@ -79,8 +83,7 @@ import visitWhile from './Implementations/visitorFunctions/while';
 
 export class YaplVisitor
   extends AbstractParseTreeVisitor<any>
-  implements yaplVisitor<any>, HelperFunctions, ParseTreeProperties, YaplParserComponents
-{
+  implements yaplVisitor<any>, HelperFunctions, ParseTreeProperties, YaplParserComponents {
   /** Helps recognize the stack: Global, Class or Method*/
   public scopeStack: Stack<CompositionComponent>;
   /** Universal Symbols table. Unique values only. */
@@ -124,7 +127,7 @@ export class YaplVisitor
     this.inMain = false;
   }
 
-  mainBranch: ClassDefineContext | null = null;
+  mainBranch?: ClassDefineContext;
 
   //#region Metadata
 
@@ -209,6 +212,10 @@ export class YaplVisitor
     return visitMethodCall(this, ctx);
   };
 
+  visitLetIn = (ctx: LetInContext) => {
+    return visitLetIn(this, ctx);
+  };
+
   visitOwnMethodCall = (ctx: OwnMethodCallContext) => {
     return visitOwnMethodCall(this, ctx);
   };
@@ -290,6 +297,10 @@ export class YaplVisitor
 
   visitAssignment = (ctx: AssignmentContext) => {
     return visitAssignment(this, ctx);
+  };
+
+  visitAssignmentExpr = (ctx: AssignmentExprContext) => {
+    return visitAssignmentExpr(this, ctx);
   };
 
   visitMethod = (ctx: MethodContext) => {

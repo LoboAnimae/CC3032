@@ -15,34 +15,35 @@ feature:
 formal: IDENTIFIER ':' TYPE;
 /* method argument */
 
+assignmentExpr: IDENTIFIER ':' TYPE (ASSIGNMENT expression)?;
+
 expression:
 	expression ('@' TYPE)? '.' IDENTIFIER '(' (
 		expression (',' expression)*
-	)? ')'													# methodCall
-	| IDENTIFIER '(' (expression (',' expression)*)? ')'	# ownMethodCall
-	| IF expression THEN expression ELSE expression FI		# if
-	| WHILE expression LOOP expression POOL					# while
-	| '{' (expression ';')+ '}'								# block
-	| LET IDENTIFIER ':' TYPE (ASSIGNMENT expression)? (
-		',' IDENTIFIER ':' TYPE (ASSIGNMENT expression)?
-	)* IN expression					# letIn
-	| NEW TYPE							# new
-	| INTEGER_NEGATIVE expression		# negative
-	| ISVOID expression					# isvoid
-	| expression MULTIPLY expression	# multiply
-	| expression ADD expression			# add
-	| expression MINUS expression		# minus
-	| expression LESS_THAN expression	# lessThan
-	| expression LESS_EQUAL expression	# lessEqual
-	| expression EQUAL expression		# equal
-	| INTEGER_NEGATIVE expression		# boolNot
-	| '(' expression ')'				# parentheses
-	| IDENTIFIER						# id
-	| INT								# int
-	| STRING							# string
-	| TRUE								# true
-	| FALSE								# false
-	| IDENTIFIER ASSIGNMENT expression	# assignment;
+	)? ')'														# methodCall
+	| IDENTIFIER '(' (expression (',' expression)*)? ')'		# ownMethodCall
+	| IF expression THEN expression ELSE expression FI			# if
+	| WHILE expression LOOP expression POOL						# while
+	| '{' (expression ';')+ '}'									# block
+	| LET assignmentExpr (',' assignmentExpr)* IN expression	# letIn
+	| NEW TYPE													# new
+	| INTEGER_NEGATIVE expression								# negative
+	| ISVOID expression											# isvoid
+	| expression MULTIPLY expression							# multiply
+	| expression DIVISION expression							# division
+	| expression ADD expression									# add
+	| expression MINUS expression								# minus
+	| expression LESS_THAN expression							# lessThan
+	| expression LESS_EQUAL expression							# lessEqual
+	| expression EQUAL expression								# equal
+	| INTEGER_NEGATIVE expression								# boolNot
+	| '(' expression ')'										# parentheses
+	| IDENTIFIER												# id
+	| INT														# int
+	| STRING													# string
+	| TRUE														# true
+	| FALSE														# false
+	| IDENTIFIER ASSIGNMENT expression							# assignment;
 // key words
 
 CLASS: C L A S S;

@@ -36,6 +36,7 @@ import { ProgramBlocksContext } from "./yaplParser";
 import { ClassDefineContext } from "./yaplParser";
 import { FeatureContext } from "./yaplParser";
 import { FormalContext } from "./yaplParser";
+import { AssignmentExprContext } from "./yaplParser";
 import { ExpressionContext } from "./yaplParser";
 
 
@@ -305,6 +306,13 @@ export interface yaplVisitor<Result> extends ParseTreeVisitor<Result> {
 	 * @return the visitor result
 	 */
 	visitFormal?: (ctx: FormalContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `yaplParser.assignmentExpr`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitAssignmentExpr?: (ctx: AssignmentExprContext) => Result;
 
 	/**
 	 * Visit a parse tree produced by `yaplParser.expression`.

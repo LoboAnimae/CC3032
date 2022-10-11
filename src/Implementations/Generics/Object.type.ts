@@ -10,12 +10,17 @@ import {
 
 import StringType from './String.type';
 import TableElement from '../DataStructures/TableElements/TableElement';
+import { ClassDefineContext } from '../../antlr/yaplParser';
 
 interface ClassTypeParams {
   name: string;
   parentType?: TypeComponent | null;
   basicComponent: BasicInfoComponent;
   typeComponent: TypeComponent;
+}
+
+interface ClassTypeRequiredParams {
+  context: ClassDefineContext;
 }
 
 export class ObjectType extends TypeComponent {
@@ -65,8 +70,8 @@ export class ObjectType extends TypeComponent {
     } else return null;
   };
 
-  createChild: () => ClassType = () => {
-    const newObject = new ClassType();
+  createChild: (context: ClassDefineContext) => ClassType = (context: ClassDefineContext) => {
+    const newObject = new ClassType({ context });
     const tableComponent = newObject.getComponent<TableComponent<TableElementType>>({
       componentType: TableComponent.Name,
     })!;
@@ -105,8 +110,11 @@ export class ClassType extends ObjectType {
   static Name = 'Class';
   static Type = 'Class';
 
-  constructor(options?: Partial<ClassTypeParams>) {
+  ctx: ClassDefineContext;
+
+  constructor(options: Partial<ClassTypeParams> & ClassTypeRequiredParams) {
     super();
+    this.ctx = options.context;
     this.componentName = options?.name ?? ClassType.Name;
     this.parent = options?.parentType ?? null;
     this.isGeneric = false;
@@ -144,7 +152,7 @@ export class ClassType extends ObjectType {
   };
 
   clone(): CompositionComponent {
-    return new ClassType();
+    return new ClassType({ context: this.ctx });
   }
 
   getSize = (): number => {

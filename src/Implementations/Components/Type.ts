@@ -1,3 +1,4 @@
+import { ClassDefineContext } from '../../antlr/yaplParser';
 import Composition from './Composition';
 import { DownUpHierarchy } from './Hierarchy';
 
@@ -73,11 +74,11 @@ export abstract class TypeComponent extends Composition implements DownUpHierarc
   abstract allowsAssignmentOf: (_incomingType?: Composition) => boolean;
   abstract allowsComparisonTo: (_incomingType?: Composition) => boolean;
   abstract coherseType: (_incomingType?: Composition, value?: any) => any;
-  abstract createChild: () => TypeComponent;
+  abstract createChild: (context: ClassDefineContext) => TypeComponent;
 }
 
 export interface TypeSupport {
-  components: { type: TypeComponent };
+  components: { type: TypeComponent; };
 }
 
 export default TypeComponent;

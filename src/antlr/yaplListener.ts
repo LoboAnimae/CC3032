@@ -36,6 +36,7 @@ import { ProgramBlocksContext } from "./yaplParser";
 import { ClassDefineContext } from "./yaplParser";
 import { FeatureContext } from "./yaplParser";
 import { FormalContext } from "./yaplParser";
+import { AssignmentExprContext } from "./yaplParser";
 import { ExpressionContext } from "./yaplParser";
 
 
@@ -462,6 +463,17 @@ export interface yaplListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	exitFormal?: (ctx: FormalContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `yaplParser.assignmentExpr`.
+	 * @param ctx the parse tree
+	 */
+	enterAssignmentExpr?: (ctx: AssignmentExprContext) => void;
+	/**
+	 * Exit a parse tree produced by `yaplParser.assignmentExpr`.
+	 * @param ctx the parse tree
+	 */
+	exitAssignmentExpr?: (ctx: AssignmentExprContext) => void;
 
 	/**
 	 * Enter a parse tree produced by `yaplParser.expression`.

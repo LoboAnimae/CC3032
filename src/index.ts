@@ -42,7 +42,7 @@ async function main(input: string) {
   }
 
   const memory = new MemoryVisitor(symbolsTable, visitor.mainBranch!);
-  memory.visit(visitor.mainBranch!);
+  memory.instantiate();
 
   console.log(memory.quadruples.join('\n'));
   // const allSizeTableValues: any[] = [];

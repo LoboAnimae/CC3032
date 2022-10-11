@@ -117,6 +117,11 @@ export class MemoryVisitor extends AbstractParseTreeVisitor<any> implements yapl
     return [];
   }
 
+  /** This is the entry point of the visitor. It uses the "Main" branch if no parameter is passed. Semantic checks must've all passed already. */
+  instantiate(ctx: ClassDefineContext = this.mainMethodBranch) {
+    return this.visit(ctx);
+  }
+
   visitId = (ctx: IdContext) => {
     return this.visitChildren(ctx);
   };

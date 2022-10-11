@@ -67,9 +67,10 @@ function semantic(p_visitor: YaplVisitor, p_ctx: ClassDefineContext, p_errors: s
       p_errors.push(`Main class can't inherit from any class`);
       parentTable = p_visitor.findTable(ObjectType.Name)!;
     }
+    p_visitor.mainBranch = p_ctx;
   }
 
-  const newTable = parentTable.createChild();
+  const newTable = parentTable.createChild(p_ctx);
   newTable.componentName = cls.toString();
   const basicComponent = extractBasicInformation(newTable)!;
   basicComponent.setName(cls.toString());
