@@ -1,20 +1,28 @@
 import { AbstractParseTreeVisitor } from 'antlr4ts/tree/AbstractParseTreeVisitor';
 import {
   AddContext,
-  ClassDefineContext, DivisionContext, FalseContext, IdContext,
+  ClassDefineContext,
+  DivisionContext,
+  FalseContext,
+  IdContext,
   IntContext,
-  MethodCallContext, MethodContext, MinusContext, MultiplyContext, NewContext,
+  MethodCallContext,
+  MethodContext,
+  MinusContext,
+  MultiplyContext,
+  NewContext,
   PropertyContext,
-  TrueContext
+  TrueContext,
 } from '../../antlr/yaplParser';
 import { yaplVisitor } from '../../antlr/yaplVisitor';
 import CompositionComponent from '../Components/Composition';
 import TableComponent, { extractTableComponent } from '../Components/Table';
 import TypeComponent, { extractTypeComponent } from '../Components/Type';
+import BoolType from '../Generics/Boolean.type';
+import IntType from '../Generics/Integer.type';
 import { ClassType } from '../Generics/Object.type';
 import { TableElementType } from './TableElements/index';
 import SymbolElement from './TableElements/SymbolElement';
-
 
 export class TemporalValue extends CompositionComponent {
   static Name = 'TemporalValue';
@@ -24,16 +32,15 @@ export class TemporalValue extends CompositionComponent {
     this.componentName = TemporalValue.Name;
     this.componentType = TemporalValue.Type;
   }
-  clone = () => (new TemporalValue());
+  clone = () => new TemporalValue();
   toString = () => `${this.componentName}{ ${this.id.substring(0, 4)} }`;
 }
-
-
-
 
 type Quad = [any, any, any, any];
 export class Quadruplet extends CompositionComponent {
   elements: Quad = [null, null, null, null];
+  size: number = 0;
+
   getTemporal() {
     return this.elements[3];
   }
@@ -145,9 +152,11 @@ export class MemoryVisitor extends AbstractParseTreeVisitor<any> implements yapl
     const quadruple = new Quadruplet();
     quadruple.set(['=', result.getTemporal(), null, referencedVariable]);
     this.addQuadruple(quadruple);
-    const referencedType = extractTypeComponent(referencedVariable)!;
-    this.register(referencedVariable.id, referencedType.sizeInBytes!);
-    referencedVariable.memoryAddress = this.memoryOffset;
+    if (!result.size) {
+      throw new Error('Property must have a size');
+    }
+    referencedVariable.setMemoryAddress(this.memoryOffset);
+    this.register(referencedVariable.id, result.size);
     return quadruple;
   };
 
@@ -166,6 +175,7 @@ export class MemoryVisitor extends AbstractParseTreeVisitor<any> implements yapl
     const [leftChildTemporal, rightChildTemporal, temporal] = this.basicOperation(ctx);
     addQuadruple.set(['+', leftChildTemporal, rightChildTemporal, temporal]);
     this.addQuadruple(addQuadruple);
+    addQuadruple.size = IntType.Size;
     return addQuadruple;
   };
 
@@ -174,53 +184,61 @@ export class MemoryVisitor extends AbstractParseTreeVisitor<any> implements yapl
     const [leftChildTemporal, rightChildTemporal, temporal] = this.basicOperation(ctx);
     minusQuadruple.set(['-', leftChildTemporal, rightChildTemporal, temporal]);
     this.addQuadruple(minusQuadruple);
+    minusQuadruple.size = IntType.Size;
     return minusQuadruple;
   };
 
   visitMultiply = (ctx: MultiplyContext) => {
-    const multQuadruple = new Quadruplet;
+    const multQuadruple = new Quadruplet();
     const [leftChildTemporal, rightChildTemporal, temporal] = this.basicOperation(ctx);
     multQuadruple.set(['*', leftChildTemporal, rightChildTemporal, temporal]);
     this.addQuadruple(multQuadruple);
+    multQuadruple.size = IntType.Size;
     return multQuadruple;
   };
 
   visitInt = (ctx: IntContext) => {
-    const temporal = new TemporalValue;
+    const temporal = new TemporalValue();
     const quadruplet = new Quadruplet();
     quadruplet.set(['=', ctx.text, null, temporal]);
     this.addQuadruple(quadruplet);
+    quadruplet.size = IntType.Size;
     return quadruplet;
   };
 
   visitTrue = (ctx: TrueContext) => {
-    const temporal = new TemporalValue;
+    const temporal = new TemporalValue();
     const quadruplet = new Quadruplet();
     quadruplet.set(['=', 1, null, temporal]);
     this.addQuadruple(quadruplet);
+    quadruplet.size = BoolType.Size;
     return quadruplet;
   };
 
   visitFalse = (ctx: FalseContext) => {
-    const temporal = new TemporalValue;
+    const temporal = new TemporalValue();
     const quadruplet = new Quadruplet();
     quadruplet.set(['=', 0, null, temporal]);
     this.addQuadruple(quadruplet);
+    quadruplet.size = BoolType.Size;
     return quadruplet;
-  }
+  };
 
   visitNew = (ctx: NewContext) => {
     const quadruple = new Quadruplet();
     const type = ctx.TYPE();
-    const typeComponent = this.symbolsTable.get(type.text)!;
     const temporal = new TemporalValue();
-    quadruple.set(['=', 'new ' + type.text, null, temporal]);
-
+    const referencedType = this.symbolsTable.get(type.text)! as ClassType;
+    const size = referencedType.getSize();
+    quadruple.size = size;
+    quadruple.set(['=', `[*(0x${this.memoryOffset.toString(16)})]<new ${type.text}>`, null, temporal]);
     this.addQuadruple(quadruple);
-    return quadruple
+    return quadruple;
   };
 
   visitMethod = (ctx: MethodContext) => {
+    const name = ctx.IDENTIFIER();
+    const type = ctx.TYPE();
     return this.visitChildren(ctx);
-  }
+  };
 }

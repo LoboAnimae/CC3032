@@ -24,7 +24,9 @@ export default class SymbolElement extends TableElement {
 
   toString(): string {
     const basicInfo = this.getComponent<BasicInfoComponent>({ componentType: BasicInfoComponent.Type })!;
-    return `SymbolElement{ scope{ ${this.scopeName} }, name{ ${basicInfo.getName()} } address { ${this.memoryAddress} } }`;
+    return `SymbolElement{ scope{ ${
+      this.scopeName
+    } }, name{ ${basicInfo.getName()} } address { 0x${this.memoryAddress.toString(16)} } }`;
   }
 
   getSize = (): number => {
@@ -38,4 +40,9 @@ export default class SymbolElement extends TableElement {
     const name = basicInfo.getName();
     return `${scope}.${name}`;
   }
+
+  setMemoryAddress = (address: number) => {
+    this.memoryAddress = address;
+  };
+  getMemoryAddress = () => this.memoryAddress;
 }

@@ -14,7 +14,7 @@ export default function visitOwnMethodCall(visitor: YaplVisitor, ctx: OwnMethodC
 
   const methodHoldingClass: MethodElement = visitor.getCurrentScope();
   const methodHoldingClassTable = extractTableComponent<SymbolElement>(methodHoldingClass)!;
-  const referencedMethod: MethodElement = methodHoldingClassTable.get(methodIdentifier) as MethodElement;
+  const referencedMethod: MethodElement = methodHoldingClassTable.get(methodIdentifier) as unknown as MethodElement;
 
   // ERROR: The method does not exist in the class (self or not)
   if (!referencedMethod) {
