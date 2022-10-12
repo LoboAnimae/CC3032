@@ -52,7 +52,6 @@ export default function visitMethod(visitor: YaplVisitor, ctx: MethodContext) {
   const expressionResultRaw: CompositionComponent = visitor.visit(methodBody);
   const expressionResult = Array.isArray(expressionResultRaw) ? expressionResultRaw[0] : expressionResultRaw;
   const expressionType = extractTypeComponent(expressionResult);
-  const expressionValue = extractValueComponent(expressionResult);
 
   // ERROR: If the expression is not valid, an empty component is returned, and no type will be found
   if (!expressionType) {

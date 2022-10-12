@@ -45,6 +45,7 @@ export default abstract class TableElement extends CompositionComponent {
     return this.getComponent<BasicInfoComponent>({ componentType: BasicInfoComponent.Type })!;
   }
 
+
   getType(): TypeComponent {
     return this.getComponent<TypeComponent>({ componentType: TypeComponent.Type })!;
   }

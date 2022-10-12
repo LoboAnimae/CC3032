@@ -35,6 +35,7 @@ export default function visitProperty(visitor: YaplVisitor, ctx: PropertyContext
     scopeName: (currentScope.getName || extractBasicInformation(currentScope)!.getName)(),
     ...lineAndColumn(ctx),
   });
+  newTableElement.setAddress(currentScope.getSize());
   const currentScopeTable = extractTableComponent(currentScope)!;
 
   const previousDeclared = currentScopeTable.get(propertyName.text, { inCurrentScope: true });

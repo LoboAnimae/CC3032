@@ -21,7 +21,7 @@ class A {
 
 
 class Main {
-    e: Int <- 34 + 2 * 5 - 3;
+    e: Int <- 3;
     f: Int <- 2;
     g: A <- new A;
     h: Int <- 2;
