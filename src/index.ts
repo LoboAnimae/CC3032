@@ -44,7 +44,7 @@ async function main(input: string) {
   const memory = new MemoryVisitor(symbolsTable, visitor.mainBranch!);
   memory.instantiate();
 
-  console.log(memory.quadruples.join('\n'));
+  // console.log(memory.quadruples.join('\n'));
   // const allSizeTableValues: any[] = [];
   // for (const foundSymbol of symbolsTable) {
   //   const str = foundSymbol?.toString();

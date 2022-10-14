@@ -1,12 +1,8 @@
 import { ClassDefineContext } from '../../antlr/yaplParser';
-import { extractBasicInformation } from '../Components/BasicInformation';
-import CompositionComponent from '../Components/Composition';
-import TableComponent, { extractTableComponent } from '../Components/Table';
-import TypeComponent, { extractTypeComponent } from '../Components/Type';
-import { SymbolElement, TableElementType } from '../DataStructures/TableElements/index';
-import { ClassType, ObjectType } from '../Generics/Object.type';
-import Pipeline from '../Pipeline';
 import { YaplVisitor } from '../../yaplVisitor';
+import { extractBasicInformation } from '../Components/BasicInformation';
+import { extractTypeComponent } from '../Components/Type';
+import { ClassType, ObjectType } from '../Generics/Object.type';
 
 /**
  * Checks that everything is alright in the class in itself

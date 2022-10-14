@@ -1,5 +1,5 @@
 import { MethodContext } from '../../../antlr/yaplParser';
-import { BasicInfoComponent, CompositionComponent } from '../../Components';
+import { BasicInfoComponent, CompositionComponent, extractPositioning, extractTypeComponent, extractValueComponent } from '../../Components';
 import ContextHolder from '../../Components/ContextHolder';
 import Table from '../../Components/Table';
 import TableComponent, { extractTableComponent } from '../../Components/Table';
@@ -32,8 +32,19 @@ export default class MethodElement extends TableElement {
     return tableComponent.getAll();
   }
 
-  clone(): CompositionComponent {
-    return new MethodElement();
+  clone(): MethodElement {
+    const typeComponent = extractTypeComponent(this)!;
+    const positioningComponent = extractPositioning(this);
+    const value = extractValueComponent(this)?.getValue();
+    return new MethodElement({
+      type: typeComponent,
+      scopeName: this.scopeName,
+      column: positioningComponent?.column,
+      line: positioningComponent?.line,
+      memoryAddress: this.memoryAddress,
+      name: this.getName(),
+      value,
+    });
   }
 
   toString(): string {

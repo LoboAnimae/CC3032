@@ -43,18 +43,25 @@ abstract class CompositionComponent {
   }
 
   getComponent<T extends CompositionComponent>(
-    params: { componentName?: string; componentType?: string; id?: string },
-    options?: { currentScope?: boolean },
+    params: { componentName?: string; componentType?: string; id?: string; },
+    options?: { currentScope?: boolean; },
   ): T | null {
     return this.getComponents<T>(params, options)[0] as T;
   }
 
+  replaceComponent(component?: CompositionComponent): boolean {
+    if (!component) return false;
+    this.removeComponent({ name: component.componentName, type: component.componentType });
+    this.addComponent(component);
+    return true;
+  }
+
   getComponents<T extends CompositionComponent>(
-    params: { componentName?: string; componentType?: string; id?: string },
-    options?: { currentScope?: boolean },
+    params: { componentName?: string; componentType?: string; id?: string; },
+    options?: { currentScope?: boolean; },
   ): T[] {
     const byPropertyRaw = Object.keys(params).map((key) => ({ key, value: params[key as keyof typeof params] }));
-    const filters: { key: string; value: any }[] = byPropertyRaw.filter((filtering) => !!filtering.value);
+    const filters: { key: string; value: any; }[] = byPropertyRaw.filter((filtering) => !!filtering.value);
 
     const allFound: CompositionComponent[] = [];
     const allComponents = [this, ...this.children];
@@ -75,18 +82,20 @@ abstract class CompositionComponent {
     return allFound as T[];
   }
 
-  removeComponent(options?: { id?: string; name?: string; type?: string }): boolean {
+  removeComponent(options?: { id?: string; name?: string; type?: string; }): boolean {
+    const previousLength = this.children.length;
     if (options?.id) {
       this.children = this.children.filter((component) => component.id !== options.id);
-      return true;
-    } else if (options?.name) {
-      this.children = this.children.filter((component) => component.componentName !== options.name);
-      return true;
-    } else if (options?.type) {
-      this.children = this.children.filter((component) => component.componentType !== options.type);
-      return true;
     }
-    return false;
+    if (options?.name) {
+      
+      this.children = this.children.filter((component) => component.componentName !== options.name);
+    }
+    if (options?.type) {
+      this.children = this.children.filter((component) => component.componentType !== options.type);
+    }
+    const newLength = this.children.length;
+    return newLength < previousLength;
   }
 
   /**

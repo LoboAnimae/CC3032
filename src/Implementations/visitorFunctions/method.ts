@@ -4,7 +4,6 @@ import CompositionComponent from '../Components/Composition';
 import ContextHolder from '../Components/ContextHolder';
 import { extractTableComponent } from '../Components/Table';
 import { extractTypeComponent } from '../Components/Type';
-import { extractValueComponent } from '../Components/ValueHolder';
 import { TableElementType } from '../DataStructures/TableElements/index';
 import MethodElement from '../DataStructures/TableElements/MethodElement';
 import { ClassType } from '../Generics/Object.type';

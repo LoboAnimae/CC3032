@@ -27,7 +27,7 @@ class BasicInfoComponent extends Composition {
   };
 
 
-  clone(): BasicInfoComponent {
+  clone = (): BasicInfoComponent => {
     return new BasicInfoComponent({ name: this.name });
   }
 }

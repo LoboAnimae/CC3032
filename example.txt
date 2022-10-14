@@ -1,8 +1,5 @@
 class A {
     z: Int <- 35;
-    forIn(): Int {
-        let x: Int <- 2, y: Int, z: Int <- 3 in (x + y + z)
-    };
     a: Int;
     b: Int;
     add(c: Int, d: Int): Int {
@@ -11,9 +8,6 @@ class A {
 
     getA(): Int { a };
     getB(): Int { b };
-    setA(newA: Int): Bool {
-        {a <- newA; true;}
-    };
 };
 
 
@@ -21,11 +15,9 @@ class A {
 
 
 class Main {
-    e: Int <- 3;
+    e: Int <- 3 + 2 * 4 * 5 + 3 - 2;
     f: Int <- 2;
     g: A <- new A;
-    h: Int <- 2;
-    main(): Int {
-        {f <- g.add(e, f); 1;}
-    };
+    h: Int <- g.add(e, f);
+    main(): Int { 1 };
 };

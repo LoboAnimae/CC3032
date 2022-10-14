@@ -22,6 +22,11 @@ export function extractTableComponent<T extends CompositionComponent>(inComponen
   return inComponent.getComponent<TableComponent<T>>({ componentType: TableComponent.Type });
 }
 
+export function replaceTableComponent<T extends CompositionComponent>(inComponent?: Composition | null) {
+  if (!inComponent) return null;
+  return inComponent.replaceComponent(inComponent);
+}
+
 class TableComponent<T extends CompositionComponent> extends Composition {
   static Name = 'Table';
   static Type = 'Table';
@@ -88,7 +93,7 @@ class TableComponent<T extends CompositionComponent> extends Composition {
   clone(): Composition {
     const newTable = new TableComponent({ parent: this.parent });
     for (const element of this.elements) {
-      newTable.add(element.clone() as T);
+      newTable.add(element.copy() as T);
     }
     return newTable;
   }
@@ -113,7 +118,7 @@ class TableComponent<T extends CompositionComponent> extends Composition {
 }
 
 export interface TableSupport<T extends CompositionComponent> {
-  components: { table: T };
+  components: { table: T; };
 }
 
 export default TableComponent;

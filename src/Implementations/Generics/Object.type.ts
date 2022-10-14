@@ -152,7 +152,7 @@ export class ClassType extends ObjectType {
   };
 
   clone(): CompositionComponent {
-    return new ClassType({ context: this.ctx });
+    return new ClassType({ context: this.ctx, name: this.getName(), parentType: this.parent });
   }
 
   getSize = (): number => {
