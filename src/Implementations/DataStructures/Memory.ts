@@ -13,14 +13,19 @@ import {
   IdContext,
   IfContext,
   IntContext,
+  LessEqualContext,
+  LessThanContext,
   LetInContext,
   MethodCallContext,
   MethodContext,
   MinusContext,
   MultiplyContext,
+  NegativeContext,
   NewContext,
+  OwnMethodCallContext,
   PropertyContext,
   TrueContext,
+  WhileContext,
 } from '../../antlr/yaplParser';
 import { yaplVisitor } from '../../antlr/yaplVisitor';
 import CompositionComponent from '../Components/Composition';
@@ -39,14 +44,19 @@ import {
   visitId,
   visitIf,
   visitInt,
+  visitLessEqual,
+  visitLessThan,
   visitLetIn,
   visitMethod,
   visitMethodCall,
   visitMinus,
   visitMultiply,
+  visitNegative,
   visitNew,
+  visitOwnMethodCall,
   visitProperty,
   visitTrue,
+  visitWhile,
 } from './MemoryVisitors';
 import add from './MemoryVisitors/add';
 import { LinkedJump, UnconditionalJump } from './MemoryVisitors/Instructions/Jumps';
@@ -302,6 +312,14 @@ export class MemoryVisitor extends AbstractParseTreeVisitor<IMemoryVisitor[]> im
     return visitEqual(this, ctx);
   };
 
+  visitLessEqual = (ctx: LessEqualContext) => {
+    return visitLessEqual(this, ctx);
+  };
+
+  visitLessThan = (ctx: LessThanContext) => {
+    return visitLessThan(this, ctx);
+  };
+
   visitFalse = (ctx: FalseContext) => {
     return visitFalse(this, ctx);
   };
@@ -356,6 +374,18 @@ export class MemoryVisitor extends AbstractParseTreeVisitor<IMemoryVisitor[]> im
 
   visitMinus = (ctx: MinusContext): IMemoryVisitor[] => {
     return visitMinus(this, ctx);
+  };
+
+  visitNegative = (ctx: NegativeContext): IMemoryVisitor[] => {
+    return visitNegative(this, ctx);
+  };
+
+  visitOwnMethodCall = (ctx: OwnMethodCallContext): IMemoryVisitor[] => {
+    return visitOwnMethodCall(this, ctx);
+  };
+
+  visitWhile = (ctx: WhileContext): IMemoryVisitor[] => {
+    return visitWhile(this, ctx);
   };
 
   visitMultiply = (ctx: MultiplyContext): IMemoryVisitor[] => {

@@ -29,6 +29,7 @@ class A inherits B {
 
 
 class Main {
+    l: Int <- ~1;
     a: Bool <- 
     IF 1 = 2 
     THEN { 1; } 
@@ -45,5 +46,12 @@ class Main {
     g: A <- new A;
     h: Int <- g@C.getA();
     i: Int <- g.getA();
-    main(): Int { g.getA() };
+    x: Int <- 1;
+    y: Int <- 3;
+    doSomething(x: Int): Int { x };
+    main(): Int { {g.getA(); 
+    WHILE x < y LOOP x <- x + 1 POOL;
+    doSomething(1); 
+    x;
+    } };
 };

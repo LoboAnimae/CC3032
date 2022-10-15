@@ -18,5 +18,5 @@ export default function visitNegative(visitor: YaplVisitor, ctx: NegativeContext
       `Expression ${basicInformationComponent.getName()} of type ${expressionType.componentType} can't be negated`,
     );
   }
-  return visitor.next(ctx);
+  return expressionType;
 }

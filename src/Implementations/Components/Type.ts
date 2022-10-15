@@ -78,7 +78,7 @@ export abstract class TypeComponent extends Composition implements DownUpHierarc
 }
 
 export interface TypeSupport {
-  components: { type: TypeComponent; };
+  components: { type: TypeComponent };
 }
 
 export default TypeComponent;

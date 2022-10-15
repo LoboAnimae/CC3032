@@ -1,4 +1,4 @@
-import { CompositionComponent, TypeComponent, ValueComponent } from '../Components/index';
+import { CompositionComponent, extractTypeComponent, TypeComponent, ValueComponent } from '../Components/index';
 import BoolType from './Boolean.type';
 import { Primitive } from './Primitive.type';
 
@@ -17,7 +17,7 @@ export default class IntType extends Primitive {
   }
 
   allowsAssignmentOf = function (value?: CompositionComponent): boolean {
-    const valueType = value?.getComponent<TypeComponent>({ componentType: TypeComponent.Type });
+    const valueType = extractTypeComponent(value);
     if (!valueType) return false;
     return [IntType.Name, BoolType.Name].includes(valueType.componentName);
   };
