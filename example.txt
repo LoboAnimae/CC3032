@@ -39,7 +39,9 @@ class Main {
         FI 
     FI;
     e: Int <- 3 + 2 * 4 * 5 + 3 - 2;
-    f: Int <- 2;
+    f: Int <- LET x: Int <- 3, y: Int IN {
+        x + y;
+    };
     g: A <- new A;
     h: Int <- g@C.getA();
     i: Int <- g.getA();

@@ -13,6 +13,7 @@ import {
   IdContext,
   IfContext,
   IntContext,
+  LetInContext,
   MethodCallContext,
   MethodContext,
   MinusContext,
@@ -30,6 +31,7 @@ import {
   visitAssignment,
   visitAssignmentExpr,
   visitBlock,
+  visitClassDefine,
   visitDivision,
   visitEqual,
   visitFalse,
@@ -37,6 +39,7 @@ import {
   visitId,
   visitIf,
   visitInt,
+  visitLetIn,
   visitMethod,
   visitMethodCall,
   visitMinus,
@@ -274,7 +277,7 @@ export class MemoryVisitor extends AbstractParseTreeVisitor<IMemoryVisitor[]> im
       new TextHolder('main:\t\t#\tEntry point of the program'),
     );
     const result = this.visit(ctx).at(-1)!;
-    const returnValue = result.getTemporal();
+    // const returnValue = result?.getTemporal();
     this.scopes = ['main'];
     this.startCall();
     this.addQuadruple(new LinkedJump('Main::main()'));
@@ -361,6 +364,10 @@ export class MemoryVisitor extends AbstractParseTreeVisitor<IMemoryVisitor[]> im
 
   visitInt = (ctx: IntContext): IMemoryVisitor[] => {
     return visitInt(this, ctx);
+  };
+
+  visitLetIn = (ctx: LetInContext): IMemoryVisitor[] => {
+    return visitLetIn(this, ctx);
   };
 
   visitTrue = (ctx: TrueContext): IMemoryVisitor[] => {

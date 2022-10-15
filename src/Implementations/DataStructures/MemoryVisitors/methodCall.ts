@@ -39,7 +39,6 @@ export default function (visitor: MemoryVisitor, ctx: MethodCallContext): IMemor
     variableTable = new TableComponent<MethodElement | SymbolElement>();
     variableTable.add(...inheritedTable.filter((t) => t.componentName === MethodElement.Name));
     variableTable.add(...currentTable.filter((t) => t.componentName === SymbolElement.Name));
-    console.log();
   } else {
     variableTable = extractTableComponent(callingVariableSymbol) as TableComponent<MethodElement | SymbolElement>;
   }

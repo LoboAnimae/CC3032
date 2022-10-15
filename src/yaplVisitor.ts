@@ -27,7 +27,7 @@ import {
   PropertyContext,
   StringContext,
   TrueContext,
-  WhileContext
+  WhileContext,
 } from './antlr/yaplParser';
 import { yaplVisitor } from './antlr/yaplVisitor';
 import {
@@ -35,7 +35,7 @@ import {
   QuadrupletComponent,
   QuadrupletElement,
   TableComponent,
-  TypeComponent
+  TypeComponent,
 } from './Implementations/Components/index';
 import ErrorComponent from './Implementations/DataStructures/Error';
 import { Stack } from './Implementations/DataStructures/Stack';
@@ -53,7 +53,7 @@ import visitClassDefine from './Implementations/visitorFunctions/classDefine';
 import visitDivision from './Implementations/visitorFunctions/division';
 import visitEqual from './Implementations/visitorFunctions/equal';
 import visitFalse from './Implementations/visitorFunctions/false';
-import visitLetIn from './Implementations/visitorFunctions/forIn';
+import visitLetIn from './Implementations/visitorFunctions/letin';
 import visitFormal from './Implementations/visitorFunctions/formal';
 import visitId from './Implementations/visitorFunctions/id';
 import visitIf from './Implementations/visitorFunctions/if';
@@ -66,7 +66,7 @@ import {
   ParseTreeProperties,
   Scope,
   ScopePosition,
-  YaplParserComponents
+  YaplParserComponents,
 } from './Implementations/visitorFunctions/meta';
 import visitMethod from './Implementations/visitorFunctions/method';
 import visitMethodCall from './Implementations/visitorFunctions/methodCall';
@@ -83,7 +83,8 @@ import visitWhile from './Implementations/visitorFunctions/while';
 
 export class YaplVisitor
   extends AbstractParseTreeVisitor<any>
-  implements yaplVisitor<any>, HelperFunctions, ParseTreeProperties, YaplParserComponents {
+  implements yaplVisitor<any>, HelperFunctions, ParseTreeProperties, YaplParserComponents
+{
   /** Helps recognize the stack: Global, Class or Method*/
   public scopeStack: Stack<CompositionComponent>;
   /** Universal Symbols table. Unique values only. */

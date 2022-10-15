@@ -25,3 +25,4 @@ export { default as visitProperty } from './property';
 export { default as visitString } from './string';
 export { default as visitTrue } from './true';
 export { default as visitWhile } from './while';
+export { default as visitLetIn } from './letin';

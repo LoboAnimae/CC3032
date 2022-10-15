@@ -9,7 +9,7 @@ export default function (visitor: MemoryVisitor, ctx: IfContext): IMemoryVisitor
   const [condition, body, elses] = ctx.expression();
 
   // Condition
-  const ifCondition = uuid().substring(0, 8);
+  const ifCondition = 'if::' + uuid().substring(0, 8);
   // GOTO
   visitor.visit(condition);
   const lastQuadruple = visitor.methods[visitor.scopes.at(-1)!].at(-1);

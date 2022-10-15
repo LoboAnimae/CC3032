@@ -1,4 +1,11 @@
-import { BasicInfoComponent, CompositionComponent, extractBasicInformation, extractPositioning, extractTypeComponent, extractValueComponent } from '../../Components';
+import {
+  BasicInfoComponent,
+  CompositionComponent,
+  extractBasicInformation,
+  extractPositioning,
+  extractTypeComponent,
+  extractValueComponent,
+} from '../../Components';
 import { ClassType } from '../../Generics/Object.type';
 import TableElement from './TableElement';
 export interface SymbolElementParams {
@@ -24,7 +31,7 @@ export default class SymbolElement extends TableElement {
     const basicInfo = extractBasicInformation(this)!;
     const positioningComponent = extractPositioning(this);
     const value = extractValueComponent(this)?.getValue();
-    console.log(this.memoryAddress)
+    console.log(this.memoryAddress);
     return new SymbolElement({
       scopeName: this.scopeName,
       type: typeComponent,
