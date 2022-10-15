@@ -11,7 +11,6 @@ export default function (visitor: MemoryVisitor, ctx: IfContext): IMemoryVisitor
   // Condition
   const ifCondition = uuid().substring(0, 8);
   // GOTO
-  //   visitor.startCall();
   visitor.visit(condition);
   const lastQuadruple = visitor.methods[visitor.scopes.at(-1)!].at(-1);
   lastQuadruple!.dest = ifCondition;
@@ -31,7 +30,6 @@ export default function (visitor: MemoryVisitor, ctx: IfContext): IMemoryVisitor
   visitor.addQuadruple(new UnconditionalJump(ifCondition + 'end'));
   visitor.addQuadruple(new Return());
   visitor.popScope();
-  //   visitor.endCall();
 
   return [{ size: 1, getTemporal: () => new TemporalValue() }];
 }

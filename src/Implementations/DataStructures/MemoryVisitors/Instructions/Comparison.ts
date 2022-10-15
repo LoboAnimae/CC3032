@@ -29,3 +29,19 @@ export class EQUAL extends COMPARISON {
     return '';
   }
 }
+
+export class LESSEQUAL extends COMPARISON {
+  operator: string = '<=';
+  operatorVerbose: string = 'ble';
+  calculateComment(): string {
+    return '';
+  }
+}
+
+export class LESSTHAN extends COMPARISON {
+  operator: string = '<';
+  operatorVerbose: string = 'blt';
+  calculateComment(): string {
+    return '';
+  }
+}

@@ -16,13 +16,6 @@ export default function (visitor: MemoryVisitor, ctx: NewContext): IMemoryVisito
   const size = referencedType.getSize();
   visitor.AskForHeapMemory(size);
   visitor.addQuadruple(new Move({ dataMovesInto: memoryBeginning, dataMovesFrom: new V0() }));
-  //   visitor.addQuadruple(
-  //     new StoreWord({
-  //       dataMovesFrom: memoryBeginning,
-  //       dataMovesInto: currentClass.toString(),
-  //       offset: visitor.memoryOffset,
-  //     }),
-  //   );
 
   const referencedTypeTable = extractTableComponent(referencedType)!;
   const allElements = referencedTypeTable.filter(SymbolElement.Name) as SymbolElement[];
