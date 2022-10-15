@@ -6,6 +6,7 @@
     "scripts": {
         "start": "node dist/index.js",
         "debug": "ts-node src/index.ts",
+        "build:raw": "tsc",
         "build": "pnpm run webpack",
         "webpack": "webpack --config webpack.config.ts",
         "antlr": "antlr4ts -visitor yapl.g4 -o ./src/antlr",

@@ -207,33 +207,36 @@ function main(input: string): IResult {
   };
 }
 
-const pathToFileURL = path.join(__dirname, '..', 'example.txt');
-const contents = fs.readFileSync(pathToFileURL, 'utf8');
+// const pathToFileURL = path.join(__dirname, '..', 'example.txt');
+// const contents = fs.readFileSync(pathToFileURL, 'utf8');
 
-main(contents);
+// main(contents);
 
-// const app = express();
-// const port = 3000;
+const app = express();
+const port = 3001;
 
-// app.use(express.json());
-// app.use(express.urlencoded({ extended: true }));
-// app.get('/', (req, res) => {
-//   res.sendStatus(200);
-// });
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.get('/', (req, res) => {
+  res.sendStatus(200);
+});
 
 interface IResult {
   quadruples: string;
   errors: string[];
   tuples: string[];
 }
-// app.post('/', (req, res) => {
-//   const { program } = req.body;
-//   if (!program) {
-//     return res.sendStatus(400);
-//   }
-//   const parsed = JSON.parse(program);
-//   const result = main(parsed);
-//   res.json(result);
-// });
+app.post('/', (req, res) => {
+  console.log('Received request');
+  const { program } = req.body;
+  if (!program) {
+    return res.sendStatus(400);
+  }
+  const parsed = JSON.parse(program);
+  const result = main(parsed);
+  res.json(result);
+});
 
-// app.listen(port);
+app.listen(port, () => {
+  console.log('Running on port', port);
+});
