@@ -1,6 +1,12 @@
 import { MethodContext } from '../../../antlr/yaplParser';
-import { BasicInfoComponent, CompositionComponent, extractPositioning, extractTypeComponent, extractValueComponent } from '../../Components';
-import ContextHolder from '../../Components/ContextHolder';
+import {
+  BasicInfoComponent,
+  CompositionComponent,
+  extractPositioning,
+  extractTypeComponent,
+  extractValueComponent,
+} from '../../Components';
+import ContextHolder, { extractContext } from '../../Components/ContextHolder';
 import Table from '../../Components/Table';
 import TableComponent, { extractTableComponent } from '../../Components/Table';
 import SymbolElement, { SymbolElementParams } from './SymbolElement';
@@ -36,7 +42,8 @@ export default class MethodElement extends TableElement {
     const typeComponent = extractTypeComponent(this)!;
     const positioningComponent = extractPositioning(this);
     const value = extractValueComponent(this)?.getValue();
-    return new MethodElement({
+    const contextHolder = extractContext(this);
+    const newMethod = new MethodElement({
       type: typeComponent,
       scopeName: this.scopeName,
       column: positioningComponent?.column,
@@ -45,6 +52,13 @@ export default class MethodElement extends TableElement {
       name: this.getName(),
       value,
     });
+
+    const table = extractTableComponent(this);
+    newMethod.replaceComponent(table?.copy());
+
+    const newContext = extractContext(newMethod)!;
+    newContext.setContext(contextHolder!.getContext()!);
+    return newMethod;
   }
 
   toString(): string {

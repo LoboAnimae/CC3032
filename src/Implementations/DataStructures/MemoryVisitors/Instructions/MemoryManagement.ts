@@ -1,11 +1,10 @@
-import CompositionComponent from "../../../Components/Composition";
-import { TemporalValue } from "../TemporaryValues";
-import Quadruple, { Quad } from "./Quadruple";
-
+import CompositionComponent from '../../../Components/Composition';
+import { TemporalValue } from '../TemporaryValues';
+import Quadruple, { Quad } from './Quadruple';
 
 export class MemoryAddress extends CompositionComponent {
-  static Name = "Memory";
-  static Type = "Memory";
+  static Name = 'Memory';
+  static Type = 'Memory';
   address: string;
   prepender = '';
   constructor(address: TemporalValue | string | number) {
@@ -33,11 +32,10 @@ export class MemoryAddress extends CompositionComponent {
   };
 }
 
-
 interface IMemoryManagement<T = any> {
   dataMovesInto: T;
   dataMovesFrom: T;
-  offset?: number;
+  offset?: number | string;
   comment?: string;
 }
 /**
@@ -46,7 +44,7 @@ interface IMemoryManagement<T = any> {
 export class MemoryManagement extends Quadruple {
   operator: string = '<-';
   operatorVerbose: string = 'move';
-  offset: number;
+  offset: number | string;
 
   constructor(options: IMemoryManagement) {
     const { dataMovesInto: dest, dataMovesFrom: src1, comment } = options;
@@ -62,9 +60,7 @@ export class MemoryManagement extends Quadruple {
   calculateComment(): string {
     throw new Error('Method not implemented.');
   }
-
 }
-
 
 /**
  * Copy from register to memory
@@ -75,7 +71,7 @@ export class StoreWord extends MemoryManagement {
   operator: string = '=';
   operatorVerbose: string = 'sw';
 
-  getOffsetString = () => this.offset ? `(${this.offset})` : '';
+  getOffsetString = () => (this.offset ? `(${this.offset})` : '');
   calculateComment(): string {
     const first = this.OPERAND1();
     const temporal = this.DESTINATION();
@@ -88,21 +84,22 @@ export class StoreWord extends MemoryManagement {
     return this.withComment(`\t\t${this.operatorVerbose}\t${this.OPERAND1()}, ${offset}(${this.DESTINATION()})`);
   }
   toString(): string {
-
     const operand = this.OPERAND1()!;
     const immediate = this.isImmediate(operand!);
+    const offset = this.offset ? ` + ${this.offset}` : '';
     if (immediate) {
-      const offset = this.offset ? ` + ${this.offset}` : '';
-      return this.withComment(`\t\tMemory[${this.DESTINATION()}] = ${operand}`);
+      return this.withComment(`\t\tMemory[${this.DESTINATION()}${offset}] = ${operand}`);
     }
-    return this.withComment(`\t\tMemory[${this.DESTINATION()}] = ${operand}`);
+    return this.withComment(`\t\tMemory[${this.DESTINATION()}${offset}] = ${operand}`);
   }
 
-  toTuple(): Quad {
+  toTuple(asString = false): Quad {
+    if (asString) {
+      return ['=', this.OPERAND1().toString(), null, `Memory[${this.DESTINATION()?.toString()}]`];
+    }
     return ['=', this.OPERAND1(), null, `Memory[${this.DESTINATION()}]`];
   }
 }
-
 
 /**
  * Copy from memory to register
@@ -132,10 +129,9 @@ export class LoadWord extends MemoryManagement {
     return this.withComment(`\t\t${immediate}\t${this.DESTINATION()}, ${offset}${operand}`);
   }
 
-
   toString(): string {
     const offset = this.offset ? ` + ${this.offset}` : '';
-    const operand  = this.OPERAND1();
+    const operand = this.OPERAND1();
     const immediate = this.immediateAppend(operand!, '');
     if (immediate) {
       return this.withComment(`\t\t${this.DESTINATION()} = ${operand.toString(16)}${offset}`);
@@ -143,20 +139,19 @@ export class LoadWord extends MemoryManagement {
     return this.withComment(`\t\t${this.DESTINATION()} = Memory[${this.OPERAND1().toString(16)}${offset}]`);
   }
 
-  toTuple(): Quad {
-    const offset = this.offset ? ` + ${this.offset}` : '';
-
+  toTuple(asString = false): Quad {
+    if (asString) {
+      return ['=', this.DESTINATION().toString(), null, this.OPERAND1().toString()];
+    }
     return ['=', this.DESTINATION(), null, this.OPERAND1()];
   }
-
 }
-
 
 /**
  * Moves data from one register to another
  * @example
  * move $1, $2 // $1 = $2
- * 
+ *
  * @warning
  * This is a pseudo instruction given by assembly, it is not a real instruction
  */
@@ -171,7 +166,6 @@ export class Move extends MemoryManagement {
   }
 
   toMIPS(): string {
-
     return this.withComment(`\t\t${this.operatorVerbose}\t${this.DESTINATION()}, ${this.OPERAND1()}`);
   }
 
@@ -185,8 +179,10 @@ export class Move extends MemoryManagement {
     return this.withComment(`\t\t${this.DESTINATION()} = ${this.OPERAND1()}${offset}`);
   }
 
-  toTuple(): Quad {
+  toTuple(asString = false): Quad {
+    if (asString) {
+      return ['=', this.OPERAND1().toString(), null, this.DESTINATION().toString()];
+    }
     return ['=', this.OPERAND1(), null, this.DESTINATION()];
   }
-
 }

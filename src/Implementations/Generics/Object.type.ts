@@ -157,8 +157,11 @@ export class ClassType extends ObjectType {
 
   getSize = (): number => {
     const tableComponent = extractTableComponent<TableElementType>(this)!;
-    const size: number = tableComponent.elements
+
+    const size: number = tableComponent
+      .getAll(false)
       .map((element: TableElementType) => {
+        if (element.componentName === MethodElement.Name) return 0;
         return element.getSize();
       })
       .reduce((a, b) => a + b);

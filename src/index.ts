@@ -44,6 +44,9 @@ async function main(input: string) {
   const memory = new MemoryVisitor(symbolsTable, visitor.mainBranch!);
   memory.instantiate();
 
+  const tuples = memory.getTuples(true);
+  const quadruples = memory.getQuadruples();
+
   // console.log(memory.quadruples.join('\n'));
   // const allSizeTableValues: any[] = [];
   // for (const foundSymbol of symbolsTable) {
@@ -54,6 +57,7 @@ async function main(input: string) {
   // console.table(allSizeTableValues, ['Table Name', 'Size in Bytes', 'Line', 'Column', 'Inherits From']);
   // console.table(errors);
   // console.log('-----------------------END Errors-----------------------\n\n');
+  console.log(quadruples);
   return;
 }
 

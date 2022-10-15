@@ -1,4 +1,4 @@
-// Generated from /home/yagdrassyl/Documents/Code/University/compiladores/cmpsproy2_fix/yapl.g4 by ANTLR 4.9.2
+// Generated from /Users/yagdrassyl/Documents/Code/cmpsproy2_fix/yapl.g4 by ANTLR 4.9.2
 import org.antlr.v4.runtime.atn.*;
 import org.antlr.v4.runtime.dfa.DFA;
 import org.antlr.v4.runtime.*;

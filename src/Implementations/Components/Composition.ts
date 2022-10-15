@@ -43,8 +43,8 @@ abstract class CompositionComponent {
   }
 
   getComponent<T extends CompositionComponent>(
-    params: { componentName?: string; componentType?: string; id?: string; },
-    options?: { currentScope?: boolean; },
+    params: { componentName?: string; componentType?: string; id?: string },
+    options?: { currentScope?: boolean },
   ): T | null {
     return this.getComponents<T>(params, options)[0] as T;
   }
@@ -57,11 +57,11 @@ abstract class CompositionComponent {
   }
 
   getComponents<T extends CompositionComponent>(
-    params: { componentName?: string; componentType?: string; id?: string; },
-    options?: { currentScope?: boolean; },
+    params: { componentName?: string; componentType?: string; id?: string },
+    options?: { currentScope?: boolean },
   ): T[] {
     const byPropertyRaw = Object.keys(params).map((key) => ({ key, value: params[key as keyof typeof params] }));
-    const filters: { key: string; value: any; }[] = byPropertyRaw.filter((filtering) => !!filtering.value);
+    const filters: { key: string; value: any }[] = byPropertyRaw.filter((filtering) => !!filtering.value);
 
     const allFound: CompositionComponent[] = [];
     const allComponents = [this, ...this.children];
@@ -82,13 +82,12 @@ abstract class CompositionComponent {
     return allFound as T[];
   }
 
-  removeComponent(options?: { id?: string; name?: string; type?: string; }): boolean {
+  removeComponent(options?: { id?: string; name?: string; type?: string }): boolean {
     const previousLength = this.children.length;
     if (options?.id) {
       this.children = this.children.filter((component) => component.id !== options.id);
     }
     if (options?.name) {
-      
       this.children = this.children.filter((component) => component.componentName !== options.name);
     }
     if (options?.type) {

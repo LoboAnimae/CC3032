@@ -4,7 +4,7 @@ import {
   CompositionComponent,
   PositioningComponent,
   TypeComponent,
-  ValueComponent
+  ValueComponent,
 } from '../../Components';
 export interface TableElementParams {
   name?: string;
@@ -44,7 +44,6 @@ export default abstract class TableElement extends CompositionComponent {
   getBasicInfo(): BasicInfoComponent {
     return this.getComponent<BasicInfoComponent>({ componentType: BasicInfoComponent.Type })!;
   }
-
 
   getType(): TypeComponent {
     return this.getComponent<TypeComponent>({ componentType: TypeComponent.Type })!;

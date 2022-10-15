@@ -1,7 +1,21 @@
-class A {
+class C {
+    c: Int;
+    getA(): Int { c + 42 };
+};
+
+class B inherits C{
+    minus(a: Int, b: Int): Int {
+        a - b
+    };
+
+
+    b: Int;
+    getA(): Int { b - 1 };
+};
+
+class A inherits B {
     z: Int <- 35;
     a: Int;
-    b: Int;
     add(c: Int, d: Int): Int {
         a * c + b * d
     };
@@ -15,9 +29,19 @@ class A {
 
 
 class Main {
+    a: Bool <- 
+    IF 1 = 2 
+    THEN { 1; } 
+    ELSE 
+        IF 1 = 1 
+        THEN { 2; } 
+        ELSE { 3; } 
+        FI 
+    FI;
     e: Int <- 3 + 2 * 4 * 5 + 3 - 2;
     f: Int <- 2;
     g: A <- new A;
-    h: Int <- g.add(e, f);
-    main(): Int { 1 };
+    h: Int <- g@C.getA();
+    i: Int <- g.getA();
+    main(): Int { g.getA() };
 };

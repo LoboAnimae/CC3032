@@ -1,3 +1,5 @@
+import MethodElement from '../DataStructures/TableElements/MethodElement';
+import SymbolElement from '../DataStructures/TableElements/SymbolElement';
 import BasicInfoComponent, { extractBasicInformation } from './BasicInformation';
 import Composition from './Composition';
 import { CompositionComponent, extractTypeComponent, TypeComponent } from './index';
@@ -66,7 +68,7 @@ class TableComponent<T extends CompositionComponent> extends Composition {
 
   getAll(inScope: boolean = true): T[] {
     if (inScope) return [...this.elements];
-    const parentElements = this.parent?.getAll() ?? [];
+    const parentElements = this.parent?.getAll(inScope) ?? [];
     const thisElements = [...this.elements];
     const elements = [...thisElements];
     for (const element of parentElements) {
@@ -78,6 +80,10 @@ class TableComponent<T extends CompositionComponent> extends Composition {
       elements.push(element);
     }
     return elements;
+  }
+
+  filter(by: string) {
+    return this.getAll().filter((t) => t.componentName === by);
   }
 
   /**
@@ -118,7 +124,7 @@ class TableComponent<T extends CompositionComponent> extends Composition {
 }
 
 export interface TableSupport<T extends CompositionComponent> {
-  components: { table: T; };
+  components: { table: T };
 }
 
 export default TableComponent;

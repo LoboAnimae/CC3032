@@ -1,7 +1,6 @@
 import { ExpressionContext } from '../../antlr/yaplParser';
 import CompositionComponent from './Composition';
 
-
 export function extractContext<T extends ExpressionContext>(inComponent?: CompositionComponent | null) {
   if (!inComponent) return null;
   return inComponent.getComponent<ContextHolder<T>>({ componentType: ContextHolder.Type });

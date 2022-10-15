@@ -12,5 +12,4 @@ export default class SubOperation extends SimpleOperation {
     newAddOperationInstance.elements[1] = this.OPERAND2;
     return newAddOperationInstance;
   }
-
 }
