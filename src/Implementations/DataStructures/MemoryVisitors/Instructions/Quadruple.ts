@@ -48,6 +48,7 @@ export default abstract class Quadruple<T = any> {
   abstract toString(): string;
   getTemporal = (): T => this.DESTINATION()!;
   withComment = (val: string) => {
+    return val;
     return `${val}\t\t#\t${this.comment || this.calculateComment?.()}`;
   };
   toTuple(asString: boolean = false): Quad {

@@ -24,6 +24,7 @@ import {
   NewContext,
   OwnMethodCallContext,
   PropertyContext,
+  StringContext,
   TrueContext,
   WhileContext,
 } from '../../antlr/yaplParser';
@@ -55,6 +56,7 @@ import {
   visitNew,
   visitOwnMethodCall,
   visitProperty,
+  visitString,
   visitTrue,
   visitWhile,
 } from './MemoryVisitors';
@@ -326,6 +328,10 @@ export class MemoryVisitor extends AbstractParseTreeVisitor<IMemoryVisitor[]> im
 
   visitId = (ctx: IdContext): IMemoryVisitor[] => {
     return visitId(this, ctx);
+  };
+
+  visitString = (ctx: StringContext): IMemoryVisitor[] => {
+    return visitString(this, ctx);
   };
 
   visitIf = (ctx: IfContext): IMemoryVisitor[] => {

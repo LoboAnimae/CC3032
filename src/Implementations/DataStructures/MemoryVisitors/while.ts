@@ -9,6 +9,8 @@ export default function (visitor: MemoryVisitor, ctx: WhileContext): IMemoryVisi
 
   const whileCondition = 'while::' + uuid().substring(0, 8);
   const endWhile = whileCondition + 'end';
+  visitor.visit(condition);
+  const conditioner = visitor.methods[visitor.scopes.at(-1)!].pop()!;
   const whileGuard = new EQUAL({
     fistOperand: new TemporalValue(),
     secondOperand: new TemporalValue(),
@@ -17,7 +19,7 @@ export default function (visitor: MemoryVisitor, ctx: WhileContext): IMemoryVisi
   visitor.addQuadruple(whileGuard);
   visitor.addQuadruple(new MethodDeclaration(whileCondition));
   visitor.visit(body);
-  visitor.visit(condition);
+  visitor.addQuadruple(conditioner);
   const lastQuadruple = visitor.methods[visitor.scopes.at(-1)!].at(-1);
   lastQuadruple!.dest = whileCondition;
   whileGuard.src1 = lastQuadruple!.src2;
@@ -27,5 +29,5 @@ export default function (visitor: MemoryVisitor, ctx: WhileContext): IMemoryVisi
 
   visitor.addQuadruple(new MethodDeclaration(endWhile));
 
-  return [];
+  return [{ size: 0, getTemporal: () => new TemporalValue() }];
 }

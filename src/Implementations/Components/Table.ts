@@ -83,7 +83,7 @@ class TableComponent<T extends CompositionComponent> extends Composition {
   }
 
   filter(by: string) {
-    return this.getAll().filter((t) => t.componentName === by);
+    return this.getAll(false).filter((t) => t.componentName === by);
   }
 
   /**

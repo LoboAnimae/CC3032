@@ -57,11 +57,10 @@ export default function (visitor: MemoryVisitor, ctx: MethodCallContext): IMemor
     });
   }
 
-  let nextPointer = 0;
   visitor.AskForStackMemory(totalMemory);
+  let nextPointer = visitor.stackMemoryOffset;
   const temporals = [];
   for (const address of addresses) {
-    const currentStackPointer = visitor.stackMemoryOffset;
     const memoryAddress = address.base + address.address;
     const temporal = new TemporalValue();
     temporals.push(temporal);
@@ -75,10 +74,10 @@ export default function (visitor: MemoryVisitor, ctx: MethodCallContext): IMemor
     visitor.addQuadruple(
       new StoreWord({
         dataMovesFrom: temporal,
-        dataMovesInto: new STACK_POINTER(currentStackPointer - nextPointer),
+        dataMovesInto: new STACK_POINTER(nextPointer),
       }),
     );
-    nextPointer = currentStackPointer + address.size;
+    nextPointer += address.size;
     // visitor.addQuadruple()
   }
 
@@ -97,25 +96,24 @@ export default function (visitor: MemoryVisitor, ctx: MethodCallContext): IMemor
     visitor.classStack.pop();
     visitor.removeFromStack(stackBefore - visitor.stackMemoryOffset);
     visitor.stackMemoryOffset = stackBefore;
-    let nextPointer2 = 0;
+    let nextPointer2 = visitor.stackMemoryOffset;
     let temporalPointer = 0;
+    visitor.writeReturn(newMethod.at(-1)!.getTemporal());
+    visitor.popScope();
     for (const address of addresses) {
       const temporal = temporals[temporalPointer++];
-      const currentStackPointer = visitor.stackMemoryOffset;
       const memoryAddress = address.base + address.address;
       visitor.addQuadruple(
         new LoadWord({
-          dataMovesFrom: new STACK_POINTER(currentStackPointer - nextPointer2),
+          dataMovesFrom: new STACK_POINTER(nextPointer2),
           dataMovesInto: temporal,
         }),
       );
-      nextPointer2 = currentStackPointer + address.size;
+      nextPointer2 += address.size;
 
       // visitor.addQuadruple()
     }
     visitor.LiberateStackMemory(totalMemory);
-    visitor.writeReturn(newMethod.at(-1)!.getTemporal());
-    visitor.popScope();
   }
   visitor.endCall();
   const temporal = new TemporalValue();

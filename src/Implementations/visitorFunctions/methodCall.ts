@@ -19,11 +19,6 @@ export default function visitMethodCall(visitor: YaplVisitor, ctx: MethodCallCon
   let referencedMethod = referencedClassTable?.get(methodName.text) as MethodElement;
   let referencedMethodType = extractTypeComponent(referencedMethod);
 
-  if (!referencedMethod) {
-    visitor.addError(ctx, `Method '${methodName.text}' is not defined in class '${referencedClass.getName()}'`);
-    return new EmptyComponent();
-  }
-
   if (methodType && methodType.text !== referencedClass.getName()) {
     const referencedMethodParentClass = visitor.findTable(methodType);
     if (!referencedMethodParentClass) {
@@ -38,6 +33,11 @@ export default function visitMethodCall(visitor: YaplVisitor, ctx: MethodCallCon
     const referencedMethodParentClassTable = extractTableComponent(referencedMethodParentClass);
     referencedMethod = referencedMethodParentClassTable?.get(methodName.text) as MethodElement;
     referencedMethodType = extractTypeComponent(referencedMethod);
+  }
+
+  if (!referencedMethod) {
+    visitor.addError(ctx, `Method '${methodName.text}' is not defined in class '${referencedClass.getName()}'`);
+    return new EmptyComponent();
   }
 
   const paramNum = parameters.length;

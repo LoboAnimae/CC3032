@@ -23,9 +23,11 @@ export default function (visitor: MemoryVisitor, ctx: LetInContext): IMemoryVisi
   const letInScope = 'letIn::' + uuid().substring(0, 8);
   visitor.addQuadruple(new LinkedJump(letInScope));
   visitor.endCall();
+
   visitor.pushScope(letInScope);
   visitor.addQuadruple(new MethodDeclaration(letInScope));
   visitor.AskForStackMemory(allSizeNeeded);
+  const receivingTemporal = new TemporalValue();
   let currentStackPointer = visitor.stackMemoryOffset;
   for (const variable of containingTable.getAll()) {
     variable.setMemoryAddress(currentStackPointer);
@@ -44,5 +46,11 @@ export default function (visitor: MemoryVisitor, ctx: LetInContext): IMemoryVisi
   visitor.popScope();
 
   visitor.classStack.pop();
-  return [{ size: 1, getTemporal: () => temporalResult }];
+  visitor.addQuadruple(
+    new Move({
+      dataMovesFrom: new V0(),
+      dataMovesInto: receivingTemporal,
+    }),
+  );
+  return [{ size: 1, getTemporal: () => receivingTemporal }];
 }
