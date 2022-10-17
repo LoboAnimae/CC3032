@@ -32,7 +32,7 @@ export default function visitProperty(visitor: YaplVisitor, ctx: PropertyContext
   const newTableElement = new SymbolElement({
     name: propertyName.text,
     type: propertyTypeClass,
-    scopeName: (currentScope.getName || extractBasicInformation(currentScope)!.getName)(),
+    scopeName: (currentScope.getName || extractBasicInformation(currentScope)?.getName || (() => 'Unknown'))(),
     ...lineAndColumn(ctx),
   });
   newTableElement.setAddress(currentScope.getSize());
@@ -41,7 +41,7 @@ export default function visitProperty(visitor: YaplVisitor, ctx: PropertyContext
   const previousDeclared = currentScopeTable.get(propertyName.text, { inCurrentScope: true });
   // // Case 1: Overriding (It does nothing)
   if (previousDeclared) {
-    visitor.addError(ctx, `Property ${propertyName.text} is already declared in ${currentScope.toString()}`);
+    visitor.addError(ctx, `Property ${propertyName.text} was previously declared in the current scope`);
     return visitor.next(ctx);
   }
 
@@ -57,8 +57,9 @@ export default function visitProperty(visitor: YaplVisitor, ctx: PropertyContext
         ctx,
         `Cannot assign ${assignmentResolvesTo?.componentName ?? 'erroneous class'} to ${
           propertyTypeClass.componentName
-        } (Can't assign type ${assignmentResolvesTo?.componentName ?? ''} to ${propertyTypeClass.componentName})`,
+        }`,
       );
+
       return visitor.next(ctx);
     }
 

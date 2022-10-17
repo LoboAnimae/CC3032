@@ -1,14 +1,14 @@
-import { AssignmentExprContext } from "../../antlr/yaplParser";
-import { YaplVisitor } from "../../yaplVisitor";
-import { extractBasicInformation } from "../Components/BasicInformation";
-import CompositionComponent from "../Components/Composition";
-import SimpleAssignment from "../Components/Quadruple/SimpleAssignment";
-import { extractTableComponent } from "../Components/Table";
-import { extractValueComponent } from "../Components/ValueHolder";
-import MethodElement from "../DataStructures/TableElements/MethodElement";
-import SymbolElement from "../DataStructures/TableElements/SymbolElement";
-import { ClassType } from "../Generics/Object.type";
-import { lineAndColumn } from "./meta";
+import { AssignmentExprContext } from '../../antlr/yaplParser';
+import { YaplVisitor } from '../../yaplVisitor';
+import { extractBasicInformation } from '../Components/BasicInformation';
+import CompositionComponent from '../Components/Composition';
+import SimpleAssignment from '../Components/Quadruple/SimpleAssignment';
+import { extractTableComponent } from '../Components/Table';
+import { extractValueComponent } from '../Components/ValueHolder';
+import MethodElement from '../DataStructures/TableElements/MethodElement';
+import SymbolElement from '../DataStructures/TableElements/SymbolElement';
+import { ClassType } from '../Generics/Object.type';
+import { lineAndColumn } from './meta';
 
 export default function visitAssignmentExpr(visitor: YaplVisitor, ctx: AssignmentExprContext) {
   // Previous table
@@ -36,7 +36,7 @@ export default function visitAssignmentExpr(visitor: YaplVisitor, ctx: Assignmen
   const previousDeclared = currentScopeTable.get(propertyName.text, { inCurrentScope: true });
   // // Case 1: Overriding (It does nothing)
   if (previousDeclared) {
-    visitor.addError(ctx, `Property ${propertyName.text} is already declared in ${currentScope.toString()}`);
+    visitor.addError(ctx, `Property ${propertyName.text} was previously declared in the current scope`);
     return visitor.next(ctx);
   }
 
@@ -48,8 +48,9 @@ export default function visitAssignmentExpr(visitor: YaplVisitor, ctx: Assignmen
       // TODO: Fix visitor
       visitor.addError(
         ctx,
-        `Cannot assign ${assignmentResolvesTo?.componentName ?? 'erroneous class'} to ${propertyTypeClass.componentName
-        } (Can't assign type ${assignmentResolvesTo?.componentName ?? ''} to ${propertyTypeClass.componentName})`,
+        `Cannot assign ${assignmentResolvesTo?.componentName ?? 'erroneous class'} to ${
+          propertyTypeClass.componentName
+        }`,
       );
       return visitor.next(ctx);
     }

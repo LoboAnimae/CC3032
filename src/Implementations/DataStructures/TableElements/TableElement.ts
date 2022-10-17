@@ -2,6 +2,7 @@ import { v4 as uuid } from 'uuid';
 import {
   BasicInfoComponent,
   CompositionComponent,
+  extractBasicInformation,
   PositioningComponent,
   TypeComponent,
   ValueComponent,
@@ -68,8 +69,8 @@ export default abstract class TableElement extends CompositionComponent {
   }
 
   getName(): string {
-    const basicInfo = this.getBasicInfo();
-    return basicInfo.getName() ?? 'Unknown name';
+    const basicInfo = extractBasicInformation(this);
+    return basicInfo?.getName() ?? 'Unknown name';
   }
 
   setAddress(newAddress: number): void {

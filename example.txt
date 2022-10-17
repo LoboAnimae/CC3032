@@ -21,14 +21,14 @@ class A inherits B {
         a * c + b * d
     };
 
-    getA(): Int { a };
+    getA(): Int { a ;
     getB(): Int { b };
 };
 
-class Main {
+class Something {
     t: String <- "Hello World";
     l: Int <- ~1;
-    a: Bool <- IF 1 = 2 
+    a: Bool | IF 1 = 2 
     THEN { 1; } 
     ELSE 
         IF 1 = 1 

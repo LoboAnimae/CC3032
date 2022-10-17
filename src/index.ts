@@ -10,6 +10,7 @@ import { MemoryVisitor } from './Implementations/DataStructures/Memory';
 import { Quad } from './Implementations/DataStructures/MemoryVisitors/Instructions/Quadruple';
 import { v4 as uuid } from 'uuid';
 import { TemporalValue } from './Implementations/DataStructures/MemoryVisitors/TemporaryValues';
+import { IError } from './Implementations/DataStructures/Error';
 class Register {
   private reservedUntil: number = 0;
   id: string | number = uuid();
@@ -160,8 +161,20 @@ function main(input: string): IResult {
   // Semantic
   visitor.visit(tree);
   const symbolsTable = visitor.symbolsTable;
-  const errors = visitor.errorComponent().getAll();
+  const ferrors = visitor.errorComponent().getAll();
+  const errors: IError[] = [];
+  for (const foundError of ferrors) {
+    if (
+      errors.find(
+        (error) =>
+          error.message === foundError.message && error.column === foundError.column && foundError.line === error.line,
+      )
+    )
+      continue;
+    errors.push(foundError);
+  }
   if (errors.length) {
+    console.table(errors);
     console.log('Errors found, aborting');
     return {
       errors: errors.map((e) => `[${e.line}: ${e.column}]${e.message}`),
@@ -200,6 +213,9 @@ function main(input: string): IResult {
     optimizedTuples.push(...optimize(allQuads));
   }
   const quadruples = memory.getQuadruples();
+  console.log(optimizedTuples.map((t) => t.map((a) => a.toString())));
+  // console.log(quadruples);
+
   return {
     errors: errors.map((e) => `[${e.line}: ${e.column}]${e.message}`),
     quadruples,
@@ -207,36 +223,36 @@ function main(input: string): IResult {
   };
 }
 
-// const pathToFileURL = path.join(__dirname, '..', 'example.txt');
-// const contents = fs.readFileSync(pathToFileURL, 'utf8');
+const pathToFileURL = path.join(__dirname, '..', 'example.txt');
+const contents = fs.readFileSync(pathToFileURL, 'utf8');
 
-// main(contents);
+main(contents);
 
-const app = express();
-const port = 3001;
+// const app = express();
+// const port = 3001;
 
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-app.get('/', (req, res) => {
-  res.sendStatus(200);
-});
+// app.use(express.json());
+// app.use(express.urlencoded({ extended: true }));
+// app.get('/', (req, res) => {
+//   res.sendStatus(200);
+// });
 
 interface IResult {
   quadruples: string;
   errors: string[];
   tuples: string[];
 }
-app.post('/', (req, res) => {
-  console.log('Received request');
-  const { program } = req.body;
-  if (!program) {
-    return res.sendStatus(400);
-  }
-  const parsed = JSON.parse(program);
-  const result = main(parsed);
-  res.json(result);
-});
+// app.post('/', (req, res) => {
+//   console.log('Received request');
+//   const { program } = req.body;
+//   if (!program) {
+//     return res.sendStatus(400);
+//   }
+//   const parsed = JSON.parse(program);
+//   const result = main(parsed);
+//   res.json(result);
+// });
 
-app.listen(port, () => {
-  console.log('Running on port', port);
-});
+// app.listen(port, () => {
+//   console.log('Running on port', port);
+// });
