@@ -1,6 +1,4 @@
-import BasicInfoComponent from '../Components/BasicInformation';
-import TypeComponent from '../Components/Type';
-import ValueComponent from '../Components/ValueHolder';
+import { BasicInfoComponent, TypeComponent, ValueComponent } from 'Components';
 
 export abstract class Primitive extends TypeComponent {
   readonly parent = null;

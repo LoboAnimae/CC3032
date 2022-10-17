@@ -1,6 +1,6 @@
-import { AssignmentExprContext } from '../../../antlr/yaplParser';
-import TypeComponent, { extractTypeComponent } from '../../Components/Type';
-import { ClassType } from '../../Generics/Object.type';
+import { AssignmentExprContext } from '../antlr/yaplParser';
+import TypeComponent, { extractTypeComponent } from '../Components'
+import { ClassType } from "../../Generics/Class.type";
 import { IMemoryVisitor, MemoryVisitor } from '../Memory';
 import { SymbolElement } from '../TableElements/index';
 import { Move } from './Instructions/MemoryManagement';

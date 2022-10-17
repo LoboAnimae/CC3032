@@ -1,4 +1,4 @@
-import { AddContext, DivisionContext, MinusContext, MultiplyContext } from "../../../../antlr/yaplParser";
+import { AddContext, DivisionContext, MinusContext, MultiplyContext } from "../../antlr/yaplParser";
 import { IMemoryVisitor, MemoryVisitor } from "../../Memory";
 import { TemporalValue } from "../TemporaryValues";
 

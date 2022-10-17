@@ -6,7 +6,7 @@ import {
   PositioningComponent,
   TypeComponent,
   ValueComponent,
-} from '../../Components';
+} from 'Components';
 export interface TableElementParams {
   name?: string;
   type?: CompositionComponent;
@@ -19,7 +19,7 @@ export interface TableElementParams {
 export default abstract class TableElement extends CompositionComponent {
   referentialID: string;
   scopeName: string;
-  memoryAddress: number = -1;
+  memoryAddress: number = -1; 
   constructor(options?: TableElementParams) {
     super();
     this.referentialID = uuid();

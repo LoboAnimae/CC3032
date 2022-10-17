@@ -1,4 +1,4 @@
-import { AssignmentContext } from "../../../antlr/yaplParser";
+import { AssignmentContext } from "../antlr/yaplParser";
 import { IMemoryVisitor, MemoryVisitor } from "../Memory";
 import SymbolElement from "../TableElements/SymbolElement";
 import { MemoryAddress, Move } from "./Instructions/MemoryManagement";

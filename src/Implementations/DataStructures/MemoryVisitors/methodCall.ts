@@ -1,8 +1,8 @@
-import { MethodCallContext } from '../../../antlr/yaplParser';
-import { extractContext } from '../../Components/ContextHolder';
-import TableComponent, { extractTableComponent } from '../../Components/Table';
-import { extractTypeComponent } from '../../Components/Type';
-import { ClassType } from '../../Generics/Object.type';
+import { MethodCallContext } from '../antlr/yaplParser';
+import { extractContext } from '../Components'
+import TableComponent, { extractTableComponent } from '../Components'
+import { extractTypeComponent } from '../Components'
+import { ClassType } from "../../Generics/Class.type";
 import { IMemoryVisitor, MemoryVisitor } from '../Memory';
 import MethodElement from '../TableElements/MethodElement';
 import SymbolElement from '../TableElements/SymbolElement';

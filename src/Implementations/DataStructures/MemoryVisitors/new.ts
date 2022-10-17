@@ -1,8 +1,8 @@
-import { NewContext } from '../../../antlr/yaplParser';
-import { extractTableComponent } from '../../Components/Table';
-import { extractTypeComponent } from '../../Components/Type';
-import { extractValueComponent } from '../../Components/ValueHolder';
-import { ClassType } from '../../Generics/Object.type';
+import { NewContext } from '../antlr/yaplParser';
+import { extractTableComponent } from '../Components'
+import { extractTypeComponent } from '../Components'
+import { extractValueComponent } from '../Components'
+import { ClassType } from "../../Generics/Class.type";
 import { IMemoryVisitor, MemoryVisitor } from '../Memory';
 import { SymbolElement } from '../TableElements/index';
 import { Move, StoreWord } from './Instructions/MemoryManagement';

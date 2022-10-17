@@ -1,4 +1,4 @@
-import { EqualContext } from '../../../antlr/yaplParser';
+import { EqualContext } from '../antlr/yaplParser';
 import BoolType from '../../Generics/Boolean.type';
 import { IMemoryVisitor, MemoryVisitor } from '../Memory';
 import { EQUAL } from './Instructions/Comparison';

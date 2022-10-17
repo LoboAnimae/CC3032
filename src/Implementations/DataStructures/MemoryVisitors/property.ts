@@ -1,7 +1,7 @@
-import { PropertyContext } from '../../../antlr/yaplParser';
-import CompositionComponent from '../../Components/Composition';
-import TableComponent, { extractTableComponent } from '../../Components/Table';
-import { extractTypeComponent } from '../../Components/Type';
+import { PropertyContext } from '../antlr/yaplParser';
+import CompositionComponent from '../Components'
+import TableComponent, { extractTableComponent } from '../Components'
+import { extractTypeComponent } from '../Components'
 import { IMemoryVisitor, MemoryVisitor } from '../Memory';
 import MethodElement from '../TableElements/MethodElement';
 import SymbolElement from '../TableElements/SymbolElement';

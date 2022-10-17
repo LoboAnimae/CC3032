@@ -1,4 +1,4 @@
-import { StringContext } from '../../../antlr/yaplParser';
+import { StringContext } from '../antlr/yaplParser';
 import { IMemoryVisitor, MemoryVisitor } from '../Memory';
 import { MemoryAddress, Move, StoreWord } from './Instructions/MemoryManagement';
 import { TemporalValue, V0 } from './TemporaryValues';

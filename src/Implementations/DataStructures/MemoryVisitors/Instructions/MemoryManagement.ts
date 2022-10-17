@@ -1,4 +1,4 @@
-import CompositionComponent from '../../../Components/Composition';
+import CompositionComponent from '../../Components'
 import { TemporalValue } from '../TemporaryValues';
 import Quadruple, { Quad } from './Quadruple';
 

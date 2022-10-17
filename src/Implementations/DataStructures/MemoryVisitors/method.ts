@@ -1,4 +1,4 @@
-import { MethodContext } from '../../../antlr/yaplParser';
+import { MethodContext } from '../antlr/yaplParser';
 import { IMemoryVisitor, MemoryVisitor } from '../Memory';
 import { Move } from './Instructions/MemoryManagement';
 import { MethodDeclaration } from './Instructions/Misc';

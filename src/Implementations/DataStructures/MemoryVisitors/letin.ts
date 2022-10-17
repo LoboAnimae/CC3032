@@ -1,6 +1,6 @@
 import { v4 as uuid } from 'uuid';
-import { LetInContext } from '../../../antlr/yaplParser';
-import TableComponent from '../../Components/Table';
+import { LetInContext } from '../antlr/yaplParser';
+import TableComponent from '../Components'
 import { IMemoryVisitor, MemoryVisitor } from '../Memory';
 import { SymbolElement } from '../TableElements/index';
 import { LinkedJump } from './Instructions/Jumps';

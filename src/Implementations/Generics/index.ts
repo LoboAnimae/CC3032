@@ -1,1 +1,6 @@
-export { default as IntegerType } from "./Integer.type";
+export * from './Boolean.type'
+export * from './IO.type'
+export * from './Integer.type'
+export * from './Object.type'
+export * from './String.type'
+export * from './Class.type'

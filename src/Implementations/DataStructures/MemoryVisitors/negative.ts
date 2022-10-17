@@ -1,4 +1,4 @@
-import { NegativeContext } from '../../../antlr/yaplParser';
+import { NegativeContext } from '../antlr/yaplParser';
 import IntType from '../../Generics/Integer.type';
 import { IMemoryVisitor, MemoryVisitor } from '../Memory';
 import { NOT } from './Instructions/Bitwise';

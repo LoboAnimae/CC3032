@@ -1,9 +1,4 @@
-interface IStack<T> {
-  push(item: T): void;
-  pop(): T | undefined;
-  peek(): T;
-  size(): number;
-}
+import { IStack } from 'Interfaces';
 
 export class Stack<T> implements IStack<T> {
   private readonly items: T[] = [];

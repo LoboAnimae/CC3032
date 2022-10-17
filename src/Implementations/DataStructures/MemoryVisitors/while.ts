@@ -1,4 +1,4 @@
-import { WhileContext } from '../../../antlr/yaplParser';
+import { WhileContext } from '../antlr/yaplParser';
 import { IMemoryVisitor, MemoryVisitor } from '../Memory';
 import { v4 as uuid } from 'uuid';
 import { MethodDeclaration } from './Instructions/Misc';

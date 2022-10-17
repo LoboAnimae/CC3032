@@ -1,5 +1,5 @@
 class C {
-    c: Int <- 17;
+    c: Int <- "17";
     getA(): Int { c + 42 };
     add(): Int { 1 + 2 };
 };

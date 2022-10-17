@@ -1,5 +1,5 @@
 import { v4 as uuid } from 'uuid';
-import { IfContext } from '../../../antlr/yaplParser';
+import { IfContext } from '../antlr/yaplParser';
 import { IMemoryVisitor, MemoryVisitor } from '../Memory';
 import { LinkedJump, UnconditionalJump } from './Instructions/Jumps';
 import { Move } from './Instructions/MemoryManagement';

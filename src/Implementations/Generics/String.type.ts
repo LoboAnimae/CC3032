@@ -1,12 +1,7 @@
 import {
-  BasicInfoComponent,
   CompositionComponent,
-  TableComponent,
-  TableInstance,
-  TypeComponent,
-  TypeInstance,
-  ValueComponent,
-} from '../Components';
+  TableComponent, TypeComponent, ValueComponent
+} from 'Components';
 import { MethodElement, SymbolElement } from '../DataStructures/TableElements';
 import Integer from './Integer.type';
 import { Primitive } from './Primitive.type';

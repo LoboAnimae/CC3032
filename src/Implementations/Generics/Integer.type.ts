@@ -1,8 +1,8 @@
-import { CompositionComponent, extractTypeComponent, TypeComponent, ValueComponent } from '../Components/index';
-import BoolType from './Boolean.type';
+import { CompositionComponent, extractTypeComponent, TypeComponent, ValueComponent } from 'Components';
+import { BoolType } from '.';
 import { Primitive } from './Primitive.type';
 
-export default class IntType extends Primitive {
+export class IntType extends Primitive {
   static Name = 'Int';
   static Type = 'Int';
   static Size = 4;

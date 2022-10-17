@@ -1,4 +1,4 @@
-import { LessEqualContext } from '../../../antlr/yaplParser';
+import { LessEqualContext } from '../antlr/yaplParser';
 import BoolType from '../../Generics/Boolean.type';
 import { IMemoryVisitor, MemoryVisitor } from '../Memory';
 import { LESSEQUAL } from './Instructions/Comparison';

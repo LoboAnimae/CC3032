@@ -1,4 +1,4 @@
-import { TrueContext } from "../../../antlr/yaplParser";
+import { TrueContext } from "../antlr/yaplParser";
 import BoolType from "../../Generics/Boolean.type";
 import { IMemoryVisitor, MemoryVisitor } from "../Memory";
 import { Move } from "./Instructions/MemoryManagement";

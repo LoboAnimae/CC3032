@@ -1,5 +1,5 @@
-import { IdContext } from '../../../antlr/yaplParser';
-import { extractTableComponent } from '../../Components/Table';
+import { IdContext } from '../antlr/yaplParser';
+import { extractTableComponent } from '../Components'
 import { IMemoryVisitor, MemoryVisitor } from '../Memory';
 import SymbolElement from '../TableElements/SymbolElement';
 import { LoadWord, MemoryAddress, Move } from './Instructions/MemoryManagement';

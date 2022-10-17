@@ -4,9 +4,9 @@ import {
   extractBasicInformation,
   extractPositioning,
   extractTypeComponent,
-  extractValueComponent,
-} from '../../Components';
-import { ClassType } from '../../Generics/Object.type';
+  extractValueComponent
+} from 'Components';
+import { ClassType } from 'Implementations/Generics';
 import TableElement from './TableElement';
 export interface SymbolElementParams {
   name?: string;
@@ -18,7 +18,7 @@ export interface SymbolElementParams {
   memoryAddress?: number;
 }
 
-export default class SymbolElement extends TableElement {
+export class SymbolElement extends TableElement {
   static Name = 'SymbolElement';
   constructor(options?: SymbolElementParams) {
     super(options);
@@ -52,7 +52,7 @@ export default class SymbolElement extends TableElement {
   }
 
   getSize = (): number => {
-    const typeComponent = extractTypeComponent(this);
+    const typeComponent = extractTypeComponent(this)!;
     return (typeComponent as ClassType)?.getSize?.() ?? typeComponent?.sizeInBytes!;
   };
 

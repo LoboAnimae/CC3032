@@ -27,12 +27,12 @@ import {
   StringContext,
   TrueContext,
   WhileContext,
-} from '../../antlr/yaplParser';
+} from 'antlr/yaplParser';
 import { yaplVisitor } from '../../antlr/yaplVisitor';
-import CompositionComponent from '../Components/Composition';
-import TableComponent, { extractTableComponent } from '../Components/Table';
-import TypeComponent from '../Components/Type';
-import { ClassType } from '../Generics/Object.type';
+import CompositionComponent from 'Components'
+import TableComponent, { extractTableComponent } from 'Components'
+import TypeComponent from 'Components'
+import { ClassType } from "../Generics/Class.type";
 import {
   visitAssignment,
   visitAssignmentExpr,

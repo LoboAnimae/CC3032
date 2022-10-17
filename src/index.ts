@@ -4,13 +4,15 @@ import { yaplLexer } from './antlr/yaplLexer';
 import { yaplParser } from './antlr/yaplParser';
 import path from 'path';
 import fs from 'fs';
-import { YaplVisitor } from './yaplVisitor';
-import { extractTableComponent } from './Implementations/Components/Table';
+import { YaplVisitor } from 'Implementations/3_Semantic/visitor';
+import { extractTableComponent } from './ImplementatioComponents'
 import { MemoryVisitor } from './Implementations/DataStructures/Memory';
 import { Quad } from './Implementations/DataStructures/MemoryVisitors/Instructions/Quadruple';
 import { v4 as uuid } from 'uuid';
 import { TemporalValue } from './Implementations/DataStructures/MemoryVisitors/TemporaryValues';
-import { IError } from './Implementations/DataStructures/Error';
+import { IError } from Components'
+import Lexer from './Implementations/1_Lexic/LexicAnalizer';
+import Parser from './Implementations/2_Syntactic/SyntacticAnalizer';
 class Register {
   private reservedUntil: number = 0;
   id: string | number = uuid();
@@ -150,12 +152,8 @@ const optimize = (tuples: Quad[]) => {
 };
 
 function main(input: string): IResult {
-  let inputStream = new ANTLRInputStream(input);
-  let lexer = new yaplLexer(inputStream);
-  let tokenStream = new CommonTokenStream(lexer);
-  let parser = new yaplParser(tokenStream);
-
-  let tree = parser.program();
+  const lexer = Lexer(input);
+  const {tree} = Parser(lexer);
 
   const visitor = new YaplVisitor();
   // Semantic

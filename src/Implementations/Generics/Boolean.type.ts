@@ -1,8 +1,8 @@
-import { CompositionComponent, TableComponent, TypeComponent, ValueComponent } from '../Components';
-import { IntegerType } from './index';
+import { CompositionComponent, TableComponent, TypeComponent, ValueComponent } from 'Components';
+import { IntType } from '.';
 import { Primitive } from './Primitive.type';
 
-export default class BoolType extends Primitive {
+export class BoolType extends Primitive {
   static Name = 'Bool';
   static Type = 'Bool';
   static Size = 1;
@@ -24,13 +24,13 @@ export default class BoolType extends Primitive {
   allowsAssignmentOf = function (value?: CompositionComponent): boolean {
     const typeComponent = value?.getComponent<TypeComponent>({ componentType: TypeComponent.Type });
     if (!typeComponent) return false;
-    return [IntegerType.Name, BoolType.Name].includes(typeComponent.componentName);
+    return [IntType.Name, BoolType.Name].includes(typeComponent.componentName);
   };
 
   allowsComparisonTo = function (value?: CompositionComponent): boolean {
     const typeComponent = value?.getComponent<TypeComponent>({ componentType: TypeComponent.Type });
     if (!typeComponent) return false;
-    return [IntegerType.Name, BoolType.Name].includes(typeComponent.componentName);
+    return [IntType.Name, BoolType.Name].includes(typeComponent.componentName);
   };
 
   coherseType = function (value?: CompositionComponent): BoolType | null {
@@ -38,7 +38,7 @@ export default class BoolType extends Primitive {
     if (!typeComponent) return null;
     if (typeComponent.componentName === BoolType.Name) {
       return value as BoolType;
-    } else if (typeComponent.componentName === IntegerType.Name) {
+    } else if (typeComponent.componentName === IntType.Name) {
       const newBool = new BoolType();
       const foundValue = value!.getComponent<ValueComponent>({ componentType: ValueComponent.Type });
       if (foundValue) {

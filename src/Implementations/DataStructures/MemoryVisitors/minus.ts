@@ -1,4 +1,4 @@
-import { MinusContext } from "../../../antlr/yaplParser";
+import { MinusContext } from "../antlr/yaplParser";
 import IntType from "../../Generics/Integer.type";
 import { IMemoryVisitor, MemoryVisitor } from "../Memory";
 import basicOperation from "./Instructions/BasicOperation";
