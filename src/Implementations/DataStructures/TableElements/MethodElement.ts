@@ -1,4 +1,4 @@
-import { MethodContext } from '../../../antlr/yaplParser';
+import { MethodContext } from '../antlr/yaplParser';
 import {
   BasicInfoComponent,
   CompositionComponent,
@@ -6,13 +6,13 @@ import {
   extractTypeComponent,
   extractValueComponent,
 } from '../../Components';
-import ContextHolder, { extractContext } from '../../Components/ContextHolder';
-import Table from '../../Components/Table';
-import TableComponent, { extractTableComponent } from '../../Components/Table';
-import SymbolElement, { SymbolElementParams } from './SymbolElement';
+import ContextHolder, { extractContext } from 'Components/ContextHolder';
+import { Table } from 'Components';
+import { TableComponent, extractTableComponent } from 'Components';
+import { SymbolElement, SymbolElementParams } from 'Implementations/DataStructures/TableElements';
 import TableElement from './TableElement';
 
-export default class MethodElement extends TableElement {
+export class MethodElement extends TableElement {
   static Name = 'MethodElement';
 
   constructor(options?: SymbolElementParams) {
