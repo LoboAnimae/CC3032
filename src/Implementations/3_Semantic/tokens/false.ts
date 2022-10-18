@@ -1,5 +1,4 @@
 import { FalseContext } from 'antlr/yaplParser';
-import { ValueComponent } from 'Components';
 import { YaplVisitor } from 'Implementations/3_Semantic/visitor';
 import { BoolType } from 'Implementations/Generics';
 

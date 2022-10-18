@@ -1,4 +1,4 @@
-import { CompositionComponent } from 'Components';
+import { CompositionComponent } from '.';
 
 export class TemporalValue extends CompositionComponent {
   static Name = 'TemporalValue';

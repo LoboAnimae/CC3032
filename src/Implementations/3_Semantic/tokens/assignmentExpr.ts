@@ -1,14 +1,13 @@
-import { AssignmentExprContext } from 'antlr/yaplParser';
+import { lineAndColumn } from '../';
+import { ClassType, MethodElement, SymbolElement } from '../../';
+import { AssignmentExprContext } from '../../../antlr/yaplParser';
 import {
   CompositionComponent,
   extractBasicInformation,
   extractTableComponent,
-  extractValueComponent,
-} from 'Components';
-import { lineAndColumn } from 'Implementations/3_Semantic/Functions';
-import { YaplVisitor } from 'Implementations/3_Semantic/visitor';
-import { MethodElement, SymbolElement } from 'Implementations/DataStructures/TableElements';
-import { ClassType } from 'Implementations/Generics';
+  extractValueComponent
+} from '../../../Components';
+import { YaplVisitor } from '../visitor';
 
 export function visitAssignmentExpr(visitor: YaplVisitor, ctx: AssignmentExprContext) {
   // Previous table
@@ -48,8 +47,7 @@ export function visitAssignmentExpr(visitor: YaplVisitor, ctx: AssignmentExprCon
       // TODO: Fix visitor
       visitor.addError(
         ctx,
-        `Cannot assign ${assignmentResolvesTo?.componentName ?? 'erroneous class'} to ${
-          propertyTypeClass.componentName
+        `Cannot assign ${assignmentResolvesTo?.componentName ?? 'erroneous class'} to ${propertyTypeClass.componentName
         }`,
       );
       return visitor.next(ctx);

@@ -7,7 +7,7 @@ import {
   extractValueComponent,
 } from 'Components';
 import { ClassType } from 'Implementations/Generics';
-import TableElement from './TableElement';
+import { TableElement } from 'Implementations/DataStructures/TableElements';
 export interface SymbolElementParams {
   name?: string;
   type: CompositionComponent;

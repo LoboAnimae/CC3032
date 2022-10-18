@@ -1,5 +1,5 @@
-import { IError } from 'Implementations/Misc/Error';
-import { BasicStorage } from 'Implementations/DataStructures/BasicStorage';
+import { IError } from '../Interfaces/Error';
+import { BasicStorage } from '../Implementations/DataStructures/BasicStorage';
 
 export class ErrorComponent extends BasicStorage<IError> {
   constructor() {

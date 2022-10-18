@@ -3,7 +3,7 @@ import { IMemoryVisitor, MemoryVisitor } from 'Implementations/4_Intermediate/vi
 import { SymbolElement } from 'Implementations/DataStructures/TableElements';
 import { ClassType } from 'Implementations/Generics';
 import { Move } from '../Instructions/MemoryManagement';
-import { TemporalValue } from '../../../Components/TemporaryValues';
+import { TemporalValue } from 'Components/TemporaryValues';
 
 export default function visitAssignmentExpr(visitor: MemoryVisitor, ctx: AssignmentExprContext): IMemoryVisitor[] {
   const name = ctx.IDENTIFIER();

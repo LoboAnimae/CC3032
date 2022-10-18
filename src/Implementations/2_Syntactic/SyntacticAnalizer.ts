@@ -1,5 +1,5 @@
 import { CommonTokenStream } from 'antlr4ts';
-import { yaplParser } from 'antlr/yaplParser';
+import { yaplParser } from '../../antlr/yaplParser';
 
 const getParser = (tokenStream: CommonTokenStream) => new yaplParser(tokenStream);
 const getTree = (parser: yaplParser) => parser.program();

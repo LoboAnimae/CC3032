@@ -1,8 +1,7 @@
-import { AddContext } from 'antlr/yaplParser';
-import { EmptyComponent } from 'Components';
-import { extractTypeComponent } from 'Components/Type';
-import { IntType } from 'Implementations/Generics/Integer.type';
-import { YaplVisitor } from 'Implementations/3_Semantic/visitor';
+import { AddContext } from '../../../antlr/yaplParser';
+import { EmptyComponent, extractTypeComponent } from '../../../Components';
+import { YaplVisitor } from '../visitor';
+import { IntType } from '../../';
 
 export function visitAdd(visitor: YaplVisitor, ctx: AddContext) {
   // Must be done between two possible integers

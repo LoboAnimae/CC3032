@@ -1,4 +1,4 @@
-import { BasicInfoComponent, CompositionComponent, extractBasicInformation } from 'Components';
+import { BasicInfoComponent, CompositionComponent, extractBasicInformation } from '.';
 
 export interface TableParams<T extends CompositionComponent> {
   parent: TableComponent<T> | null;

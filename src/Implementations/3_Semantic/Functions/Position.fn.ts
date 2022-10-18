@@ -1,9 +1,8 @@
-import { CompositionComponent, TableComponent, TypeComponent } from 'Components';
-import { Stack } from 'Implementations/DataStructures/Stack';
-import { MethodElement } from 'Implementations/DataStructures/TableElements/MethodElement';
-import { ClassType } from 'Implementations/Generics';
+import { ClassType, MethodElement } from '../../';
+import { CompositionComponent, TableComponent, TypeComponent } from '../../../Components';
+import { Stack } from '../../DataStructures/Stack';
 
-export function lineAndColumn(ctx: any): { line: number; column: number } {
+export function lineAndColumn(ctx: any): { line: number; column: number; } {
   const line: number = ctx.start.line;
   const column: number = ctx.start.charPositionInLine;
 

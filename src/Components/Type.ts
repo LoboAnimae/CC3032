@@ -1,6 +1,6 @@
-import { ClassDefineContext } from 'antlr/yaplParser';
+import { ClassDefineContext } from '../antlr/yaplParser';
 import {CompositionComponent} from '.';
-import { DownUpHierarchy } from 'Interfaces';
+import { DownUpHierarchy } from '../Interfaces';
 
 export interface TypeParams {
   isGeneric?: boolean;

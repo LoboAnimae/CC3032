@@ -1,6 +1,6 @@
 import { CompositionComponent, TableComponent, TypeComponent, ValueComponent } from 'Components';
 import { MethodElement, SymbolElement } from 'Implementations/DataStructures/TableElements';
-import Integer from './Integer.type';
+import { IntType } from 'Implementations/Generics/';
 import { Primitive } from './Primitive.type';
 
 export class StringType extends Primitive {
@@ -19,7 +19,7 @@ export class StringType extends Primitive {
 
     const lengthMethod = new MethodElement({
       name: 'length',
-      type: new Integer(),
+      type: new IntType(),
       scopeName: this.componentName,
       memoryAddress: -1,
     });
@@ -41,8 +41,8 @@ export class StringType extends Primitive {
       memoryAddress: -1,
     });
     substrMethod.addParameters(
-      new SymbolElement({ name: 'i', type: new Integer(), scopeName: this.componentName, memoryAddress: -1 }),
-      new SymbolElement({ name: 'l', type: new Integer(), scopeName: this.componentName, memoryAddress: -1 }),
+      new SymbolElement({ name: 'i', type: new IntType(), scopeName: this.componentName, memoryAddress: -1 }),
+      new SymbolElement({ name: 'l', type: new IntType(), scopeName: this.componentName, memoryAddress: -1 }),
     );
 
     tableComponent.add(lengthMethod, concatMethod, substrMethod);

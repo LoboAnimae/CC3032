@@ -1,7 +1,7 @@
-import { EqualContext } from 'antlr/yaplParser';
-import { EmptyComponent, extractTypeComponent } from 'Components';
-import { YaplVisitor } from 'Implementations/3_Semantic/visitor';
-import { BoolType } from 'Implementations/Generics';
+import { BoolType } from '../..';
+import { EqualContext } from '../../../antlr/yaplParser';
+import { EmptyComponent, extractTypeComponent } from '../../../Components';
+import { YaplVisitor } from '../visitor';
 
 export function visitEqual(visitor: YaplVisitor, ctx: EqualContext) {
   // TODO: Add value

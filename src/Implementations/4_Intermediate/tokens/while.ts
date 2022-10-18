@@ -3,7 +3,7 @@ import { IMemoryVisitor, MemoryVisitor } from 'Implementations/4_Intermediate/vi
 import { v4 as uuid } from 'uuid';
 import { MethodDeclaration } from '../Instructions/Misc';
 import { EQUAL } from '../Instructions/Comparison';
-import { TemporalValue } from '../../../Components/TemporaryValues';
+import { TemporalValue } from 'Components/TemporaryValues';
 export default function (visitor: MemoryVisitor, ctx: WhileContext): IMemoryVisitor[] {
   const [condition, body] = ctx.expression();
 

@@ -1,4 +1,4 @@
-import { JUMP_BACK, JUMP_LINK_REGISTER } from '../../../Components/TemporaryValues';
+import { JUMP_BACK, JUMP_LINK_REGISTER } from 'Components/TemporaryValues';
 import Quadruple, { Quad } from './Quadruple';
 
 export class Return extends Quadruple {

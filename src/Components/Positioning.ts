@@ -1,4 +1,4 @@
-import { CompositionComponent } from 'Components';
+import { CompositionComponent } from '.';
 
 export interface PositioningParams {
   line: number;

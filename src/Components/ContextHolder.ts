@@ -1,5 +1,5 @@
-import { ExpressionContext } from 'antlr/yaplParser';
-import {CompositionComponent} from '.';
+import { ExpressionContext } from '../antlr/yaplParser';
+import { CompositionComponent } from '.';
 
 export function extractContext<T extends ExpressionContext>(inComponent?: CompositionComponent | null) {
   if (!inComponent) return null;

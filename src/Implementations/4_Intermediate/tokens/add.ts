@@ -1,7 +1,7 @@
 import { AddContext } from 'antlr/yaplParser';
-import { IntType } from 'Implementations/Generics';
+import { basicOperation } from 'Implementations/4_Intermediate/Instructions/BasicOperation';
 import { IMemoryVisitor, MemoryVisitor } from 'Implementations/4_Intermediate/visitor';
-import basicOperation from '../Instructions/BasicOperation';
+import { IntType } from 'Implementations/Generics';
 import { Add } from '../Instructions/Operation';
 
 export default function (visitor: MemoryVisitor, ctx: AddContext): IMemoryVisitor[] {

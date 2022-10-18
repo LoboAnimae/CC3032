@@ -1,13 +1,13 @@
-import { AssignmentContext } from 'antlr/yaplParser';
+import { TableElementType } from '../../';
+import { AssignmentContext } from '../../../antlr/yaplParser';
 import {
   CompositionComponent,
   EmptyComponent,
   extractBasicInformation,
   extractTableComponent,
-  extractTypeComponent,
-} from 'Components';
-import { YaplVisitor } from 'Implementations/3_Semantic/visitor';
-import { TableElementType } from 'Implementations/DataStructures/TableElements';
+  extractTypeComponent
+} from '../../../Components';
+import { YaplVisitor } from '../visitor';
 
 export function visitAssignment(visitor: YaplVisitor, ctx: AssignmentContext) {
   const assignmentTo = ctx.IDENTIFIER();

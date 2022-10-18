@@ -16,7 +16,7 @@ export interface TableElementParams {
   scopeName: string; // Just to help us
 }
 
-export default abstract class TableElement extends CompositionComponent {
+export abstract class TableElement extends CompositionComponent {
   referentialID: string;
   scopeName: string;
   memoryAddress: number = -1;

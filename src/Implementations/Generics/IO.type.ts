@@ -1,8 +1,6 @@
-import { CompositionComponent, TableComponent } from 'Components';
-import { MethodElement, SymbolElement } from 'Implementations/DataStructures/TableElements';
-import Integer from './Integer.type';
-import { Primitive } from './Primitive.type';
-import StringType from './String.type';
+import { Primitive, StringType } from '.';
+import { IntType, MethodElement, SymbolElement } from '../';
+import { CompositionComponent, TableComponent } from '../../Components';
 
 export class IOType extends Primitive {
   static Name = 'IO';
@@ -38,7 +36,7 @@ export class IOType extends Primitive {
       memoryAddress: -1,
     });
     outIntMethod.addParameters(
-      new SymbolElement({ name: 'x', type: new Integer(), scopeName: this.componentName, memoryAddress: -1 }),
+      new SymbolElement({ name: 'x', type: new IntType(), scopeName: this.componentName, memoryAddress: -1 }),
     );
 
     const inStringMethod = new MethodElement({
@@ -49,7 +47,7 @@ export class IOType extends Primitive {
     });
     const inIntMethod = new MethodElement({
       name: 'in_int',
-      type: new Integer(),
+      type: new IntType(),
       scopeName: this.componentName,
       memoryAddress: -1,
     });

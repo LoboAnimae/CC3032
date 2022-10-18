@@ -1,4 +1,4 @@
-import { CompositionComponent, TemporalComponent } from 'Components';
+import { CompositionComponent, TemporalComponent } from '.';
 import { v4 as uuid } from 'uuid';
 
 export function extractQuadruplet(inComponent?: CompositionComponent | null): QuadrupletElement | null {

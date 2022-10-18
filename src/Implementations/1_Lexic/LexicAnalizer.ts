@@ -1,4 +1,4 @@
-import { ANTLRInputStream, CharStreams, CodePointCharStream, CommonTokenStream } from "antlr4ts";
+import { CharStreams, CodePointCharStream, CommonTokenStream } from "antlr4ts";
 import { yaplLexer } from "../../antlr/yaplLexer";
 
 const getInputStream = (inputString: string) => CharStreams.fromString(inputString);

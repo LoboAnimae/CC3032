@@ -26,19 +26,31 @@ import {
   PropertyContext,
   StringContext,
   TrueContext,
-  WhileContext,
+  WhileContext
 } from 'antlr/yaplParser';
-import { yaplVisitor } from '../../antlr/yaplVisitor';
-import CompositionComponent from 'Components';
-import TableComponent, { extractTableComponent } from 'Components';
-import TypeComponent from 'Components';
+import { CompositionComponent, extractTableComponent, TableComponent, TypeComponent } from 'Components';
+import { SymbolElement, TableElementType } from 'Implementations/DataStructures/TableElements';
 import { ClassType } from 'Implementations/Generics';
+import { yaplVisitor } from '../../antlr/yaplVisitor';
+import {
+  ALLOCATE,
+  EXIT,
+  FUNCTION_PARAMETER_1,
+  JUMP_LINK_REGISTER,
+  STACK_POINTER,
+  TemporalValue,
+  V0
+} from 'Components/TemporaryValues';
+import { LinkedJump, UnconditionalJump } from './Instructions/Jumps';
+import { LoadWord, Move, StoreWord } from './Instructions/MemoryManagement';
+import { MethodDeclaration, Return, SysCall, TextHolder } from './Instructions/Misc';
+import { Add, Sub } from './Instructions/Operation';
+import Quadruple, { Quad } from './Instructions/Quadruple';
+import add from './tokens/add';
 import {
   visitAssignment,
   visitAssignmentExpr,
-  visitBlock,
-  visitClassDefine,
-  visitDivision,
+  visitBlock, visitDivision,
   visitEqual,
   visitFalse,
   visitFormal,
@@ -58,24 +70,8 @@ import {
   visitProperty,
   visitString,
   visitTrue,
-  visitWhile,
+  visitWhile
 } from './tokens/index';
-import add from './tokens/add';
-import { LinkedJump, UnconditionalJump } from './Instructions/Jumps';
-import { LoadWord, MemoryAddress, Move, StoreWord } from './Instructions/MemoryManagement';
-import { MethodDeclaration, Return, SysCall, TextHolder } from './Instructions/Misc';
-import { Add, Sub } from './Instructions/Operation';
-import Quadruple, { Quad } from './Instructions/Quadruple';
-import {
-  ALLOCATE,
-  EXIT,
-  FUNCTION_PARAMETER_1,
-  JUMP_LINK_REGISTER,
-  STACK_POINTER,
-  TemporalValue,
-  V0,
-} from '../../Components/TemporaryValues';
-import { SymbolElement, TableElementType } from './TableElements';
 
 export interface IMemoryVisitor {
   size: number;
@@ -354,7 +350,7 @@ export class MemoryVisitor extends AbstractParseTreeVisitor<IMemoryVisitor[]> im
     this.scopes.pop();
   };
 
-  methods: { [key: string]: Quadruple[] } = {};
+  methods: { [key: string]: Quadruple[]; } = {};
 
   stackMemoryOffset = 0;
 

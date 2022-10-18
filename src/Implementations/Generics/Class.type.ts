@@ -1,15 +1,14 @@
+import { ClassTypeParams, ClassTypeRequiredParams, ObjectType } from '.';
+import { ClassDefineContext } from '../../antlr/yaplParser';
 import {
   BasicInfoComponent,
   CompositionComponent,
   extractTableComponent,
   ITableGetOptions,
   TableComponent,
-  TypeComponent,
-} from 'Components';
-import { MethodElement, TableElementType } from 'Implementations/DataStructures/TableElements';
-import { ClassDefineContext } from 'antlr/yaplParser';
-import TableElement from 'Implementations/DataStructures/TableElements';
-import { ObjectType, ClassTypeParams, ClassTypeRequiredParams } from './Object.type';
+  TypeComponent
+} from '../../Components';
+import { MethodElement, TableElement, TableElementType } from '../DataStructures';
 
 export class ClassType extends ObjectType {
   static Name = 'Class';

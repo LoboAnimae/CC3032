@@ -7,5 +7,6 @@ export * from './Positioning';
 export * from './QuadrupleComponent';
 export * from './Table';
 export * from './TemporalComponent';
+export * from './TemporaryValues';
 export * from './Type';
 export * from './ValueHolder';

@@ -1,16 +1,10 @@
 import { MethodContext } from 'antlr/yaplParser';
 import {
-  BasicInfoComponent,
-  CompositionComponent,
-  extractPositioning,
-  extractTypeComponent,
-  extractValueComponent,
+  BasicInfoComponent, extractPositioning, extractTableComponent, extractTypeComponent,
+  extractValueComponent, TableComponent
 } from 'Components';
-import ContextHolder, { extractContext } from 'Components/ContextHolder';
-import { Table } from 'Components';
-import { TableComponent, extractTableComponent } from 'Components';
-import { SymbolElement, SymbolElementParams } from 'Implementations/DataStructures/TableElements';
-import TableElement from './TableElement';
+import { ContextHolder, extractContext } from 'Components/ContextHolder';
+import { SymbolElement, SymbolElementParams, TableElement } from 'Implementations/DataStructures/TableElements';
 
 export class MethodElement extends TableElement {
   static Name = 'MethodElement';
@@ -24,13 +18,13 @@ export class MethodElement extends TableElement {
   }
 
   addParameters(...parameters: SymbolElement[]): MethodElement {
-    const tableComponent = this.getComponent<TableComponent<SymbolElement>>({ componentType: Table.Type })!;
+    const tableComponent = this.getComponent<TableComponent<SymbolElement>>({ componentType: TableComponent.Type })!;
     tableComponent.add(...parameters);
     return this;
   }
 
   getTable(): TableComponent<SymbolElement> {
-    return this.getComponent<TableComponent<SymbolElement>>({ componentType: Table.Type })!;
+    return this.getComponent<TableComponent<SymbolElement>>({ componentType: TableComponent.Type })!;
   }
 
   getParameters(): SymbolElement[] {

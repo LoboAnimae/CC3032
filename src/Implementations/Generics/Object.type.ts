@@ -1,5 +1,5 @@
-import { BasicInfoComponent, CompositionComponent, TableComponent, TypeComponent } from 'Components';
-import { MethodElement, TableElementType } from 'Implementations/DataStructures/TableElements';
+import { BasicInfoComponent, CompositionComponent, TableComponent, TypeComponent } from '../../Components';
+import { MethodElement, TableElementType } from 'Implementations/DataStructures/';
 
 import { ClassDefineContext } from 'antlr/yaplParser';
 import { StringType, ClassType } from '.';

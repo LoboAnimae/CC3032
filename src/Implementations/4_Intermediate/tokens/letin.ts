@@ -1,12 +1,12 @@
 import { v4 as uuid } from 'uuid';
 import { LetInContext } from 'antlr/yaplParser';
-import TableComponent from 'Components';
+import { TableComponent } from 'Components';
 import { IMemoryVisitor, MemoryVisitor } from 'Implementations/4_Intermediate/visitor';
 import { SymbolElement } from 'Implementations/DataStructures/TableElements';
 import { LinkedJump } from '../Instructions/Jumps';
 import { Move } from '../Instructions/MemoryManagement';
 import { MethodDeclaration, Return } from '../Instructions/Misc';
-import { TemporalValue, V0 } from '../../../Components/TemporaryValues';
+import { TemporalValue, V0 } from 'Components/TemporaryValues';
 export default function (visitor: MemoryVisitor, ctx: LetInContext): IMemoryVisitor[] {
   const assigmentExpressions = ctx.assignmentExpr();
   const expression = ctx.expression();

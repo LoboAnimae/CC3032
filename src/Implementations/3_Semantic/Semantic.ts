@@ -2,7 +2,7 @@ import { ClassDefineContext, ProgramContext } from 'antlr/yaplParser';
 import { TableComponent } from 'Components/Table';
 import { TypeComponent } from 'Components/Type';
 import { YaplVisitor } from 'Implementations/3_Semantic/visitor';
-import { IError } from 'Implementations/Misc/Error';
+import { IError } from 'Interfaces';
 
 export interface ISemanticResult {
   symbolsTable?: TableComponent<TypeComponent>;
@@ -10,7 +10,7 @@ export interface ISemanticResult {
   mainBranch?: ClassDefineContext;
 }
 
-export default function Semantic(programRoot: ProgramContext): ISemanticResult {
+export function Semantic(programRoot: ProgramContext): ISemanticResult {
   const visitor = new YaplVisitor();
   visitor.visit(programRoot);
   const errors = visitor.errorComponent().getAll();

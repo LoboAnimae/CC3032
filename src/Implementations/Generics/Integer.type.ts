@@ -1,6 +1,5 @@
-import { CompositionComponent, extractTypeComponent, TypeComponent, ValueComponent } from 'Components';
-import { BoolType } from '.';
-import { Primitive } from './Primitive.type';
+import { BoolType, Primitive } from '.';
+import { CompositionComponent, extractTypeComponent, TypeComponent, ValueComponent } from '../../Components';
 
 export class IntType extends Primitive {
   static Name = 'Int';

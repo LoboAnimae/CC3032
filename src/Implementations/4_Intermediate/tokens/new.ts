@@ -6,7 +6,7 @@ import { ClassType } from 'Implementations/Generics';
 import { IMemoryVisitor, MemoryVisitor } from 'Implementations/4_Intermediate/visitor';
 import { SymbolElement } from 'Implementations/DataStructures/TableElements';
 import { Move, StoreWord } from '../Instructions/MemoryManagement';
-import { TemporalValue, V0 } from '../../../Components/TemporaryValues';
+import { TemporalValue, V0 } from 'Components/TemporaryValues';
 
 export default function (visitor: MemoryVisitor, ctx: NewContext): IMemoryVisitor[] {
   const type = ctx.TYPE();

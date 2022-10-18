@@ -2,7 +2,7 @@ import { MethodContext } from 'antlr/yaplParser';
 import { IMemoryVisitor, MemoryVisitor } from 'Implementations/4_Intermediate/visitor';
 import { Move } from '../Instructions/MemoryManagement';
 import { MethodDeclaration } from '../Instructions/Misc';
-import { TemporalValue, V0 } from '../../../Components/TemporaryValues';
+import { TemporalValue, V0 } from 'Components/TemporaryValues';
 
 export default function (visitor: MemoryVisitor, ctx: MethodContext): IMemoryVisitor[] {
   const name = ctx.IDENTIFIER();

@@ -1,7 +1,7 @@
-import { DivisionContext } from 'antlr/yaplParser';
-import { EmptyComponent, extractTypeComponent } from 'Components';
-import { YaplVisitor } from 'Implementations/3_Semantic/visitor';
-import { IntType } from 'Implementations/Generics';
+import { IntType } from '../../';
+import { DivisionContext } from '../../../antlr/yaplParser';
+import { EmptyComponent, extractTypeComponent } from '../../../Components';
+import { YaplVisitor } from '../visitor';
 
 export function visitDivision(visitor: YaplVisitor, ctx: DivisionContext) {
   // TODO: Add value

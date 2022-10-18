@@ -1,8 +1,8 @@
 import { FormalContext } from 'antlr/yaplParser';
+import { STACK_POINTER, TemporalValue } from 'Components/TemporaryValues';
 import { IMemoryVisitor, MemoryVisitor } from 'Implementations/4_Intermediate/visitor';
-import SymbolElement from 'Implementations/DataStructures/TableElements';
+import { SymbolElement } from 'Implementations/DataStructures/TableElements';
 import { MemoryAddress, Move } from '../Instructions/MemoryManagement';
-import { STACK_POINTER, TemporalValue } from '../../../Components/TemporaryValues';
 
 export default function (visitor: MemoryVisitor, ctx: FormalContext): IMemoryVisitor[] {
   const name = ctx.IDENTIFIER();

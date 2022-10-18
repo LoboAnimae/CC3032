@@ -4,7 +4,7 @@ import { IMemoryVisitor, MemoryVisitor } from 'Implementations/4_Intermediate/vi
 import { LinkedJump, UnconditionalJump } from '../Instructions/Jumps';
 import { Move } from '../Instructions/MemoryManagement';
 import { MethodDeclaration, Return } from '../Instructions/Misc';
-import { TemporalValue, V0 } from '../../../Components/TemporaryValues';
+import { TemporalValue, V0 } from 'Components/TemporaryValues';
 export default function (visitor: MemoryVisitor, ctx: IfContext): IMemoryVisitor[] {
   const [condition, body, elses] = ctx.expression();
 

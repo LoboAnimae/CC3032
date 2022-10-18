@@ -1,8 +1,8 @@
 import { IntContext } from 'antlr/yaplParser';
-import IntType from 'Implementations/Generics';
+import { TemporalValue } from 'Components/TemporaryValues';
 import { IMemoryVisitor, MemoryVisitor } from 'Implementations/4_Intermediate/visitor';
+import { IntType } from 'Implementations/Generics';
 import { Move } from '../Instructions/MemoryManagement';
-import { TemporalValue } from '../../../Components/TemporaryValues';
 
 export default function (visitor: MemoryVisitor, ctx: IntContext): IMemoryVisitor[] {
   const temporal = new TemporalValue();

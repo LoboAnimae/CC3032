@@ -1,5 +1,5 @@
-import { CompositionComponent } from 'Components';
-import { SymbolElement } from 'Implementations/DataStructures/TableElements';
+import { CompositionComponent } from '.';
+import { SymbolElement } from '../Implementations/DataStructures/TableElements';
 
 export function isTemporalComponent(component?: CompositionComponent) {
   return component?.componentType === 'TemporalComponent';

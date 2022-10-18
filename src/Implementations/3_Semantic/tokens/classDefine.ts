@@ -1,7 +1,7 @@
-import { ClassDefineContext } from 'antlr/yaplParser';
-import { extractBasicInformation, extractTypeComponent } from 'Components';
-import { YaplVisitor } from 'Implementations/3_Semantic/visitor';
-import { ClassType, ObjectType } from 'Implementations/Generics';
+import { ClassDefineContext } from '../../../antlr/yaplParser';
+import { extractBasicInformation, extractTypeComponent } from '../../../Components';
+import { ClassType, ObjectType } from '../../Generics';
+import { YaplVisitor } from '../visitor';
 
 /**
  * Checks that everything is alright in the class in itself
