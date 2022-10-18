@@ -1,9 +1,8 @@
 import { NegativeContext } from 'antlr/yaplParser';
-import { extractBasicInformation } from 'Components'
-import TypeComponent from 'Components'
-import { YaplVisitor } from './meta';
+import { extractBasicInformation, TypeComponent } from 'Components';
+import { YaplVisitor } from '../visitor';
 
-export default function visitNegative(visitor: YaplVisitor, ctx: NegativeContext) {
+export function visitNegative(visitor: YaplVisitor, ctx: NegativeContext) {
   const expressionRaw = ctx.expression();
   const expressionType: TypeComponent = visitor.visit(expressionRaw);
 

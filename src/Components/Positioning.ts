@@ -1,4 +1,4 @@
-import {CompositionComponent} from 'Components';
+import { CompositionComponent } from 'Components';
 
 export interface PositioningParams {
   line: number;
@@ -15,8 +15,8 @@ export function extractPositioning(inComponent?: CompositionComponent | null) {
  * If something implements this, then positions can be stored
  */
 export class PositioningComponent extends CompositionComponent {
-  static Name = "Positioning"
-  static Type = "Positioning"
+  static Name = 'Positioning';
+  static Type = 'Positioning';
   public line?: number;
   public column?: number;
   constructor(options?: Partial<PositioningParams>) {

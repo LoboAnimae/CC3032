@@ -1,11 +1,9 @@
 import { IdContext } from 'antlr/yaplParser';
-import { extractBasicInformation, extractQuadruplet, extractTableComponent } from '../Components';
-import EmptyComponent from 'Components'
-import SimpleHolder from 'Components'
-import { TableElementType } from '../DataStructures/TableElements';
-import { YaplVisitor } from './meta';
+import { EmptyComponent, extractBasicInformation, extractTableComponent } from 'Components';
+import { YaplVisitor } from 'Implementations/3_Semantic/visitor';
+import { TableElementType } from 'Implementations/DataStructures/TableElements';
 
-export default function visitId(visitor: YaplVisitor, ctx: IdContext) {
+export function visitId(visitor: YaplVisitor, ctx: IdContext) {
   // Find it in the scope
   const name = ctx.IDENTIFIER();
   const currentScope = visitor.getCurrentScope();
@@ -26,15 +24,6 @@ export default function visitId(visitor: YaplVisitor, ctx: IdContext) {
     visitor.addError(ctx, `Symbol '${name.toString()}' is not defined in scope '${basicInfo!.name}'`);
     return new EmptyComponent();
   }
-  const previousQuadruplet = extractQuadruplet(foundComponent) as SimpleHolder;
-
-  const quadrupletElement = previousQuadruplet ?? new SimpleHolder();
-
-  quadrupletElement.setValue(foundComponent);
-  if (!previousQuadruplet) {
-    foundComponent.addComponent(quadrupletElement);
-  }
-  // visitor.addQuadruple(quadrupletElement)
 
   return foundComponent;
 }

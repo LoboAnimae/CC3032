@@ -1,10 +1,9 @@
 import { MultiplyContext } from 'antlr/yaplParser';
-import { EmptyComponent, extractQuadruplet, extractTypeComponent, TypeComponent } from 'Components'
-import MultOperation from 'Components'
-import IntType from '../Generics/Integer.type';
-import { YaplVisitor } from './meta';
+import { EmptyComponent, extractQuadruplet, extractTypeComponent } from 'Components';
+import { YaplVisitor } from 'Implementations/3_Semantic/visitor';
+import { IntType } from 'Implementations/Generics';
 
-export default function visitMultiply(visitor: YaplVisitor, ctx: MultiplyContext) {
+export function visitMultiply(visitor: YaplVisitor, ctx: MultiplyContext) {
   const [leftChild, rightChild] = ctx.expression();
   const intTable = visitor.findTable(IntType.Name)!.copy();
 
@@ -36,13 +35,5 @@ export default function visitMultiply(visitor: YaplVisitor, ctx: MultiplyContext
     visitor.addError(ctx, `Invalid Operation between ${leftName} and ${rightName}`);
     return new EmptyComponent();
   }
-
-  // Quadruplet
-  const quadrupletElement = new MultOperation();
-  const lValueComponent = extractQuadruplet(leftElement);
-  const rValueComponent = extractQuadruplet(rightElement);
-  quadrupletElement.elements = [lValueComponent, rValueComponent];
-  intTable.addComponent(quadrupletElement);
-  // visitor.addQuadruple(quadrupletElement);
   return intTable;
 }

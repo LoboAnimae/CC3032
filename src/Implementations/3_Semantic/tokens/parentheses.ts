@@ -1,6 +1,6 @@
 import { ParenthesesContext } from 'antlr/yaplParser';
-import { YaplVisitor } from './meta';
+import { YaplVisitor } from 'Implementations/3_Semantic/visitor';
 
-export default function visitParentheses(visitor: YaplVisitor, ctx: ParenthesesContext) {
+export function visitParentheses(visitor: YaplVisitor, ctx: ParenthesesContext) {
   return visitor.visit(ctx.expression());
 }

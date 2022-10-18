@@ -1,10 +1,9 @@
 import { MinusContext } from 'antlr/yaplParser';
-import { EmptyComponent, extractQuadruplet, extractTypeComponent } from 'Components'
-import SubOperation from 'Components'
-import IntType from '../Generics/Integer.type';
-import { YaplVisitor } from './meta';
+import { EmptyComponent, extractTypeComponent } from 'Components';
+import { YaplVisitor } from 'Implementations/3_Semantic/visitor';
+import { IntType } from 'Implementations/Generics';
 
-export default function visitMinus(visitor: YaplVisitor, ctx: MinusContext) {
+export function visitMinus(visitor: YaplVisitor, ctx: MinusContext) {
   const [leftChild, rightChild] = ctx.expression();
   const intTable = visitor.findTable(IntType.Name)!.copy();
 
@@ -37,12 +36,6 @@ export default function visitMinus(visitor: YaplVisitor, ctx: MinusContext) {
     return new EmptyComponent();
   }
 
-  // Quadruplet
-  const quadrupletElement = new SubOperation();
-  const lValueComponent = extractQuadruplet(leftElement);
-  const rValueComponent = extractQuadruplet(rightElement);
-  quadrupletElement.elements = [lValueComponent, rValueComponent];
-  intTable.addComponent(quadrupletElement);
   // visitor.addQuadruple(quadrupletElement);
   return intTable;
 }

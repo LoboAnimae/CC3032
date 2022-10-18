@@ -1,5 +1,11 @@
 import { AssignmentContext } from 'antlr/yaplParser';
-import { CompositionComponent, EmptyComponent, extractBasicInformation, extractTableComponent, extractTypeComponent } from 'Components';
+import {
+  CompositionComponent,
+  EmptyComponent,
+  extractBasicInformation,
+  extractTableComponent,
+  extractTypeComponent,
+} from 'Components';
 import { YaplVisitor } from 'Implementations/3_Semantic/visitor';
 import { TableElementType } from 'Implementations/DataStructures/TableElements';
 

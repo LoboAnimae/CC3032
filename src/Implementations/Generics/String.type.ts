@@ -1,8 +1,5 @@
-import {
-  CompositionComponent,
-  TableComponent, TypeComponent, ValueComponent
-} from 'Components';
-import { MethodElement, SymbolElement } from '../DataStructures/TableElements';
+import { CompositionComponent, TableComponent, TypeComponent, ValueComponent } from 'Components';
+import { MethodElement, SymbolElement } from 'Implementations/DataStructures/TableElements';
 import Integer from './Integer.type';
 import { Primitive } from './Primitive.type';
 
@@ -67,7 +64,6 @@ export class StringType extends Primitive {
   };
 
   coherseType = function (value?: CompositionComponent): StringType | null {
-
     const incomingValueTypeComponent = value?.getComponent<TypeComponent>({ componentType: TypeComponent.Name });
     const incomingValueComponent = value?.getComponent<ValueComponent>({ componentType: ValueComponent.Name });
     if (!incomingValueTypeComponent || !incomingValueComponent) return null;

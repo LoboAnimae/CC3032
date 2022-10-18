@@ -1,9 +1,8 @@
 import { IfContext } from 'antlr/yaplParser';
-import BoolType from '../Generics/Boolean.type';
-import { ClassType } from '../Generics/Object.type';
-import { YaplVisitor } from './meta';
+import { YaplVisitor } from 'Implementations/3_Semantic/visitor';
+import { BoolType, ClassType } from 'Implementations/Generics';
 
-export default function visitIf(visitor: YaplVisitor, ctx: IfContext) {
+export function visitIf(visitor: YaplVisitor, ctx: IfContext) {
   // Empty bodies are disallowed by the parser in itself
   const [condition, body, elses] = ctx.expression();
   const boolTable: ClassType = visitor.findTable(BoolType.Name)!;

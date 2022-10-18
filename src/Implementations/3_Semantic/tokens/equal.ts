@@ -3,7 +3,7 @@ import { EmptyComponent, extractTypeComponent } from 'Components';
 import { YaplVisitor } from 'Implementations/3_Semantic/visitor';
 import { BoolType } from 'Implementations/Generics';
 
-export default function visitEqual(visitor: YaplVisitor, ctx: EqualContext) {
+export function visitEqual(visitor: YaplVisitor, ctx: EqualContext) {
   // TODO: Add value
   // Must be done between two possible integers
   const [leftChild, rightChild] = ctx.expression();

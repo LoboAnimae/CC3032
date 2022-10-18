@@ -1,17 +1,7 @@
 import { StringContext } from 'antlr/yaplParser';
-import ValueComponent from 'Components'
-import StringType from '../Generics/String.type';
-import { YaplVisitor } from './meta';
+import { StringType } from 'Implementations/Generics';
+import { YaplVisitor } from 'Implementations/3_Semantic/visitor';
 
-export default function visitString(visitor: YaplVisitor, ctx: StringContext) {
-  const newString = new StringType();
-  const stringValue = new ValueComponent({ value: ctx.STRING().text });
-  newString.addComponent(stringValue);
-  /*
-  Why does this component not have a quadrupleElement representation, you ask?
-    1. It holds no memory representation.
-    2. It can be hardcoded.
-    3. It is a terminal node that holds no variable value, such as Integers and Booleans
-  */
-  return newString;
+export function visitString(_visitor: YaplVisitor, _ctx: StringContext) {
+  return new StringType();
 }

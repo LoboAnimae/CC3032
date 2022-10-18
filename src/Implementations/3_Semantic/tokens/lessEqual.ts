@@ -1,10 +1,9 @@
 import { LessEqualContext } from 'antlr/yaplParser';
-import {EmptyComponent} from 'Components'
-import { extractTypeComponent } from 'Components'
-import {BoolType} from '../Generics/Boolean.type';
-import { YaplVisitor } from './meta';
+import { EmptyComponent, extractTypeComponent } from 'Components';
+import { BoolType } from 'Implementations/Generics';
+import { YaplVisitor } from 'Implementations/3_Semantic/visitor';
 
-export default function visitLessEqual(visitor: YaplVisitor, ctx: LessEqualContext) {
+export function visitLessEqual(visitor: YaplVisitor, ctx: LessEqualContext) {
   // Must be done between two possible integers
   // TODO: Add value
   const [leftChild, rightChild] = ctx.expression();

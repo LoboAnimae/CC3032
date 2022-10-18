@@ -1,5 +1,10 @@
 import { AssignmentExprContext } from 'antlr/yaplParser';
-import { CompositionComponent, extractBasicInformation, extractTableComponent, extractValueComponent } from 'Components';
+import {
+  CompositionComponent,
+  extractBasicInformation,
+  extractTableComponent,
+  extractValueComponent,
+} from 'Components';
 import { lineAndColumn } from 'Implementations/3_Semantic/Functions';
 import { YaplVisitor } from 'Implementations/3_Semantic/visitor';
 import { MethodElement, SymbolElement } from 'Implementations/DataStructures/TableElements';
@@ -43,7 +48,8 @@ export function visitAssignmentExpr(visitor: YaplVisitor, ctx: AssignmentExprCon
       // TODO: Fix visitor
       visitor.addError(
         ctx,
-        `Cannot assign ${assignmentResolvesTo?.componentName ?? 'erroneous class'} to ${propertyTypeClass.componentName
+        `Cannot assign ${assignmentResolvesTo?.componentName ?? 'erroneous class'} to ${
+          propertyTypeClass.componentName
         }`,
       );
       return visitor.next(ctx);

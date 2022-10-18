@@ -1,18 +1,22 @@
-import { ProgramContext } from "antlr/yaplParser";
-import { YaplVisitor } from "../../yaplVisitor";
+import { ClassDefineContext, ProgramContext } from 'antlr/yaplParser';
+import { TableComponent } from 'Components/Table';
+import { TypeComponent } from 'Components/Type';
+import { YaplVisitor } from 'Implementations/3_Semantic/visitor';
+import { IError } from 'Implementations/Misc/Error';
 
-export interface ISemantic {
-    canContinue: boolean;
+export interface ISemanticResult {
+  symbolsTable?: TableComponent<TypeComponent>;
+  errors?: IError[];
+  mainBranch?: ClassDefineContext;
 }
 
-export interface ISemanticSuccess extends ISemantic {
-    symbolsTable: any;
-}
-
-export interface ISemanticError extends ISemantic {
-    errors: string[];
-}
-
-export default function Semantic(programRoot: ProgramContext): ISemanaticError | ISemanticSuccess {
-    const visitor = new YaplVisitor(programRoot);
+export default function Semantic(programRoot: ProgramContext): ISemanticResult {
+  const visitor = new YaplVisitor();
+  visitor.visit(programRoot);
+  const errors = visitor.errorComponent().getAll();
+  if (errors.length) {
+    return { errors };
+  }
+  const symbolsTable = visitor.symbolsTable;
+  return { symbolsTable, mainBranch: visitor.mainBranch };
 }

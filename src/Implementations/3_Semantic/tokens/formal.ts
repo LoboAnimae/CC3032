@@ -1,10 +1,11 @@
 import { FormalContext } from 'antlr/yaplParser';
-import EmptyComponent from 'Components'
-import SymbolElement from '../DataStructures/TableElements/SymbolElement';
-import { ClassType } from '../Generics/Object.type';
-import { lineAndColumn, YaplVisitor } from './meta';
+import { EmptyComponent } from 'Components';
+import { lineAndColumn } from 'Implementations/3_Semantic/Functions';
+import { YaplVisitor } from 'Implementations/3_Semantic/visitor';
+import { SymbolElement } from 'Implementations/DataStructures/TableElements';
+import { ClassType } from 'Implementations/Generics';
 
-export default function visitFormal(visitor: YaplVisitor, ctx: FormalContext) {
+export function visitFormal(visitor: YaplVisitor, ctx: FormalContext) {
   const paramName = ctx.IDENTIFIER();
   const dataType = ctx.TYPE();
   const foundTable: ClassType | null | undefined = visitor.findTable(dataType)?.copy() as ClassType;

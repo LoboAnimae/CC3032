@@ -1,6 +1,6 @@
 import { NewContext } from 'antlr/yaplParser';
-import {EmptyComponent} from 'Components';
-import {MethodElement} from 'Implementations/DataStructures/TableElements';
+import { EmptyComponent } from 'Components';
+import { MethodElement } from 'Implementations/DataStructures/TableElements';
 import { ClassType } from 'Implementations/Generics';
 import { YaplVisitor } from 'Implementations/3_Semantic/visitor';
 

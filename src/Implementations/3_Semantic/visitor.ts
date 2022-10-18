@@ -2,57 +2,80 @@ import { AbstractParseTreeVisitor } from 'antlr4ts/tree/AbstractParseTreeVisitor
 
 import {
   CompositionComponent,
+  ErrorComponent,
   QuadrupletComponent,
   QuadrupletElement,
   TableComponent,
   TypeComponent,
-  ErrorComponent,
 } from 'Components';
-import { Stack } from 'Implementations/DataStructures';
+import { Stack } from 'Implementations/DataStructures/Stack';
 import { MethodElement } from 'Implementations/DataStructures/TableElements';
-import {BoolType, IntType, IOType, ClassType, ObjectType, StringType} from 'Implementations/Generics';
+import { BoolType, ClassType, IntType, IOType, ObjectType, StringType } from 'Implementations/Generics';
 
-import visitAdd from './Implementations/visitorFunctions/add';
-import visitAssignment from './Implementations/visitorFunctions/assignment';
-import visitAssignmentExpr from './Implementations/visitorFunctions/assignmentExpr';
-import visitBlock from './Implementations/visitorFunctions/block';
-import visitClassDefine from './Implementations/visitorFunctions/classDefine';
-import visitDivision from './Implementations/visitorFunctions/division';
-import visitEqual from './Implementations/visitorFunctions/equal';
-import visitFalse from './Implementations/visitorFunctions/false';
-import visitLetIn from './Implementations/visitorFunctions/letin';
-import visitFormal from './Implementations/visitorFunctions/formal';
-import visitId from './Implementations/visitorFunctions/id';
-import visitIf from './Implementations/visitorFunctions/if';
-import visitInt from './Implementations/visitorFunctions/int';
-import visitIsvoid from './Implementations/visitorFunctions/isVoid';
-import visitLessEqual from './Implementations/visitorFunctions/lessEqual';
-import visitLessThan from './Implementations/visitorFunctions/lessThan';
 import {
-  HelperFunctions,
-  ParseTreeProperties,
-  Scope,
-  ScopePosition,
-  YaplParserComponents,
-} from './Implementations/visitorFunctions/meta';
-import visitMethod from './Implementations/visitorFunctions/method';
-import visitMethodCall from './Implementations/visitorFunctions/methodCall';
-import visitMinus from './Implementations/visitorFunctions/minus';
-import visitMultiply from './Implementations/visitorFunctions/multiply';
-import visitNegative from './Implementations/visitorFunctions/negative';
-import visitNew from './Implementations/visitorFunctions/new';
-import visitOwnMethodCall from './Implementations/visitorFunctions/ownMethodCall';
-import visitParentheses from './Implementations/visitorFunctions/parentheses';
-import visitProperty from './Implementations/visitorFunctions/property';
-import visitString from './Implementations/visitorFunctions/string';
-import visitTrue from './Implementations/visitorFunctions/true';
-import visitWhile from './Implementations/visitorFunctions/while';
+  AddContext,
+  AssignmentContext,
+  AssignmentExprContext,
+  BlockContext,
+  ClassDefineContext,
+  DivisionContext,
+  EqualContext,
+  FalseContext,
+  FormalContext,
+  IdContext,
+  IfContext,
+  IntContext,
+  IsvoidContext,
+  LessEqualContext,
+  LessThanContext,
+  LetInContext,
+  MethodCallContext,
+  MethodContext,
+  MinusContext,
+  MultiplyContext,
+  NegativeContext,
+  NewContext,
+  OwnMethodCallContext,
+  ParenthesesContext,
+  PropertyContext,
+  StringContext,
+  TrueContext,
+  WhileContext,
+} from 'antlr/yaplParser';
+import { Scope, ScopePosition } from 'Implementations/3_Semantic/Functions';
+import {
+  visitAdd,
+  visitAssignment,
+  visitAssignmentExpr,
+  visitBlock,
+  visitClassDefine,
+  visitDivision,
+  visitEqual,
+  visitFalse,
+  visitFormal,
+  visitId,
+  visitIf,
+  visitInt,
+  visitIsvoid,
+  visitLessEqual,
+  visitLessThan,
+  visitLetIn,
+  visitMethod,
+  visitMethodCall,
+  visitMinus,
+  visitMultiply,
+  visitNegative,
+  visitNew,
+  visitOwnMethodCall,
+  visitParentheses,
+  visitProperty,
+  visitString,
+  visitTrue,
+  visitWhile,
+} from 'Implementations/3_Semantic/tokens';
 import { yaplVisitor } from '../../antlr/yaplVisitor';
 
-export class YaplVisitor
-  extends AbstractParseTreeVisitor<any>
-  implements yaplVisitor<any>, HelperFunctions, ParseTreeProperties, YaplParserComponents
-{
+export class YaplVisitor extends AbstractParseTreeVisitor<any> implements yaplVisitor<any> {
   /** Helps recognize the stack: Global, Class or Method*/
   public scopeStack: Stack<CompositionComponent>;
   /** Universal Symbols table. Unique values only. */

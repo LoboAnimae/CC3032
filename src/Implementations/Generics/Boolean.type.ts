@@ -9,7 +9,6 @@ export class BoolType extends Primitive {
 
   defaultValue: number = 0;
   constructor() {
-
     super({ name: BoolType.Name });
     this.componentName = BoolType.Name;
     this.sizeInBytes = BoolType.Size;

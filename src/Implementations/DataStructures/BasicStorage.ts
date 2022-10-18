@@ -1,25 +1,27 @@
-import { AnyObject } from "Types/SimpleStructures.type";
+import { IBasicStorageOptions } from 'Interfaces/index';
+import { AnyObject } from 'Types/SimpleStructures.type';
 
 export class BasicStorage<T extends AnyObject> {
-    public readonly elements: T[];
-    constructor() {
-      this.elements = [];
-    }
-    add = (error: T) => {
-      if (this.exists(error)) return;
-      this.elements.push(error);
-    };
-    exists = (error: T): boolean => {
-      const requiredKeys = Object.keys(error);
-      return this.elements.some((existingError) => {
-        return requiredKeys.every((key) => {
-          return existingError[key] === error[key];
-        });
-      });
-    };
-    getAll = (): T[] => this.elements;
-    flush = () => {
-      this.elements.length = 0;
-    };
+  public readonly elements: T[];
+  unique: boolean;
+  constructor(options?: IBasicStorageOptions) {
+    this.elements = [];
+    this.unique = options?.unique ?? false;
   }
-  
+  add = (element: T) => {
+    if (this.unique && this.exists(element)) return;
+    this.elements.push(element);
+  };
+  exists = (element: T): boolean => {
+    const requiredKeys = Object.keys(element);
+    return this.elements.some((existingElement) => {
+      return requiredKeys.every((key) => {
+        return existingElement[key] === element[key];
+      });
+    });
+  };
+  getAll = (): T[] => [...this.elements];
+  flush = () => {
+    this.elements.length = 0;
+  };
+}

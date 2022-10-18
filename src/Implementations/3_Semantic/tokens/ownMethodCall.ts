@@ -1,12 +1,9 @@
 import { OwnMethodCallContext } from 'antlr/yaplParser';
-import { extractBasicInformation } from 'Components'
-import { extractTableComponent } from 'Components'
-import TypeComponent, { extractTypeComponent } from 'Components'
-import MethodElement from '../DataStructures/TableElements/MethodElement';
-import SymbolElement from '../DataStructures/TableElements/SymbolElement';
-import { YaplVisitor } from './meta';
+import { extractBasicInformation, extractTableComponent, extractTypeComponent, TypeComponent } from 'Components';
+import { YaplVisitor } from 'Implementations/3_Semantic/visitor';
+import { MethodElement, SymbolElement } from 'Implementations/DataStructures/TableElements';
 
-export default function visitOwnMethodCall(visitor: YaplVisitor, ctx: OwnMethodCallContext) {
+export function visitOwnMethodCall(visitor: YaplVisitor, ctx: OwnMethodCallContext) {
   const methodIdentifier = ctx.IDENTIFIER();
   const [...methodParametersRaw] = ctx.expression();
 

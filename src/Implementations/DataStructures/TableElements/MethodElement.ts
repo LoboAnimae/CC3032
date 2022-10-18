@@ -1,11 +1,11 @@
-import { MethodContext } from '../antlr/yaplParser';
+import { MethodContext } from 'antlr/yaplParser';
 import {
   BasicInfoComponent,
   CompositionComponent,
   extractPositioning,
   extractTypeComponent,
   extractValueComponent,
-} from '../../Components';
+} from 'Components';
 import ContextHolder, { extractContext } from 'Components/ContextHolder';
 import { Table } from 'Components';
 import { TableComponent, extractTableComponent } from 'Components';

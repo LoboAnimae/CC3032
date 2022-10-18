@@ -13,9 +13,7 @@ export abstract class Primitive extends TypeComponent {
 
   getValue = (): any => {
     return (
-      this.getComponent<ValueComponent>({ componentType: ValueComponent.Type })?.getValue() ??
-      this.defaultValue ??
-      null
+      this.getComponent<ValueComponent>({ componentType: ValueComponent.Type })?.getValue() ?? this.defaultValue ?? null
     );
   };
 
@@ -24,6 +22,8 @@ export abstract class Primitive extends TypeComponent {
   };
 
   toString(): string {
-    return `Primitive{ ${this.getComponent<BasicInfoComponent>({ componentType: BasicInfoComponent.Type })?.getName()} }`;
+    return `Primitive{ ${this.getComponent<BasicInfoComponent>({
+      componentType: BasicInfoComponent.Type,
+    })?.getName()} }`;
   }
 }

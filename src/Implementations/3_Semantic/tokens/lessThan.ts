@@ -1,10 +1,10 @@
 import { LessThanContext } from 'antlr/yaplParser';
-import EmptyComponent from 'Components'
-import { extractTypeComponent } from 'Components'
-import BoolType from '../Generics/Boolean.type';
-import { YaplVisitor } from './meta';
+import { EmptyComponent } from 'Components';
+import { extractTypeComponent } from 'Components';
+import { BoolType } from 'Implementations/Generics/';
+import { YaplVisitor } from '../visitor';
 
-export default function visitLessThan(visitor: YaplVisitor, ctx: LessThanContext) {
+export function visitLessThan(visitor: YaplVisitor, ctx: LessThanContext) {
   // TODO: Add value
   // Must be done between two possible integers
   const [leftChild, rightChild] = ctx.expression();

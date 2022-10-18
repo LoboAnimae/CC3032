@@ -3,7 +3,7 @@ import { EmptyComponent, extractTypeComponent } from 'Components';
 import { YaplVisitor } from 'Implementations/3_Semantic/visitor';
 import { IntType } from 'Implementations/Generics';
 
-export default function visitDivision(visitor: YaplVisitor, ctx: DivisionContext) {
+export function visitDivision(visitor: YaplVisitor, ctx: DivisionContext) {
   // TODO: Add value
   // Must be done between two possible integers
   const [leftChild, rightChild] = ctx.expression();
@@ -36,13 +36,5 @@ export default function visitDivision(visitor: YaplVisitor, ctx: DivisionContext
     visitor.addError(ctx, `Invalid Operation between ${leftName} and ${rightName}`);
     return new EmptyComponent();
   }
-
-  // Quadruplet
-  // const quadrupletElement = new DivOperation();
-  // const lValueComponent = extractQuadruplet(leftElement);
-  // const rValueComponent = extractQuadruplet(rightElement);
-  // quadrupletElement.elements = [lValueComponent, rValueComponent];
-  // intTable.addComponent(quadrupletElement);
-  // visitor.addQuadruple(quadrupletElement);
   return intTable;
 }

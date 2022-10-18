@@ -1,4 +1,3 @@
-
 import { BasicInfoComponent, CompositionComponent, extractBasicInformation } from 'Components';
 
 export interface TableParams<T extends CompositionComponent> {
@@ -121,7 +120,5 @@ export class TableComponent<T extends CompositionComponent> extends CompositionC
 }
 
 export interface TableSupport<T extends CompositionComponent> {
-  components: { table: T; };
+  components: { table: T };
 }
-
-

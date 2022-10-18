@@ -1,16 +1,7 @@
-import { ANTLRInputStream, CommonTokenStream } from 'antlr4ts';
-import express from 'express';
-import { yaplLexer } from './antlr/yaplLexer';
-import { yaplParser } from './antlr/yaplParser';
-import path from 'path';
-import fs from 'fs';
-import { YaplVisitor } from 'Implementations/3_Semantic/visitor';
-import { extractTableComponent } from './ImplementatioComponents'
-import { MemoryVisitor } from './Implementations/DataStructures/Memory';
-import { Quad } from './Implementations/DataStructures/MemoryVisitors/Instructions/Quadruple';
-import { v4 as uuid } from 'uuid';
-import { TemporalValue } from './Implementations/DataStructures/MemoryVisitors/TemporaryValues';
-import { IError } from Components'
+import { extractTableComponent } from 'Components/index';
+import Semantic, { ISemanticError } from 'Implementations/3_Semantic/Semantic';
+import { MemoryVisitor } from 'Implementations/DataStructures/Memory';
+import { IError } from 'Implementations/Misc/Error';
 import Lexer from './Implementations/1_Lexic/LexicAnalizer';
 import Parser from './Implementations/2_Syntactic/SyntacticAnalizer';
 class Register {
@@ -152,55 +143,44 @@ const optimize = (tuples: Quad[]) => {
 };
 
 function main(input: string): IResult {
+  /*
+   * Lexer phase
+   */
   const lexer = Lexer(input);
-  const {tree} = Parser(lexer);
+  /*
+   * Parser phase
+   */
+  const parser = Parser(lexer);
+  /*
+   * Semantic phase
+   */
+  const { errors, symbolsTable, mainBranch } = Semantic(parser.tree);
 
-  const visitor = new YaplVisitor();
-  // Semantic
-  visitor.visit(tree);
-  const symbolsTable = visitor.symbolsTable;
-  const ferrors = visitor.errorComponent().getAll();
-  const errors: IError[] = [];
-  for (const foundError of ferrors) {
-    if (
-      errors.find(
-        (error) =>
-          error.message === foundError.message && error.column === foundError.column && foundError.line === error.line,
-      )
-    )
-      continue;
-    errors.push(foundError);
-  }
-  if (errors.length) {
+  if (errors) {
     console.table(errors);
-    console.log('Errors found, aborting');
-    return {
-      errors: errors.map((e) => `[${e.line}: ${e.column}]${e.message}`),
-      quadruples: '',
-      tuples: [],
-    };
+    return { errors };
   }
-  // Memory
+  if (!symbolsTable) {
+    return { errors: [{ message: 'No symbols table found', line: -1, column: -1 }] };
+  } else if (!mainBranch) {
+    return { errors: [{ message: 'No main branch found', line: -1, column: -1 }] };
+  }
+
+  /*
+   * Intermediate Code Phase
+   */
   const mainClass = symbolsTable.get('Main')!;
   if (!mainClass) {
     console.log('Main method not found, aborting');
-    return {
-      errors: ['Main method not found'],
-      quadruples: '',
-      tuples: [],
-    };
+    return { errors: [{ message: 'Main class not found', line: -1, column: -1 }] };
   }
   const mainTable = extractTableComponent(mainClass)!;
   const mainMethod = mainTable.get('main')!;
   if (!mainMethod) {
-    return {
-      errors: ['Main method not found'],
-      quadruples: '',
-      tuples: [],
-    };
+    return { errors: [{ message: 'Main method not found', line: -1, column: -1 }] };
   }
 
-  const memory = new MemoryVisitor(symbolsTable, visitor.mainBranch!);
+  const memory = new MemoryVisitor(symbolsTable, mainBranch!);
   memory.instantiate();
 
   const allScopes = Object.keys(memory.methods);
@@ -236,9 +216,7 @@ main(contents);
 // });
 
 interface IResult {
-  quadruples: string;
-  errors: string[];
-  tuples: string[];
+  errors: IError[];
 }
 // app.post('/', (req, res) => {
 //   console.log('Received request');

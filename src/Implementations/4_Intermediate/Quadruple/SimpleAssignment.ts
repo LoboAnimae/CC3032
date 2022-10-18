@@ -37,7 +37,6 @@ export class SimpleAssignment extends QuadrupletElement {
   }
 
   toCode(): string {
-
     if (process.env.DEBUG) {
       return `AddOperation{ OPERAND1{ ${this.getAssigningTo().toString()} }, OPERAND2{ ${this.getValue().toString()} } }`;
     }

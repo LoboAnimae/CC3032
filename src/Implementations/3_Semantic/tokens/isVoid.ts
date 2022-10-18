@@ -3,7 +3,7 @@ import { TypeComponent } from 'Components';
 import { YaplVisitor } from 'Implementations/3_Semantic/visitor';
 import { ClassType, ObjectType } from 'Implementations/Generics';
 
-export default function visitIsvoid(visitor: YaplVisitor, ctx: IsvoidContext) {
+export function visitIsvoid(visitor: YaplVisitor, ctx: IsvoidContext) {
   const expressionRaw = ctx.expression();
   const expressionType: TypeComponent = visitor.visit(expressionRaw);
 

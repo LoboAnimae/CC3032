@@ -4,7 +4,7 @@ import {
   extractBasicInformation,
   extractPositioning,
   extractTypeComponent,
-  extractValueComponent
+  extractValueComponent,
 } from 'Components';
 import { ClassType } from 'Implementations/Generics';
 import TableElement from './TableElement';

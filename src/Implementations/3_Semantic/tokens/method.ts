@@ -5,7 +5,7 @@ import { YaplVisitor } from 'Implementations/3_Semantic/visitor';
 import { MethodElement, TableElementType } from 'Implementations/DataStructures/TableElements';
 import { ClassType } from 'Implementations/Generics';
 
-export default function visitMethod(visitor: YaplVisitor, ctx: MethodContext) {
+export function visitMethod(visitor: YaplVisitor, ctx: MethodContext) {
   const methodName = ctx.IDENTIFIER().text;
   const methodExpectedType = ctx.TYPE();
   const methodBody = ctx.expression();

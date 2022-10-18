@@ -1,4 +1,4 @@
-import {CompositionComponent} from 'Components';
+import { CompositionComponent } from 'Components';
 
 export interface Params {
   name: string;
@@ -26,10 +26,9 @@ export class BasicInfoComponent extends CompositionComponent {
     this.name = newName;
   };
 
-
   clone = (): BasicInfoComponent => {
     return new BasicInfoComponent({ name: this.name });
-  }
+  };
 }
 
 /**
@@ -38,4 +37,3 @@ export class BasicInfoComponent extends CompositionComponent {
 export interface Support {
   components: { basicInfo: BasicInfoComponent };
 }
-

@@ -19,7 +19,7 @@ export interface TableElementParams {
 export default abstract class TableElement extends CompositionComponent {
   referentialID: string;
   scopeName: string;
-  memoryAddress: number = -1; 
+  memoryAddress: number = -1;
   constructor(options?: TableElementParams) {
     super();
     this.referentialID = uuid();

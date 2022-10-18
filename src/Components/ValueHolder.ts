@@ -30,4 +30,3 @@ export class ValueComponent extends CompositionComponent {
     return new ValueComponent({ value: this.value });
   }
 }
-

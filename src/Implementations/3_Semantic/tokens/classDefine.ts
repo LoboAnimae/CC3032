@@ -73,7 +73,7 @@ function semantic(p_visitor: YaplVisitor, p_ctx: ClassDefineContext, p_errors: s
   return newTable;
 }
 
-export default function visitClassDefine(p_visitor: YaplVisitor, p_ctx: ClassDefineContext) {
+export function visitClassDefine(p_visitor: YaplVisitor, p_ctx: ClassDefineContext) {
   p_visitor.returnToGlobalScope();
   const errors: string[] = [];
   const newTable = semantic(p_visitor, p_ctx, errors);

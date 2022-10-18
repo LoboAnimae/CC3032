@@ -1,11 +1,10 @@
 import { AddContext } from 'antlr/yaplParser';
 import { EmptyComponent } from 'Components';
 import { extractTypeComponent } from 'Components/Type';
-import {IntType} from 'Implementations/Generics/Integer.type';
+import { IntType } from 'Implementations/Generics/Integer.type';
 import { YaplVisitor } from 'Implementations/3_Semantic/visitor';
 
 export function visitAdd(visitor: YaplVisitor, ctx: AddContext) {
-  // TODO: Add value
   // Must be done between two possible integers
   const [leftChild, rightChild] = ctx.expression();
   const intTable = visitor.findTable(IntType.Name)!.copy();

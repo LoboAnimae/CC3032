@@ -1,13 +1,8 @@
-import {
-  BasicInfoComponent,
-  CompositionComponent,
-  TableComponent,
-  TypeComponent
-} from 'Components';
+import { BasicInfoComponent, CompositionComponent, TableComponent, TypeComponent } from 'Components';
 import { MethodElement, TableElementType } from 'Implementations/DataStructures/TableElements';
 
 import { ClassDefineContext } from 'antlr/yaplParser';
-import {StringType, ClassType} from '.';
+import { StringType, ClassType } from '.';
 
 export interface ClassTypeParams {
   name: string;
@@ -102,5 +97,3 @@ export class ObjectType extends TypeComponent {
     })?.getName()}`;
   }
 }
-
-

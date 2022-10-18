@@ -1,20 +1,17 @@
 import { PropertyContext } from 'antlr/yaplParser';
 import {
+  CompositionComponent,
   extractBasicInformation,
-  extractQuadruplet,
   extractTableComponent,
   extractValueComponent,
   ValueComponent,
-} from '../Components';
-import CompositionComponent from 'Components'
-import SimpleAssignment from 'Components'
-import MethodElement from '../DataStructures/TableElements/MethodElement';
-import SymbolElement from '../DataStructures/TableElements/SymbolElement';
-import { ClassType } from '../Generics/Object.type';
-import { lineAndColumn } from './meta';
-import { YaplVisitor } from '../../yaplVisitor';
+} from 'Components';
+import { lineAndColumn } from 'Implementations/3_Semantic/Functions';
+import { YaplVisitor } from 'Implementations/3_Semantic/visitor';
+import { MethodElement, SymbolElement } from 'Implementations/DataStructures/TableElements/';
+import { ClassType } from 'Implementations/Generics';
 
-export default function visitProperty(visitor: YaplVisitor, ctx: PropertyContext) {
+export function visitProperty(visitor: YaplVisitor, ctx: PropertyContext) {
   // Previous table
   const propertyName = ctx.IDENTIFIER();
   const propertyType = ctx.TYPE();
@@ -45,8 +42,6 @@ export default function visitProperty(visitor: YaplVisitor, ctx: PropertyContext
     return visitor.next(ctx);
   }
 
-  const simpleAssignment = new SimpleAssignment();
-
   if (propertyAssignmentExpression) {
     const assignmentResolvesTo: CompositionComponent = visitor.visit(propertyAssignmentExpression);
     const acceptsAssignment = propertyTypeClass.allowsAssignmentOf(assignmentResolvesTo);
@@ -65,14 +60,7 @@ export default function visitProperty(visitor: YaplVisitor, ctx: PropertyContext
 
     const valueHolder = extractValueComponent(assignmentResolvesTo);
     newTableElement.addComponent(valueHolder?.copy());
-    const resolvingToAssignment = extractQuadruplet(assignmentResolvesTo);
-    simpleAssignment.setValue(resolvingToAssignment);
-    simpleAssignment.setAssigningTo(newTableElement);
-    // visitor.addQuadruple(simpleAssignment);
   } else {
-    simpleAssignment.setValue(propertyTypeClass.defaultValue);
-    simpleAssignment.setAssigningTo(newTableElement);
-    // visitor.addQuadruple(simpleAssignment);
     newTableElement.addComponent(new ValueComponent({ value: propertyTypeClass.defaultValue }));
   }
 

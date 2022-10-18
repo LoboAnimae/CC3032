@@ -4,13 +4,12 @@ import {
   extractTableComponent,
   ITableGetOptions,
   TableComponent,
-  TypeComponent
+  TypeComponent,
 } from 'Components';
-import { MethodElement, TableElementType } from '../DataStructures/TableElements';
+import { MethodElement, TableElementType } from 'Implementations/DataStructures/TableElements';
 import { ClassDefineContext } from 'antlr/yaplParser';
-import TableElement from '../DataStructures/TableElements/TableElement';
+import TableElement from 'Implementations/DataStructures/TableElements';
 import { ObjectType, ClassTypeParams, ClassTypeRequiredParams } from './Object.type';
-
 
 export class ClassType extends ObjectType {
   static Name = 'Class';
@@ -25,7 +24,8 @@ export class ClassType extends ObjectType {
     this.parent = options?.parentType ?? null;
     this.isGeneric = false;
 
-    const parentTable = options?.parentType?.getComponent<TableComponent<TableElement>>({ componentType: TableComponent.Type }) ?? null;
+    const parentTable =
+      options?.parentType?.getComponent<TableComponent<TableElement>>({ componentType: TableComponent.Type }) ?? null;
 
     const basicInfo = this.getComponent<BasicInfoComponent>({ componentType: BasicInfoComponent.Type })!;
     basicInfo.setName(options?.name ?? ClassType.Name);
@@ -52,8 +52,7 @@ export class ClassType extends ObjectType {
 
   getElement = (name: string, options?: ITableGetOptions): TableElement | null => {
     const tableComponent = this.getComponent<TableComponent<TableElementType>>({ componentType: TableComponent.Type });
-    if (!tableComponent)
-      return null;
+    if (!tableComponent) return null;
     return tableComponent.get(name, options);
   };
 
@@ -67,8 +66,7 @@ export class ClassType extends ObjectType {
     const size: number = tableComponent
       .getAll(false)
       .map((element: TableElementType) => {
-        if (element.componentName === MethodElement.Name)
-          return 0;
+        if (element.componentName === MethodElement.Name) return 0;
         return element.getSize();
       })
       .reduce((a, b) => a + b);
