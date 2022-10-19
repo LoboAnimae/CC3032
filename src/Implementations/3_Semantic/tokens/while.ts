@@ -1,14 +1,15 @@
-import { WhileContext } from 'antlr/yaplParser';
-import { YaplVisitor } from 'Implementations/3_Semantic/visitor';
+import { Primitive } from '../..';
+import { WhileContext } from '../../../antlr/yaplParser';
+import { YaplVisitor } from '../visitor';
 
-export function visitWhile(visitor: YaplVisitor, ctx: WhileContext) {
+export function visitWhile(visitor: YaplVisitor, ctx: WhileContext): Primitive[] {
   const [booleanExpression, subResult] = ctx.expression();
 
   // There is no expression inside the while loop
   if (!booleanExpression) {
     return visitor.next(ctx);
   }
-  const foundExpression = visitor.visit(booleanExpression);
+  const [foundExpression] = visitor.visit(booleanExpression);
 
   const boolTable = visitor.findTable('Bool')!;
   const allowsAssignment = boolTable.allowsAssignmentOf(foundExpression);
@@ -16,7 +17,7 @@ export function visitWhile(visitor: YaplVisitor, ctx: WhileContext) {
   if (!allowsAssignment) {
     visitor.addError(
       ctx,
-      `Expression inside while loop cannot be set as a boolean expression (got ${foundExpression.tableName})`,
+      `Expression inside while loop cannot be set as a boolean expression (got ${foundExpression.componentName})`,
     );
     visitor.next(ctx);
   }

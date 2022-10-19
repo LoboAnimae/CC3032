@@ -1,27 +1,29 @@
-import { NewContext } from 'antlr/yaplParser';
-import { EmptyComponent } from 'Components';
-import { MethodElement } from 'Implementations/DataStructures/TableElements';
-import { ClassType } from 'Implementations/Generics';
-import { YaplVisitor } from 'Implementations/3_Semantic/visitor';
+import { ClassType, ErrorType, MethodElement, Primitive } from '../../';
+import { NewContext } from '../../../antlr/yaplParser';
+import { CompositionComponent, EmptyComponent, extractTypeComponent } from '../../../Components';
+import { Color } from '../../../Misc';
+import { YaplVisitor } from '../visitor';
 
-export function visitNew(visitor: YaplVisitor, ctx: NewContext) {
+export function visitNew(visitor: YaplVisitor, ctx: NewContext): Primitive[] {
   const instantiationOf = ctx.TYPE();
 
   const currentClass: ClassType | MethodElement = visitor.getCurrentScope();
   const currentClassBasicComponent = currentClass.getBasicInfo();
 
   const instantiatingClass = visitor.findTable(instantiationOf.text) as ClassType | null;
-  const instantiatingType = instantiatingClass?.getType();
+  const instantiatingType = extractTypeComponent(instantiatingClass);
   const instantiatingBasicComponent = instantiatingClass?.getBasicInfo();
 
   if (!instantiatingType) {
-    visitor.addError(ctx, `Cannot instantiate non-existing class ${instantiationOf.text}`);
-    return new EmptyComponent();
+    const message = `Cannot instantiate non-existing ${Color.class('class')} ${Color.class(instantiationOf.text)}`;
+    visitor.addError(ctx, message);
+    return [new ErrorType()];
   } else if (!instantiatingBasicComponent) {
     throw new Error('Bug! Instantiating class has no basic info component');
   } else if (currentClassBasicComponent?.getName() === instantiatingBasicComponent.getName()) {
-    visitor.addError(ctx, `Attempting to instantiate ${currentClassBasicComponent?.getName()} inside itself`);
-    return new EmptyComponent();
+    const message = `Cannot instantiate ${Color.class('class')} ${Color.class(currentClassBasicComponent?.getName()!)} inside itself`;
+    visitor.addError(ctx, message);
+    return [new ErrorType()];
   }
-  return instantiatingClass;
+  return [instantiatingType! as Primitive];
 }

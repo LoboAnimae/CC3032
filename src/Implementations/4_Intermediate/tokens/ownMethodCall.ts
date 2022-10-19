@@ -1,7 +1,7 @@
-import { OwnMethodCallContext } from 'antlr/yaplParser';
-import { TemporalValue } from 'Components';
-import { IMemoryVisitor, MemoryVisitor } from 'Implementations/4_Intermediate/visitor';
-import { MethodElement } from 'Implementations/DataStructures/TableElements';
+import { MethodElement } from "../..";
+import { OwnMethodCallContext } from "../../../antlr/yaplParser";
+import { TemporalValue } from "../../../Components";
+import { MemoryVisitor, IMemoryVisitor } from "../visitor";
 
 export default function (visitor: MemoryVisitor, ctx: OwnMethodCallContext): IMemoryVisitor[] {
   visitor.startCall();

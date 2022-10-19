@@ -1,88 +1,77 @@
 import { ClassDefineContext } from '../../../antlr/yaplParser';
 import { extractBasicInformation, extractTypeComponent } from '../../../Components';
-import { ClassType, ObjectType } from '../../Generics';
+import { Color } from '../../../Misc';
+import { ClassType, ErrorType, ObjectType, Primitive } from '../../Generics';
 import { YaplVisitor } from '../visitor';
 
-/**
- * Checks that everything is alright in the class in itself
- * @param p_visitor
- * @param p_ctx
- * @returns The table
- */
-function semantic(p_visitor: YaplVisitor, p_ctx: ClassDefineContext, p_errors: string[]): ClassType | void {
-  let [cls, inheritsFrom = ObjectType.Name] = p_ctx.TYPE();
+
+export function visitClassDefine(visitor: YaplVisitor, ctx: ClassDefineContext): Primitive[] {
+  visitor.returnToGlobalScope();
+  let [cls, inheritsFrom = ObjectType.Name] = ctx.TYPE();
   if (cls.text === 'Main') {
-    p_visitor.mainBranch = p_ctx;
+    visitor.mainBranch = ctx;
   }
 
   // ERROR: Class inherits from itself
   if (cls.toString() === inheritsFrom.toString()) {
-    p_errors.push(`Class ${cls.toString()} can't inherit from itself`);
+    const message = `${Color.class('Class')} ${Color.class(cls.text)} cannot inherit from itself (Attempting to inherit from ${Color.class(ObjectType.Name)} as a failsafe)`;
+    visitor.addError(ctx, message);
     inheritsFrom = ObjectType.Name; // FAILSAFE: If something inherits from itself, make it inherit from ObjectType
   }
 
-  const classTable = p_visitor.findTable(cls);
+  const classTable = visitor.findTable(cls);
   // FATAL: Class already exists
   if (classTable) {
     const { isGeneric } = extractTypeComponent(classTable)!;
     if (isGeneric) {
-      p_errors.push(`Generic class ${cls} can't be redefined`);
-      return;
+      const message = `${Color.class('Class')} ${Color.class(cls.text)} is a ${Color.type('generic')} ${Color.class('class')} and ${Color.error('cannot')} be redefined`;
+      visitor.addError(ctx, message);
+    } else {
+      const message = `${Color.class('Class')} ${Color.class(cls.text)} is already defined`; 
+      visitor.addError(ctx, message);
     }
-    p_errors.push(`Redefinition of class ${cls}`);
-    return;
   }
 
-  let parentTable = p_visitor.findTable(inheritsFrom) as ClassType;
+  let parentTable = visitor.findTable(inheritsFrom) as ClassType;
   const typeTableComponent = extractTypeComponent(parentTable);
-  let defaultInheritance = true;
   // ERROR: Trying to inherit from a non-existing class
   if (!parentTable) {
-    p_errors.push(`Class ${cls} inherits from non-existing class ${inheritsFrom}`);
+    const message = `${Color.class('Class')} ${Color.class(inheritsFrom.toString())} is not defined but ${Color.class(cls.text)} is trying to inherit from it`;
+    visitor.addError(ctx, message);
   }
   // ERROR: The table can't be inherited
   else if (!typeTableComponent) {
-    p_errors.push(`Class ${cls} is trying to inherit from class ${inheritsFrom}, which is not a type`);
+    const message = `${Color.class('Class')} ${Color.class(inheritsFrom.toString())} cannot be inherited from`;
+    visitor.addError(ctx, message);
   } else if (typeTableComponent.isGeneric) {
-    p_errors.push(`Class ${cls} is trying to inherit from generic class ${inheritsFrom}`);
-  } else {
-    defaultInheritance = false;
-  }
+    const message = `${Color.class('Class')} ${Color.class(inheritsFrom.toString())} is a ${Color.type('generic')} class and ${Color.error('cannot')} be inherited from, but ${Color.class(cls.text)} is trying to inherit from it`;
+    visitor.addError(ctx, message);
+  } 
 
-  if (defaultInheritance) {
-    parentTable = p_visitor.findTable(ObjectType.Name)!; // Shift back to ObjectType as a failsafe instead of failing
-  }
 
   const inMainClass = cls.toString() === 'Main';
   if (inMainClass) {
-    p_visitor.enterMainScope();
-    p_visitor.mainExists = true;
+    visitor.enterMainScope();
+    visitor.mainExists = true;
     // ERROR: Main class is trying to inherit from another class, which is not allowed
     if (parentTable?.componentName !== ObjectType.Name) {
-      p_errors.push(`Main class can't inherit from any class`);
-      parentTable = p_visitor.findTable(ObjectType.Name)!;
+      const message = `${Color.class('Class')} ${Color.class(cls.text)} ${Color.error('cannot')} inherit from another ${Color.class('class')} other than ${Color.class(ObjectType.Name)}`;
+      visitor.addError(ctx, message);
+      parentTable = visitor.findTable(ObjectType.Name)!;
     }
-    p_visitor.mainBranch = p_ctx;
+    visitor.mainBranch = ctx;
   }
 
-  const newTable = parentTable.createChild(p_ctx);
+  const newTable = parentTable.createChild(ctx);
   newTable.componentName = cls.toString();
   const basicComponent = extractBasicInformation(newTable)!;
   basicComponent.setName(cls.toString());
 
-  return newTable;
-}
-
-export function visitClassDefine(p_visitor: YaplVisitor, p_ctx: ClassDefineContext) {
-  p_visitor.returnToGlobalScope();
-  const errors: string[] = [];
-  const newTable = semantic(p_visitor, p_ctx, errors);
   if (!newTable) {
-    return p_visitor.next(p_ctx);
+    return visitor.next(ctx);
   }
-  p_visitor.addError(p_ctx, ...errors);
-  p_visitor.addSymbol(newTable);
-  p_visitor.addScope(newTable);
+  visitor.addSymbol(newTable);
+  visitor.addScope(newTable);
 
-  return p_visitor.next(p_ctx);
+  return visitor.next(ctx);
 }

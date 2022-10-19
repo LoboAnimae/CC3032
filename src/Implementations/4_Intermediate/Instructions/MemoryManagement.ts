@@ -1,6 +1,6 @@
-import { CompositionComponent } from 'Components';
-import { TemporalValue } from 'Components';
-import Quadruple, { Quad } from './Quadruple';
+
+import { CompositionComponent, TemporalValue } from '../../../Components';
+import { Quadruple, Quad } from './Quadruple';
 
 export class MemoryAddress extends CompositionComponent {
   static Name = 'Memory';

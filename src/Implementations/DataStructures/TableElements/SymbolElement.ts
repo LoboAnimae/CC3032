@@ -1,13 +1,7 @@
-import {
-  BasicInfoComponent,
-  CompositionComponent,
-  extractBasicInformation,
-  extractPositioning,
-  extractTypeComponent,
-  extractValueComponent,
-} from 'Components';
-import { ClassType } from 'Implementations/Generics';
-import { TableElement } from 'Implementations/DataStructures/TableElements';
+import { TableElement } from "./TableElement";
+import { ClassType } from "../..";
+import { CompositionComponent, extractTypeComponent, extractBasicInformation, extractPositioning, extractValueComponent, BasicInfoComponent } from "../../../Components";
+
 export interface SymbolElementParams {
   name?: string;
   type: CompositionComponent;

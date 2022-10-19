@@ -1,34 +1,21 @@
 class C {
-    c: Int <- "17";
-    getA(): Int { c + 42 };
-    add(): Int { 1 + 2 };
+    getNum(x: Int, y: Int): Int { y };
 };
 
 class B inherits C{
-    minus(a: Int, b: Int): Int {
-        a - b
-    };
-
-
-    b: Int;
-    getA(): Int { b - 1 };
+    getNum(x: Int): Int { x };
 };
 
 class A inherits B {
-    z: Int <- 35;
-    a: Int;
-    add(c: Int, d: Int): Int {
-        a * c + b * d
-    };
-
-    getA(): Int { a ;
-    getB(): Int { b };
+    g: B <- new B;
+    f: Int <- g.getNum(1);
+    add(x: Int, y: Int): Int { x + y };
 };
 
 class Something {
     t: String <- "Hello World";
     l: Int <- ~1;
-    a: Bool | IF 1 = 2 
+    a: Bool <- IF 1 = 2 
     THEN { 1; } 
     ELSE 
         IF 1 = 1 

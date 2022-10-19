@@ -1,7 +1,7 @@
 import { CompositionComponent } from '.';
 
 export function isEmptyComponent(inComponent?: CompositionComponent | null) {
-  return !!inComponent?.children.length;
+  return inComponent?.componentName === EmptyComponent.Name;
 }
 
 export class EmptyComponent extends CompositionComponent {

@@ -1,9 +1,10 @@
-import { PropertyContext } from 'antlr/yaplParser';
-import { CompositionComponent, extractTableComponent, TableComponent } from 'Components';
-import { IMemoryVisitor, MemoryVisitor } from 'Implementations/4_Intermediate/visitor';
-import { MethodElement, SymbolElement } from 'Implementations/DataStructures/TableElements';
-import { StoreWord } from '../Instructions/MemoryManagement';
-import { Comment } from '../Instructions/Misc';
+import { SymbolElement, MethodElement } from "../..";
+import { PropertyContext } from "../../../antlr/yaplParser";
+import { extractTableComponent, TableComponent, CompositionComponent } from "../../../Components";
+import { StoreWord } from "../Instructions";
+import { MemoryVisitor, IMemoryVisitor } from "../visitor";
+import { Comment } from "../Instructions";
+
 export default function (visitor: MemoryVisitor, ctx: PropertyContext): IMemoryVisitor[] {
   const name = ctx.IDENTIFIER();
   const currentClassTable = visitor.currentClassTable();

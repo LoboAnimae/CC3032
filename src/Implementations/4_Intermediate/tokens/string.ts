@@ -1,7 +1,7 @@
-import { StringContext } from 'antlr/yaplParser';
-import { IMemoryVisitor, MemoryVisitor } from 'Implementations/4_Intermediate/visitor';
-import { MemoryAddress, Move, StoreWord } from '../Instructions/MemoryManagement';
-import { TemporalValue, V0 } from 'Components/TemporaryValues';
+import { StringContext } from "../../../antlr/yaplParser";
+import { TemporalValue, V0 } from "../../../Components";
+import { Move, StoreWord, MemoryAddress } from "../Instructions";
+import { MemoryVisitor, IMemoryVisitor } from "../visitor";
 
 export default function (visitor: MemoryVisitor, ctx: StringContext): IMemoryVisitor[] {
   const string = ctx.STRING().text.substring(1, ctx.STRING().text.length - 1);

@@ -1,8 +1,9 @@
-import { TrueContext } from 'antlr/yaplParser';
-import {BoolType} from 'Implementations/Generics';
-import { IMemoryVisitor, MemoryVisitor } from 'Implementations/4_Intermediate/visitor';
-import { Move } from '../Instructions/MemoryManagement';
-import { TemporalValue } from 'Components/TemporaryValues';
+import { BoolType } from "../..";
+import { TrueContext } from "../../../antlr/yaplParser";
+import { TemporalValue } from "../../../Components";
+import { Move } from "../Instructions";
+import { MemoryVisitor, IMemoryVisitor } from "../visitor";
+
 
 export default function (visitor: MemoryVisitor, ctx: TrueContext): IMemoryVisitor[] {
   const size = BoolType.Size;

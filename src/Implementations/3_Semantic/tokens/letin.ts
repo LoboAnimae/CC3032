@@ -1,10 +1,9 @@
-import { ClassDefineContext, LetInContext } from 'antlr/yaplParser';
-import { extractTableComponent } from 'Components';
-import { YaplVisitor } from 'Implementations/3_Semantic/visitor';
-import { MethodElement } from 'Implementations/DataStructures/TableElements';
-import { ClassType } from 'Implementations/Generics';
+import { ClassType, MethodElement, Primitive } from '../../';
+import { ClassDefineContext, LetInContext } from '../../../antlr/yaplParser';
+import { extractTableComponent } from '../../../Components';
+import { YaplVisitor } from '../visitor';
 
-export function visitLetIn(visitor: YaplVisitor, ctx: LetInContext) {
+export function visitLetIn(visitor: YaplVisitor, ctx: LetInContext): Primitive[] {
   const methodComponent = new MethodElement({
     scopeName: 'letIn',
     name: 'leIn',
@@ -12,7 +11,10 @@ export function visitLetIn(visitor: YaplVisitor, ctx: LetInContext) {
   });
   extractTableComponent<ClassType | MethodElement>(methodComponent)!.parent = visitor.getCurrentScope();
   visitor.scopeStack.push(methodComponent);
-  ctx.assignmentExpr().forEach(visitor.visit);
+  const allExpressions = ctx.assignmentExpr();
+  for (const expr of allExpressions) {
+    visitor.visit(expr);
+  }
   const expression = ctx.expression();
   const result = visitor.visit(expression);
   visitor.scopeStack.pop();

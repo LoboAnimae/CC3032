@@ -1,5 +1,6 @@
 import { AbstractParseTreeVisitor } from 'antlr4ts/tree/AbstractParseTreeVisitor';
 
+import { ClassType, SymbolElement, TableElementType } from '../';
 import {
   AddContext,
   AssignmentContext,
@@ -27,27 +28,16 @@ import {
   StringContext,
   TrueContext,
   WhileContext
-} from 'antlr/yaplParser';
-import { CompositionComponent, extractTableComponent, TableComponent, TypeComponent } from 'Components';
-import { SymbolElement, TableElementType } from 'Implementations/DataStructures/TableElements';
-import { ClassType } from 'Implementations/Generics';
+} from '../../antlr/yaplParser';
 import { yaplVisitor } from '../../antlr/yaplVisitor';
 import {
-  ALLOCATE,
-  EXIT,
-  FUNCTION_PARAMETER_1,
+  ALLOCATE, CompositionComponent, EXIT, extractTableComponent, FUNCTION_PARAMETER_1,
   JUMP_LINK_REGISTER,
-  STACK_POINTER,
-  TemporalValue,
-  V0
-} from 'Components/TemporaryValues';
-import { LinkedJump, UnconditionalJump } from './Instructions/Jumps';
-import { LoadWord, Move, StoreWord } from './Instructions/MemoryManagement';
-import { MethodDeclaration, Return, SysCall, TextHolder } from './Instructions/Misc';
-import { Add, Sub } from './Instructions/Operation';
-import Quadruple, { Quad } from './Instructions/Quadruple';
-import add from './tokens/add';
+  STACK_POINTER, TableComponent, TemporalValue, TypeComponent, V0
+} from '../../Components';
+import { Add, LinkedJump, LoadWord, MethodDeclaration, Move, Quad, Quadruple, Return, StoreWord, Sub, SysCall, TextHolder, UnconditionalJump } from './Instructions';
 import {
+  visitAdd,
   visitAssignment,
   visitAssignmentExpr,
   visitBlock, visitDivision,
@@ -363,7 +353,7 @@ export class MemoryVisitor extends AbstractParseTreeVisitor<IMemoryVisitor[]> im
   };
 
   visitAdd = (ctx: AddContext): IMemoryVisitor[] => {
-    return add(this, ctx);
+    return visitAdd(this, ctx);
   };
 
   visitAssignment = (ctx: AssignmentContext): IMemoryVisitor[] => {

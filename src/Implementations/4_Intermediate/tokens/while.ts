@@ -1,9 +1,10 @@
-import { WhileContext } from 'antlr/yaplParser';
-import { IMemoryVisitor, MemoryVisitor } from 'Implementations/4_Intermediate/visitor';
+import { WhileContext } from "../../../antlr/yaplParser";
+import { TemporalValue } from "../../../Components";
+import { MethodDeclaration } from "../Instructions";
+import { EQUAL } from "../Instructions/Comparison";
+import { MemoryVisitor, IMemoryVisitor } from "../visitor";
 import { v4 as uuid } from 'uuid';
-import { MethodDeclaration } from '../Instructions/Misc';
-import { EQUAL } from '../Instructions/Comparison';
-import { TemporalValue } from 'Components/TemporaryValues';
+
 export default function (visitor: MemoryVisitor, ctx: WhileContext): IMemoryVisitor[] {
   const [condition, body] = ctx.expression();
 

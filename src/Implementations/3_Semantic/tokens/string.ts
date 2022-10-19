@@ -1,7 +1,8 @@
-import { StringContext } from 'antlr/yaplParser';
-import { StringType } from 'Implementations/Generics';
-import { YaplVisitor } from 'Implementations/3_Semantic/visitor';
+import { Primitive, StringType } from "../..";
+import { StringContext } from "../../../antlr/yaplParser";
+import { YaplVisitor } from "../visitor";
 
-export function visitString(_visitor: YaplVisitor, _ctx: StringContext) {
-  return new StringType();
+
+export function visitString(_visitor: YaplVisitor, _ctx: StringContext): Primitive[] {
+  return [new StringType()];
 }

@@ -1,8 +1,8 @@
-import { ClassDefineContext, ProgramContext } from 'antlr/yaplParser';
-import { TableComponent } from 'Components/Table';
-import { TypeComponent } from 'Components/Type';
-import { YaplVisitor } from 'Implementations/3_Semantic/visitor';
-import { IError } from 'Interfaces';
+import { ClassDefineContext, ProgramContext } from "../../antlr/yaplParser";
+import { TableComponent, TypeComponent } from "../../Components";
+import { IError } from "../../Interfaces";
+import { YaplVisitor } from "./visitor";
+
 
 export interface ISemanticResult {
   symbolsTable?: TableComponent<TypeComponent>;

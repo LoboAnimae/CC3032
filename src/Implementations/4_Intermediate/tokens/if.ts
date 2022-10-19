@@ -1,10 +1,8 @@
-import { v4 as uuid } from 'uuid';
-import { IfContext } from 'antlr/yaplParser';
-import { IMemoryVisitor, MemoryVisitor } from 'Implementations/4_Intermediate/visitor';
-import { LinkedJump, UnconditionalJump } from '../Instructions/Jumps';
-import { Move } from '../Instructions/MemoryManagement';
-import { MethodDeclaration, Return } from '../Instructions/Misc';
-import { TemporalValue, V0 } from 'Components/TemporaryValues';
+import { IfContext } from "../../../antlr/yaplParser";
+import { V0, TemporalValue } from "../../../Components";
+import { MethodDeclaration, Move, UnconditionalJump, Return } from "../Instructions";
+import { MemoryVisitor, IMemoryVisitor } from "../visitor";
+import {v4 as uuid} from 'uuid'
 export default function (visitor: MemoryVisitor, ctx: IfContext): IMemoryVisitor[] {
   const [condition, body, elses] = ctx.expression();
 

@@ -1,22 +1,27 @@
 import { lineAndColumn } from '../';
-import { ClassType, MethodElement, SymbolElement } from '../../';
+import { ClassType, MethodElement, Primitive, SymbolElement } from '../../';
 import { AssignmentExprContext } from '../../../antlr/yaplParser';
 import {
   CompositionComponent,
   extractBasicInformation,
   extractTableComponent,
-  extractValueComponent
+  extractTypeComponent,
+  extractValueComponent,
+  isEmptyComponent
 } from '../../../Components';
+import { Color } from '../../../Misc';
 import { YaplVisitor } from '../visitor';
 
-export function visitAssignmentExpr(visitor: YaplVisitor, ctx: AssignmentExprContext) {
+export function visitAssignmentExpr(visitor: YaplVisitor, ctx: AssignmentExprContext): Primitive[] {
   // Previous table
   const propertyName = ctx.IDENTIFIER();
   const propertyType = ctx.TYPE();
   const propertyAssignmentExpression = ctx.expression();
+  let assignmentResolvesTo;
 
   const propertyTypeClass: ClassType | null = visitor.findTable(propertyType);
   const currentScope: ClassType | MethodElement = visitor.getCurrentScope();
+  const classType = extractTypeComponent(propertyTypeClass);
 
   // ERROR: The type is not yet defined
   if (!propertyTypeClass) {
@@ -35,30 +40,28 @@ export function visitAssignmentExpr(visitor: YaplVisitor, ctx: AssignmentExprCon
   const previousDeclared = currentScopeTable.get(propertyName.text, { inCurrentScope: true });
   // // Case 1: Overriding (It does nothing)
   if (previousDeclared) {
-    visitor.addError(ctx, `Property ${propertyName.text} was previously declared in the current scope`);
-    return visitor.next(ctx);
+    const scope = (currentScope.componentName === MethodElement.Name ? Color.scope : Color.class)(currentScope.componentName);
+    const message = `Property ${Color.member(propertyName.text)} was previously declared in the scope ${scope}`;
+    visitor.addError(ctx, message);
   }
 
   if (propertyAssignmentExpression) {
-    const assignmentResolvesTo: CompositionComponent = visitor.visit(propertyAssignmentExpression);
+    assignmentResolvesTo = visitor.visit(propertyAssignmentExpression)[0];
     const acceptsAssignment = propertyTypeClass.allowsAssignmentOf(assignmentResolvesTo);
     // ERROR: Not allowed an assignment and the assignment is not to an ancestor
     if (!acceptsAssignment) {
-      // TODO: Fix visitor
-      visitor.addError(
-        ctx,
-        `Cannot assign ${assignmentResolvesTo?.componentName ?? 'erroneous class'} to ${propertyTypeClass.componentName
-        }`,
-      );
-      return visitor.next(ctx);
+      if (isEmptyComponent(assignmentResolvesTo)) {
+        const message = `Expression resolved to an ${Color.error('error')} and can't be assigned to property ${Color.member(propertyName.text)}`;
+        visitor.addError(ctx, message);
+      } else {
+        const message = `Expression of type ${Color.class(assignmentResolvesTo.componentName)} can't be assigned to property ${Color.member(propertyName.text)} (${Color.class(propertyTypeClass.componentName)})`;
+        visitor.addError(ctx, message);
+      }
     }
-
-    const valueHolder = extractValueComponent(assignmentResolvesTo);
-    newTableElement.addComponent(valueHolder?.copy());
     // visitor.addQuadruple(simpleAssignment);
   }
 
   // Case 2: Declaration of a new property
-  currentScopeTable.add(newTableElement);
-  return newTableElement;
+  if (!previousDeclared) currentScopeTable.add(newTableElement);
+  return [classType as Primitive];
 }

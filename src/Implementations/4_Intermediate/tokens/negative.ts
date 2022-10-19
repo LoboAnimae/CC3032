@@ -1,8 +1,8 @@
-import { NegativeContext } from 'antlr/yaplParser';
-import { IntType } from 'Implementations/Generics';
-import { IMemoryVisitor, MemoryVisitor } from 'Implementations/4_Intermediate/visitor';
-import { NOT } from 'Implementations/4_Intermediate/Instructions';
-import { TemporalValue } from 'Components/TemporaryValues';
+import { IntType } from "../..";
+import { NegativeContext } from "../../../antlr/yaplParser";
+import { TemporalValue } from "../../../Components";
+import { NOT } from "../Instructions";
+import { MemoryVisitor, IMemoryVisitor } from "../visitor";
 
 export default function (visitor: MemoryVisitor, ctx: NegativeContext): IMemoryVisitor[] {
   const expression = ctx.expression();

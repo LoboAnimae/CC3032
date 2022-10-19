@@ -1,10 +1,11 @@
-import { NegativeContext } from 'antlr/yaplParser';
-import { extractBasicInformation, TypeComponent } from 'Components';
+import { Primitive } from '../..';
+import { NegativeContext } from '../../../antlr/yaplParser';
+import { extractBasicInformation } from '../../../Components';
 import { YaplVisitor } from '../visitor';
 
-export function visitNegative(visitor: YaplVisitor, ctx: NegativeContext) {
+export function visitNegative(visitor: YaplVisitor, ctx: NegativeContext): Primitive[] {
   const expressionRaw = ctx.expression();
-  const expressionType: TypeComponent = visitor.visit(expressionRaw);
+  const [expressionType] = visitor.visit(expressionRaw);
 
   const basicInformationComponent = extractBasicInformation(expressionType);
   if (!basicInformationComponent) {
@@ -17,5 +18,5 @@ export function visitNegative(visitor: YaplVisitor, ctx: NegativeContext) {
       `Expression ${basicInformationComponent.getName()} of type ${expressionType.componentType} can't be negated`,
     );
   }
-  return expressionType;
+  return [expressionType];
 }

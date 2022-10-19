@@ -1,4 +1,5 @@
-import { BoolType, Primitive } from '.';
+import { Primitive } from './Primitive.type';
+import { BoolType } from './Boolean.type';
 import { CompositionComponent, extractTypeComponent, TypeComponent, ValueComponent } from '../../Components';
 
 export class IntType extends Primitive {

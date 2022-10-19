@@ -1,7 +1,7 @@
-import { FalseContext } from 'antlr/yaplParser';
-import { YaplVisitor } from 'Implementations/3_Semantic/visitor';
-import { BoolType } from 'Implementations/Generics';
+import { BoolType, Primitive } from '../../';
+import { FalseContext } from '../../../antlr/yaplParser';
+import { YaplVisitor } from '../visitor';
 
-export function visitFalse(_visitor: YaplVisitor, _ctx: FalseContext) {
-  return new BoolType();
+export function visitFalse(_visitor: YaplVisitor, _ctx: FalseContext): Primitive[] {
+  return [new BoolType()];
 }

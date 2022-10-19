@@ -1,30 +1,34 @@
-import { PropertyContext } from 'antlr/yaplParser';
+import { lineAndColumn } from '../';
+import { ClassType, MethodElement, ObjectType, Primitive, SymbolElement } from '../../';
+import { PropertyContext } from '../../../antlr/yaplParser';
 import {
   CompositionComponent,
   extractBasicInformation,
   extractTableComponent,
+  extractTypeComponent,
   extractValueComponent,
-  ValueComponent,
-} from 'Components';
-import { lineAndColumn } from 'Implementations/3_Semantic/Functions';
-import { YaplVisitor } from 'Implementations/3_Semantic/visitor';
-import { MethodElement, SymbolElement } from 'Implementations/DataStructures/TableElements/';
-import { ClassType } from 'Implementations/Generics';
+  isEmptyComponent,
+  ValueComponent
+} from '../../../Components';
+import { Color } from '../../../Misc';
+import { YaplVisitor } from '../visitor';
 
-export function visitProperty(visitor: YaplVisitor, ctx: PropertyContext) {
+
+export function visitProperty(visitor: YaplVisitor, ctx: PropertyContext): Primitive[] {
   // Previous table
   const propertyName = ctx.IDENTIFIER();
   const propertyType = ctx.TYPE();
   const propertyAssignmentExpression = ctx.expression();
 
-  const propertyTypeClass: ClassType | null = visitor.findTable(propertyType);
+  let propertyTypeClass: ClassType | null = visitor.findTable(propertyType);
   const currentScope: ClassType | MethodElement = visitor.getCurrentScope();
-
+  let assignmentResolvesTo = undefined;
   // ERROR: The type is not yet defined
   if (!propertyTypeClass) {
     visitor.addError(ctx, `Type ${propertyType.text} is not (yet?) defined`);
-    return visitor.next(ctx);
+    propertyTypeClass = visitor.findTable(ObjectType.Name)!;
   }
+  const classtype = extractTypeComponent(propertyTypeClass);
 
   const newTableElement = new SymbolElement({
     name: propertyName.text,
@@ -38,33 +42,24 @@ export function visitProperty(visitor: YaplVisitor, ctx: PropertyContext) {
   const previousDeclared = currentScopeTable.get(propertyName.text, { inCurrentScope: true });
   // // Case 1: Overriding (It does nothing)
   if (previousDeclared) {
-    visitor.addError(ctx, `Property ${propertyName.text} was previously declared in the current scope`);
-    return visitor.next(ctx);
+    const scope = (currentScope.componentName === MethodElement.Name ? Color.scope : Color.class)(currentScope.componentName);
+    const message = `Property ${Color.member(propertyName.text)} was previously declared in the scope ${scope}`;
+    visitor.addError(ctx, message);
   }
 
   if (propertyAssignmentExpression) {
-    const assignmentResolvesTo: CompositionComponent = visitor.visit(propertyAssignmentExpression);
+    assignmentResolvesTo = visitor.visit(propertyAssignmentExpression)[0];
     const acceptsAssignment = propertyTypeClass.allowsAssignmentOf(assignmentResolvesTo);
     // ERROR: Not allowed an assignment and the assignment is not to an ancestor
     if (!acceptsAssignment) {
-      // TODO: Fix visitor
-      visitor.addError(
-        ctx,
-        `Cannot assign ${assignmentResolvesTo?.componentName ?? 'erroneous class'} to ${
-          propertyTypeClass.componentName
-        }`,
-      );
-
-      return visitor.next(ctx);
+      if (!isEmptyComponent(assignmentResolvesTo))  {
+        const message = `Expression of type ${Color.class(assignmentResolvesTo.componentName)} can't be assigned to property ${Color.member(propertyName.text)} (${Color.class(propertyTypeClass.componentName)})`;
+        visitor.addError(ctx, message);
+      }
     }
-
-    const valueHolder = extractValueComponent(assignmentResolvesTo);
-    newTableElement.addComponent(valueHolder?.copy());
-  } else {
-    newTableElement.addComponent(new ValueComponent({ value: propertyTypeClass.defaultValue }));
   }
 
   // Case 2: Declaration of a new property
-  currentScopeTable.add(newTableElement);
-  return visitor.next(ctx);
+  if (!previousDeclared) currentScopeTable.add(newTableElement);
+  return [classtype as Primitive];
 }

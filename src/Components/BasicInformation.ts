@@ -1,4 +1,4 @@
-import { CompositionComponent } from '.';
+import { CompositionComponent } from './Composition';
 
 export interface Params {
   name: string;

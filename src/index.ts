@@ -7,6 +7,7 @@ import { IError } from './Interfaces';
 import path from 'path';
 import Lexer from './Implementations/1_Lexic/LexicAnalizer';
 import Parser from './Implementations/2_Syntactic/SyntacticAnalizer';
+import { Color } from './Misc';
 
 function main(input: string): IResult {
   /*
@@ -23,7 +24,8 @@ function main(input: string): IResult {
   const { errors, symbolsTable, mainBranch } = Semantic(parser.tree);
 
   if (errors) {
-    console.table(errors);
+    const output = errors.map((error) => `${Color.colorize(`${error.line}:${error.column}`, Color.CYAN)}\t${error.message}`).join('\n')
+    console.log(output)
     return { errors };
   }
   if (!symbolsTable) {

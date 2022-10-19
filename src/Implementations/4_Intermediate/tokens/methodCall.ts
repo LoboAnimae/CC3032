@@ -1,12 +1,9 @@
-import { MethodCallContext } from 'antlr/yaplParser';
-import { extractContext, extractTableComponent, extractTypeComponent, TableComponent } from 'Components';
-import { STACK_POINTER, TemporalValue, V0 } from 'Components/TemporaryValues';
-import { IMemoryVisitor, MemoryVisitor } from 'Implementations/4_Intermediate/visitor';
-import { MethodElement, SymbolElement } from 'Implementations/DataStructures/TableElements';
-import { ClassType } from 'Implementations/Generics';
-import { LinkedJump } from '../Instructions/Jumps';
-import { LoadWord, MemoryAddress, Move, StoreWord } from '../Instructions/MemoryManagement';
-import { MethodDeclaration } from '../Instructions/Misc';
+import { ClassType, MethodElement, SymbolElement } from "../..";
+import { MethodCallContext } from "../../../antlr/yaplParser";
+import { extractTypeComponent, TableComponent, extractTableComponent, TemporalValue, STACK_POINTER, extractContext, V0 } from "../../../Components";
+import { MemoryAddress, LoadWord, StoreWord, LinkedJump, MethodDeclaration, Move } from "../Instructions";
+import { MemoryVisitor, IMemoryVisitor } from "../visitor";
+
 
 export default function (visitor: MemoryVisitor, ctx: MethodCallContext): IMemoryVisitor[] {
   visitor.startCall();

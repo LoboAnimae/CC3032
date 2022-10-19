@@ -1,4 +1,4 @@
-import { IStack } from 'Interfaces';
+import { IStack } from '../../Interfaces';
 
 export class Stack<T> implements IStack<T> {
   private readonly items: T[] = [];

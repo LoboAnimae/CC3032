@@ -1,5 +1,5 @@
-import { JUMP_BACK, JUMP_LINK_REGISTER } from 'Components/TemporaryValues';
-import Quadruple, { Quad } from './Quadruple';
+import { JUMP_BACK, JUMP_LINK_REGISTER } from '../../../Components';
+import { Quad, Quadruple } from './Quadruple';
 
 export class Return extends Quadruple {
   operator: string = '';

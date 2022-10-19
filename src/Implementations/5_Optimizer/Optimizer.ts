@@ -1,9 +1,9 @@
-import { TemporalValue } from "Components/TemporaryValues";
-import { Quad } from "Implementations/4_Intermediate/Instructions/Quadruple";
-import { RegisterManager } from "Implementations/5_Optimizer/RegisterManager";
+import { TemporalValue } from "../../Components";
+import { Quad } from "../4_Intermediate/Instructions";
+import { RegisterManager } from "./RegisterManager";
 
 export function Optimize(tuples: Quad[]) {
-    const registerController = new RegisterManager(100);
+  const registerController = new RegisterManager(100);
   const newTuples: Quad[] = [];
   const temporalRegex = /T\{.{3}\}/;
 

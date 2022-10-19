@@ -2,15 +2,16 @@ import { AbstractParseTreeVisitor } from 'antlr4ts/tree/AbstractParseTreeVisitor
 
 import {
   CompositionComponent,
+  EmptyComponent,
   ErrorComponent,
   QuadrupletComponent,
   QuadrupletElement,
   TableComponent,
   TypeComponent,
-} from 'Components';
-import { Stack } from 'Implementations/DataStructures/Stack';
-import { MethodElement } from 'Implementations/DataStructures/TableElements';
-import { BoolType, ClassType, IntType, IOType, ObjectType, StringType } from 'Implementations/Generics';
+} from '../../Components';
+import { Stack } from '..';
+import { MethodElement } from '..';
+import { BoolType, ClassType, IntType, IOType, ObjectType, Primitive, StringType } from '../Generics';
 
 import {
   AddContext,
@@ -20,6 +21,7 @@ import {
   ClassDefineContext,
   DivisionContext,
   EqualContext,
+  ExpressionContext,
   FalseContext,
   FormalContext,
   IdContext,
@@ -41,8 +43,8 @@ import {
   StringContext,
   TrueContext,
   WhileContext,
-} from 'antlr/yaplParser';
-import { Scope, ScopePosition } from 'Implementations/3_Semantic/Functions';
+} from '../../antlr/yaplParser';
+import { Scope, ScopePosition } from './Functions';
 import {
   visitAdd,
   visitAssignment,
@@ -72,10 +74,12 @@ import {
   visitString,
   visitTrue,
   visitWhile,
-} from 'Implementations/3_Semantic/tokens';
+} from './tokens';
 import { yaplVisitor } from '../../antlr/yaplVisitor';
 
-export class YaplVisitor extends AbstractParseTreeVisitor<any> implements yaplVisitor<any> {
+export type SemanticVisitorReturn = Primitive[];
+
+export class YaplVisitor extends AbstractParseTreeVisitor<SemanticVisitorReturn> implements yaplVisitor<SemanticVisitorReturn> {
   /** Helps recognize the stack: Global, Class or Method*/
   public scopeStack: Stack<CompositionComponent>;
   /** Universal Symbols table. Unique values only. */
@@ -169,7 +173,7 @@ export class YaplVisitor extends AbstractParseTreeVisitor<any> implements yaplVi
     return [...aggregate, nextResult];
   }
 
-  addError(ctx: any, ...errorMessage: string[]) {
+  addError<T extends ExpressionContext>(ctx: T, ...errorMessage: string[]) {
     this.errorComponent().addError(ctx, ...errorMessage);
   }
 
@@ -196,114 +200,114 @@ export class YaplVisitor extends AbstractParseTreeVisitor<any> implements yaplVi
 
   //#endregion
 
-  visitClassDefine = (ctx: ClassDefineContext) => {
+  visitClassDefine = (ctx: ClassDefineContext): Primitive[] => {
     return visitClassDefine(this, ctx);
   };
 
-  visitMethodCall = (ctx: MethodCallContext) => {
+  visitMethodCall = (ctx: MethodCallContext): Primitive[] => {
     return visitMethodCall(this, ctx);
   };
 
-  visitLetIn = (ctx: LetInContext) => {
+  visitLetIn = (ctx: LetInContext): Primitive[] => {
     return visitLetIn(this, ctx);
   };
 
-  visitOwnMethodCall = (ctx: OwnMethodCallContext) => {
+  visitOwnMethodCall = (ctx: OwnMethodCallContext): Primitive[] => {
     return visitOwnMethodCall(this, ctx);
   };
 
   // The first if (the one on top of the stack) defines the type, the others follow it
-  visitIf = (ctx: IfContext) => {
+  visitIf = (ctx: IfContext): Primitive[] => {
     return visitIf(this, ctx);
   };
 
-  visitWhile = (ctx: WhileContext) => {
+  visitWhile = (ctx: WhileContext): Primitive[] => {
     return visitWhile(this, ctx);
   };
 
-  visitBlock = (ctx: BlockContext) => {
+  visitBlock = (ctx: BlockContext): Primitive[] => {
     return visitBlock(this, ctx);
   };
 
-  visitNew = (ctx: NewContext) => {
+  visitNew = (ctx: NewContext): Primitive[] => {
     return visitNew(this, ctx);
   };
 
-  visitNegative = (ctx: NegativeContext) => {
+  visitNegative = (ctx: NegativeContext): Primitive[] => {
     return visitNegative(this, ctx);
   };
 
-  visitIsvoid = (ctx: IsvoidContext) => {
+  visitIsvoid = (ctx: IsvoidContext): Primitive[] => {
     return visitIsvoid(this, ctx);
   };
 
-  visitMultiply = (ctx: MultiplyContext) => {
+  visitMultiply = (ctx: MultiplyContext): Primitive[] => {
     return visitMultiply(this, ctx);
   };
 
-  visitDivision = (ctx: DivisionContext) => {
+  visitDivision = (ctx: DivisionContext): Primitive[] => {
     return visitDivision(this, ctx);
   };
-  visitAdd = (ctx: AddContext) => {
+  visitAdd = (ctx: AddContext): Primitive[] => {
     return visitAdd(this, ctx);
   };
-  visitMinus = (ctx: MinusContext) => {
+  visitMinus = (ctx: MinusContext): Primitive[] => {
     return visitMinus(this, ctx);
   };
 
   // Less than return booleans.
-  visitLessThan = (ctx: LessThanContext) => {
+  visitLessThan = (ctx: LessThanContext): Primitive[] => {
     return visitLessThan(this, ctx);
   };
 
-  visitLessEqual = (ctx: LessEqualContext) => {
+  visitLessEqual = (ctx: LessEqualContext): Primitive[] => {
     return visitLessEqual(this, ctx);
   };
-  visitEqual = (ctx: EqualContext) => {
+  visitEqual = (ctx: EqualContext): Primitive[] => {
     return visitEqual(this, ctx);
   };
 
-  visitParentheses = (ctx: ParenthesesContext) => {
+  visitParentheses = (ctx: ParenthesesContext): Primitive[] => {
     return visitParentheses(this, ctx);
   };
 
-  visitId = (ctx: IdContext) => {
+  visitId = (ctx: IdContext): Primitive[] => {
     return visitId(this, ctx);
   };
 
-  visitInt = (ctx: IntContext) => {
+  visitInt = (ctx: IntContext): Primitive[] => {
     return visitInt(this, ctx);
   };
 
-  visitString = (ctx: StringContext) => {
+  visitString = (ctx: StringContext): Primitive[] => {
     return visitString(this, ctx);
   };
 
-  visitTrue = (ctx: TrueContext) => {
+  visitTrue = (ctx: TrueContext): Primitive[] => {
     return visitTrue(this, ctx);
   };
 
-  visitFalse = (ctx: FalseContext) => {
+  visitFalse = (ctx: FalseContext): Primitive[] => {
     return visitFalse(this, ctx);
   };
 
-  visitAssignment = (ctx: AssignmentContext) => {
+  visitAssignment = (ctx: AssignmentContext): Primitive[] => {
     return visitAssignment(this, ctx);
   };
 
-  visitAssignmentExpr = (ctx: AssignmentExprContext) => {
+  visitAssignmentExpr = (ctx: AssignmentExprContext): Primitive[] => {
     return visitAssignmentExpr(this, ctx);
   };
 
-  visitMethod = (ctx: MethodContext) => {
+  visitMethod = (ctx: MethodContext): Primitive[] => {
     return visitMethod(this, ctx);
   };
 
-  visitProperty = (ctx: PropertyContext) => {
+  visitProperty = (ctx: PropertyContext): Primitive[] => {
     return visitProperty(this, ctx);
   };
 
-  visitFormal = (ctx: FormalContext) => {
+  visitFormal = (ctx: FormalContext): Primitive[] => {
     return visitFormal(this, ctx);
   };
 }

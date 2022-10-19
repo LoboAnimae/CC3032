@@ -1,7 +1,8 @@
-import { AssignmentContext } from 'antlr/yaplParser';
-import { IMemoryVisitor, MemoryVisitor } from 'Implementations/4_Intermediate/visitor';
-import { SymbolElement } from 'Implementations/DataStructures/TableElements';
-import { MemoryAddress, Move } from '../Instructions/MemoryManagement';
+import { SymbolElement } from "../..";
+import { AssignmentContext } from "../../../antlr/yaplParser";
+import { MemoryAddress, Move } from "../Instructions";
+import { MemoryVisitor, IMemoryVisitor } from "../visitor";
+
 
 export default function (visitor: MemoryVisitor, ctx: AssignmentContext): IMemoryVisitor[] {
   const name = ctx.IDENTIFIER();

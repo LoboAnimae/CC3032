@@ -1,7 +1,10 @@
-import { CompositionComponent, TableComponent, TypeComponent, ValueComponent } from 'Components';
-import { MethodElement, SymbolElement } from 'Implementations/DataStructures/TableElements';
-import { IntType } from 'Implementations/Generics/';
-import { Primitive } from './Primitive.type';
+import { IntType } from "./Integer.type";
+import { Primitive } from "./Primitive.type";
+import { MethodElement, SymbolElement } from "..";
+import { TableComponent, CompositionComponent, TypeComponent, ValueComponent } from "../../Components";
+
+
+
 
 export class StringType extends Primitive {
   static Name = 'String';

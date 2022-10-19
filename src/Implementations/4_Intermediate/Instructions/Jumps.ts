@@ -1,4 +1,4 @@
-import Quadruple, { Quad } from './Quadruple';
+import { Quadruple, Quad } from './Quadruple';
 
 export class UnconditionalJump extends Quadruple {
   operator: string = '';

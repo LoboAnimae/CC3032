@@ -1,12 +1,9 @@
-import { NewContext } from 'antlr/yaplParser';
-import { extractTableComponent } from 'Components';
-import { extractTypeComponent } from 'Components';
-import { extractValueComponent } from 'Components';
-import { ClassType } from 'Implementations/Generics';
-import { IMemoryVisitor, MemoryVisitor } from 'Implementations/4_Intermediate/visitor';
-import { SymbolElement } from 'Implementations/DataStructures/TableElements';
-import { Move, StoreWord } from '../Instructions/MemoryManagement';
-import { TemporalValue, V0 } from 'Components/TemporaryValues';
+import { SymbolElement, ClassType } from "../..";
+import { NewContext } from "../../../antlr/yaplParser";
+import { TemporalValue, V0, extractTableComponent, extractValueComponent, extractTypeComponent } from "../../../Components";
+import { Move, StoreWord } from "../Instructions";
+import { MemoryVisitor, IMemoryVisitor } from "../visitor";
+
 
 export default function (visitor: MemoryVisitor, ctx: NewContext): IMemoryVisitor[] {
   const type = ctx.TYPE();

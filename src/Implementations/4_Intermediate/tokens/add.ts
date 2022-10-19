@@ -1,8 +1,7 @@
-import { AddContext } from 'antlr/yaplParser';
-import { basicOperation } from 'Implementations/4_Intermediate/Instructions/BasicOperation';
-import { IMemoryVisitor, MemoryVisitor } from 'Implementations/4_Intermediate/visitor';
-import { IntType } from 'Implementations/Generics';
-import { Add } from '../Instructions/Operation';
+import { IntType } from "../..";
+import { AddContext } from "../../../antlr/yaplParser";
+import { basicOperation, Add } from "../Instructions";
+import { MemoryVisitor, IMemoryVisitor } from "../visitor";
 
 export default function (visitor: MemoryVisitor, ctx: AddContext): IMemoryVisitor[] {
   const [leftChildTemporal, rightChildTemporal, temporal] = basicOperation(visitor, ctx);

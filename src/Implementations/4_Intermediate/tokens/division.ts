@@ -1,8 +1,8 @@
-import { DivisionContext } from 'antlr/yaplParser';
-import { IntType } from 'Implementations/Generics';
-import { IMemoryVisitor, MemoryVisitor } from 'Implementations/4_Intermediate/visitor';
-import { basicOperation } from 'Implementations/4_Intermediate/Instructions';
-import { Div } from '../Instructions/Operation';
+import { IntType } from "../..";
+import { DivisionContext } from "../../../antlr/yaplParser";
+import { basicOperation, Div } from "../Instructions";
+import { MemoryVisitor, IMemoryVisitor } from "../visitor";
+
 
 export default function visitDivision(visitor: MemoryVisitor, ctx: DivisionContext): IMemoryVisitor[] {
   const [leftChildTemporal, rightChildTemporal, temporal] = basicOperation(visitor, ctx);

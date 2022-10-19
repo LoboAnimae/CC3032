@@ -1,5 +1,7 @@
-import { Primitive, StringType } from '.';
-import { IntType, MethodElement, SymbolElement } from '../';
+import { Primitive, } from './Primitive.type';
+import { StringType } from './String.type';
+import { IntType } from './Integer.type';
+import { MethodElement, SymbolElement } from '../';
 import { CompositionComponent, TableComponent } from '../../Components';
 
 export class IOType extends Primitive {

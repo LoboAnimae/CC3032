@@ -1,4 +1,4 @@
-import Quadruple from './Quadruple';
+import {Quadruple} from './Quadruple';
 
 interface IOperation {
   saveIn: any;

@@ -1,9 +1,9 @@
-import { AssignmentExprContext } from 'antlr/yaplParser';
-import { IMemoryVisitor, MemoryVisitor } from 'Implementations/4_Intermediate/visitor';
-import { SymbolElement } from 'Implementations/DataStructures/TableElements';
-import { ClassType } from 'Implementations/Generics';
-import { Move } from '../Instructions/MemoryManagement';
-import { TemporalValue } from 'Components/TemporaryValues';
+import { ClassType, SymbolElement } from "../..";
+import { AssignmentExprContext } from "../../../antlr/yaplParser";
+import { TemporalValue } from "../../../Components";
+import { Move } from "../Instructions";
+import { MemoryVisitor, IMemoryVisitor } from "../visitor";
+
 
 export default function visitAssignmentExpr(visitor: MemoryVisitor, ctx: AssignmentExprContext): IMemoryVisitor[] {
   const name = ctx.IDENTIFIER();

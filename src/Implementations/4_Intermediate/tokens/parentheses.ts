@@ -1,5 +1,6 @@
-import { ParenthesesContext } from 'antlr/yaplParser';
-import { IMemoryVisitor, MemoryVisitor } from 'Implementations/4_Intermediate/visitor';
+import { ParenthesesContext } from "../../../antlr/yaplParser";
+import { MemoryVisitor, IMemoryVisitor } from "../visitor";
+
 
 export default function (visitor: MemoryVisitor, ctx: ParenthesesContext): IMemoryVisitor[] {
   return [];

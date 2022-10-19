@@ -1,18 +1,18 @@
-import { MethodContext } from 'antlr/yaplParser';
-import { CompositionComponent, ContextHolder, extractTableComponent, extractTypeComponent } from 'Components';
-import { lineAndColumn } from 'Implementations/3_Semantic/Functions';
-import { YaplVisitor } from 'Implementations/3_Semantic/visitor';
-import { MethodElement, TableElementType } from 'Implementations/DataStructures/TableElements';
-import { ClassType } from 'Implementations/Generics';
+import { lineAndColumn } from '../';
+import { ClassType, MethodElement, Primitive, SymbolElement, TableElementType } from '../../';
+import { MethodContext } from '../../../antlr/yaplParser';
+import { CompositionComponent, ContextHolder, extractTableComponent, extractTypeComponent } from '../../../Components';
+import { Color } from '../../../Misc';
+import { YaplVisitor } from '../visitor';
 
-export function visitMethod(visitor: YaplVisitor, ctx: MethodContext) {
+export function visitMethod(visitor: YaplVisitor, ctx: MethodContext): Primitive[] {
   const methodName = ctx.IDENTIFIER().text;
   const methodExpectedType = ctx.TYPE();
   const methodBody = ctx.expression();
 
   const methodTable: ClassType | MethodElement | null =
     methodExpectedType.text === 'SELF_TYPE' ? visitor.getCurrentScope() : visitor.findTable(methodExpectedType);
-  const methodType = extractTypeComponent(methodTable);
+  const methodType = extractTypeComponent(methodTable) as Primitive;
 
   // ERROR: The method type is not yet defined (if ever)
   if (!methodType) {
@@ -40,12 +40,11 @@ export function visitMethod(visitor: YaplVisitor, ctx: MethodContext) {
   // If it doesn't exist, it is a syntax error
   const formalParameters = ctx.formal();
   for (const param of formalParameters) {
-    const newParam = visitor.visit(param);
-    newMethod.addParameters(newParam);
+    visitor.visit(param);
+    // newMethod.addParameters(newParam);
   }
 
-  const expressionResultRaw: CompositionComponent = visitor.visit(methodBody);
-  const expressionResult = Array.isArray(expressionResultRaw) ? expressionResultRaw[0] : expressionResultRaw;
+  const [expressionResult] = visitor.visit(methodBody);
   const expressionType = extractTypeComponent(expressionResult);
 
   // ERROR: If the expression is not valid, an empty component is returned, and no type will be found
@@ -57,14 +56,11 @@ export function visitMethod(visitor: YaplVisitor, ctx: MethodContext) {
   const canBeAssigned = methodType.allowsAssignmentOf(expressionType);
   // ERROR: Last child and return type do not match or can't be assigned
   if (!canBeAssigned) {
-    visitor.addError(
-      ctx,
-      `Cannot assign ${expressionType.componentName} to method of type ${methodType.componentName}`,
-    );
-    return visitor.next(ctx);
+    const message = `Cannot assign ${Color.class(expressionType.componentName)} to method of type ${Color.class(methodType.componentName)}`;
+    visitor.addError(ctx, message);
   }
 
   visitor.scopeStack.pop();
   classTableComponent.add(newMethod);
-  return methodType;
+  return [methodType];
 }

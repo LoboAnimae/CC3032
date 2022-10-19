@@ -1,5 +1,6 @@
-import { IBasicStorageOptions } from 'Interfaces/index';
-import { AnyObject } from 'Types/SimpleStructures.type';
+import { IBasicStorageOptions } from "../../Interfaces";
+import { AnyObject } from "../../Types";
+
 
 export class BasicStorage<T extends AnyObject> {
   public readonly elements: T[];

@@ -1,6 +1,6 @@
-import { AddContext, DivisionContext, MinusContext, MultiplyContext } from 'antlr/yaplParser';
-import { TemporalValue } from 'Components/TemporaryValues';
-import { MemoryVisitor } from 'Implementations/4_Intermediate/visitor';
+import { AddContext, MinusContext, MultiplyContext, DivisionContext } from "../../../antlr/yaplParser";
+import { TemporalValue } from "../../../Components";
+import { MemoryVisitor } from "../visitor";
 
 export function basicOperation(
   visitor: MemoryVisitor,

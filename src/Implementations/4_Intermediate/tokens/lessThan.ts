@@ -1,8 +1,9 @@
-import { LessThanContext } from 'antlr/yaplParser';
-import { TemporalValue } from 'Components/TemporaryValues';
-import { IMemoryVisitor, MemoryVisitor } from 'Implementations/4_Intermediate/visitor';
-import { BoolType } from 'Implementations/Generics';
-import { LESSTHAN } from '../Instructions/Comparison';
+import { BoolType } from "../..";
+import { LessThanContext } from "../../../antlr/yaplParser";
+import { TemporalValue } from "../../../Components";
+import { LESSTHAN } from "../Instructions/Comparison";
+import { MemoryVisitor, IMemoryVisitor } from "../visitor";
+
 
 export default function (visitor: MemoryVisitor, ctx: LessThanContext): IMemoryVisitor[] {
   const [leftExpression, rightExpression] = ctx.expression();

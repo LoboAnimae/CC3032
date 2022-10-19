@@ -1,17 +1,17 @@
-import { OwnMethodCallContext } from 'antlr/yaplParser';
-import { extractBasicInformation, extractTableComponent, extractTypeComponent, TypeComponent } from 'Components';
-import { YaplVisitor } from 'Implementations/3_Semantic/visitor';
-import { MethodElement, SymbolElement } from 'Implementations/DataStructures/TableElements';
+import { MethodElement, Primitive, SymbolElement } from '../../';
+import { OwnMethodCallContext } from '../../../antlr/yaplParser';
+import { CompositionComponent, extractBasicInformation, extractTableComponent, extractTypeComponent, TypeComponent } from '../../../Components';
+import { YaplVisitor } from '../visitor';
 
-export function visitOwnMethodCall(visitor: YaplVisitor, ctx: OwnMethodCallContext) {
+export function visitOwnMethodCall(visitor: YaplVisitor, ctx: OwnMethodCallContext): Primitive[] {
   const methodIdentifier = ctx.IDENTIFIER();
   const [...methodParametersRaw] = ctx.expression();
 
-  const methodParameters: SymbolElement[] = methodParametersRaw.map((p) => visitor.visit(p));
+  const methodParameters: Primitive[] = methodParametersRaw.flatMap((p) => visitor.visit(p)) as Primitive[];
 
   const methodHoldingClass: MethodElement = visitor.getCurrentScope();
-  const methodHoldingClassTable = extractTableComponent<SymbolElement>(methodHoldingClass)!;
-  const referencedMethod: MethodElement = methodHoldingClassTable.get(methodIdentifier) as unknown as MethodElement;
+  const methodHoldingClassTable = extractTableComponent<MethodElement | SymbolElement>(methodHoldingClass)!;
+  const referencedMethod = methodHoldingClassTable.get(methodIdentifier)! as MethodElement;
 
   // ERROR: The method does not exist in the class (self or not)
   if (!referencedMethod) {
@@ -31,8 +31,7 @@ export function visitOwnMethodCall(visitor: YaplVisitor, ctx: OwnMethodCallConte
     const methodHoldingClassName = extractBasicInformation(methodHoldingClassTable)?.getName();
     visitor.addError(
       ctx,
-      `Incorrect number of parameters for method ${methodIdentifier.toString()} from class ${methodHoldingClassName} (expected ${
-        requiredMethodParameters.length
+      `Incorrect number of parameters for method ${methodIdentifier.toString()} from class ${methodHoldingClassName} (expected ${requiredMethodParameters.length
       }, got ${methodParameters.length})`,
     );
     return visitor.next(ctx);
@@ -40,7 +39,7 @@ export function visitOwnMethodCall(visitor: YaplVisitor, ctx: OwnMethodCallConte
 
   for (let i = 0; i < requiredMethodParameters.length; i++) {
     const requiredParameterType: TypeComponent = extractTypeComponent(requiredMethodParameters[i])!;
-    const methodParameterType: SymbolElement = methodParameters[i];
+    const methodParameterType: Primitive = methodParameters[i];
     const allowed = requiredParameterType.allowsAssignmentOf(methodParameterType);
     // ERROR: The parameter required is not the same as the one passed
     if (!allowed) {
@@ -52,5 +51,6 @@ export function visitOwnMethodCall(visitor: YaplVisitor, ctx: OwnMethodCallConte
       );
     }
   }
-  return referencedMethod;
+  const referencedMethodType = extractTypeComponent(referencedMethod)!;
+  return [referencedMethodType as Primitive];
 }

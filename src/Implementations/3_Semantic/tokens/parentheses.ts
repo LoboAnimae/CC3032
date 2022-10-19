@@ -1,6 +1,7 @@
-import { ParenthesesContext } from 'antlr/yaplParser';
-import { YaplVisitor } from 'Implementations/3_Semantic/visitor';
+import { Primitive } from '../..';
+import { ParenthesesContext } from '../../../antlr/yaplParser';
+import { YaplVisitor } from '../visitor';
 
-export function visitParentheses(visitor: YaplVisitor, ctx: ParenthesesContext) {
+export function visitParentheses(visitor: YaplVisitor, ctx: ParenthesesContext): Primitive[] {
   return visitor.visit(ctx.expression());
 }

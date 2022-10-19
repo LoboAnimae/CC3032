@@ -6,7 +6,7 @@ interface IQuadruple {
 }
 
 export type Quad = [any, any, any, any];
-export default abstract class Quadruple<T = any> {
+export abstract class Quadruple<T = any> {
   abstract operator: string;
   abstract operatorVerbose: string;
   src1: T | null = null;

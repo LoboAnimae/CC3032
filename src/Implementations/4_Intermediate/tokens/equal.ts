@@ -1,8 +1,9 @@
-import { EqualContext } from 'antlr/yaplParser';
-import { TemporalValue } from 'Components/TemporaryValues';
-import { IMemoryVisitor, MemoryVisitor } from 'Implementations/4_Intermediate/visitor';
-import { BoolType } from 'Implementations/Generics';
-import { EQUAL } from '../Instructions/Comparison';
+import { BoolType } from "../..";
+import { EqualContext } from "../../../antlr/yaplParser";
+import { TemporalValue } from "../../../Components";
+import { EQUAL } from "../Instructions/Comparison";
+import { MemoryVisitor, IMemoryVisitor } from "../visitor";
+
 
 export default function (visitor: MemoryVisitor, ctx: EqualContext): IMemoryVisitor[] {
   const [leftExpression, rightExpression] = ctx.expression();
