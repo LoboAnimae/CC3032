@@ -2,8 +2,9 @@
 class Main {
     x: Int <- 1;
     a: A <- new A;
+    b: Int <- 1;
+    c: Int <- 2;
     main(): Int {
-            a.someMethod(1, 2)
-        
+            a.someMethod(b, c)  
     };
 };

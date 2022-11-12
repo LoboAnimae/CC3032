@@ -29,7 +29,7 @@ export default function (visitor: MemoryVisitor, ctx: PropertyContext): IMemoryV
     visitor.addQuadruple(
       new StoreWord({
         dataMovesFrom: temporal,
-        dataMovesInto: referencedVariable.toString(),
+        dataMovesInto: referencedVariable,
       }),
     );
   }

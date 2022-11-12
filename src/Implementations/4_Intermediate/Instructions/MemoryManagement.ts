@@ -102,7 +102,7 @@ export class StoreWord extends MemoryManagement {
     if (asString) {
       return ['=', this.OPERAND1().toString(), null, `Memory[${this.DESTINATION()?.toString()}]`];
     }
-    return ['=', this.OPERAND1(), null, `Memory[${this.DESTINATION()}]`];
+    return ['=', this.OPERAND1(), null, this.DESTINATION()];
   }
 }
 

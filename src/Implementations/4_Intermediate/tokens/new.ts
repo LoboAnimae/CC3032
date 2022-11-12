@@ -28,7 +28,7 @@ export default function (visitor: MemoryVisitor, ctx: NewContext): IMemoryVisito
         }),
         new StoreWord({
           dataMovesFrom: temporal,
-          dataMovesInto: element.toString(),
+          dataMovesInto: element,
           offset: memoryBeginning.toString(),
         }),
       );
@@ -40,7 +40,7 @@ export default function (visitor: MemoryVisitor, ctx: NewContext): IMemoryVisito
         }),
         new StoreWord({
           dataMovesFrom: temporal,
-          dataMovesInto: element.toString(),
+          dataMovesInto: element,
           offset: memoryBeginning.toString(),
         }),
       );
