@@ -5,6 +5,7 @@ import { StoreWord } from "../Instructions";
 import { MemoryVisitor, IMemoryVisitor } from "../visitor";
 import { Comment } from "../Instructions";
 
+// Properties live in the heap
 export default function (visitor: MemoryVisitor, ctx: PropertyContext): IMemoryVisitor[] {
   const name = ctx.IDENTIFIER();
   const currentClassTable = visitor.currentClassTable();

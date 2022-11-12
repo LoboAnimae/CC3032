@@ -11,15 +11,15 @@ export default function (visitor: MemoryVisitor, ctx: FormalContext): IMemoryVis
   const newTemporal = new TemporalValue();
   const symbol = currentClassTable.get(name.text) as SymbolElement;
   newTemporal.id = symbol.id;
-
-  visitor.addQuadruple(
-    new Move({
-      dataMovesFrom: new MemoryAddress(new STACK_POINTER(visitor.stackMemoryOffset)),
-      dataMovesInto: newTemporal,
-      comment: `Parameters are passed through the stack`,
-    }),
-  );
-  visitor.stackMemoryOffset += symbol!.getSize();
+  // const dataMovesFrom = new MemoryAddress(new STACK_POINTER(visitor.stackMemoryOffset))
+  // console.log(dataMovesFrom.toString())
+  // visitor.addQuadruple(
+  //   new Move({
+  //     dataMovesFrom: new MemoryAddress(new STACK_POINTER(visitor.stackMemoryOffset)),
+  //     dataMovesInto: newTemporal,
+  //     comment: `Parameters are passed through the stack`,
+  //   }),
+  // );
   const size = symbol.getSize();
   const getTemporal = () => newTemporal;
   return [{ size, getTemporal }];

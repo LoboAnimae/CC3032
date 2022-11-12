@@ -56,6 +56,8 @@ export class OBJECT_POINTER extends Registry {
   };
 }
 
+
+
 export class STACK_POINTER extends Registry {
   register = '$sp';
   offset: number;

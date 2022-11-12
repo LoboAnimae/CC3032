@@ -3,7 +3,7 @@ import { Quad } from "../4_Intermediate/Instructions";
 import { RegisterManager } from "./RegisterManager";
 
 export function Optimize(tuples: Quad[]) {
-  const registerController = new RegisterManager(100);
+  const registerController = new RegisterManager(10);
   const newTuples: Quad[] = [];
   const temporalRegex = /T\{.{3}\}/;
 

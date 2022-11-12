@@ -28,8 +28,13 @@ export class MemoryAddress extends CompositionComponent {
     // if (offset) {
     // return `${this.componentName}[${this.prepender}${this.address} + ${offset.toString(16)}]`;
     // }
-    return `${this.componentName}[${this.prepender}${this.address}]`;
+    return `${this.prepender}(${this.address})`;
   };
+
+  toMIPS = () => {
+    const offset = this.address;
+    return this.toString()
+  }
 }
 
 interface IMemoryManagement<T = any> {

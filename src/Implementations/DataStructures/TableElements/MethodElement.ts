@@ -7,6 +7,15 @@ import { TableComponent, ContextHolder, extractTypeComponent, extractPositioning
 export class MethodElement extends TableElement {
   static Name = 'MethodElement';
 
+  get size() {
+    let size = 0;
+    for (const element of this.getTable().getAll()) {
+      if (element.componentName === MethodElement.Name) continue;
+       size += element.getSize();
+    }
+    return size;
+  }
+
   constructor(options?: SymbolElementParams) {
     super(options);
     this.componentName = MethodElement.Name;
