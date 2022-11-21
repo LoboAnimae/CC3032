@@ -58,6 +58,9 @@ function main(input: string): IResult {
     optimizedTuples.push(...Optimize(allQuads));
   }
 
+  for (let i = 0; i < optimizedTuples.length; i++){
+    console.log(optimizedTuples[i])
+  }
   return { errors: [] };
 }
 

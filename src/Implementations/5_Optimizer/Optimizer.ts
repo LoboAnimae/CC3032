@@ -1,10 +1,11 @@
 import { TemporalValue } from "../../Components";
 import { Quad } from "../4_Intermediate/Instructions";
-import { RegisterManager } from "./RegisterManager";
+import { RegisterManager, Register } from "./RegisterManager";
 
 export function Optimize(tuples: Quad[]) {
-  const registerController = new RegisterManager(10);
+  const registerController = new RegisterManager(100);
   const newTuples: Quad[] = [];
+  const temporalRegex = /T\{.{3}\}/;
 
   /**
    *
@@ -21,7 +22,7 @@ export function Optimize(tuples: Quad[]) {
       if (
         op1 === lookingFor ||
         op2 === lookingFor ||
-        (dest !== lookingFor)
+        (dest !== lookingFor && temporalRegex.exec(dest?.toString() ?? ''))
       ) {
         lastFound = i;
       }
@@ -29,18 +30,26 @@ export function Optimize(tuples: Quad[]) {
     return lastFound;
   };
 
+  let pairs = registerController.pairs
+
   for (let i = 0; i < tuples.length; i++) {
     const currentTuple = tuples[i];
     const [_op, op1, op2, dest] = currentTuple;
 
-    if (op1?.componentName === TemporalValue.Name) {
-      const registerUsed = registerController.getPairedRegister(op1);
+    if (temporalRegex.test(op1.toString())) {
+      let registerUsed: Register | undefined = registerController.getPairedRegister(op1);
+      if(!registerUsed){
+        registerUsed = pairs.find((pair) => pair[0].id.startsWith(op1.id))?.[1];
+      }
       if (registerUsed) {
         currentTuple[1] = registerUsed.toString();
       }
     }
-    if (op2?.componentName === TemporalValue.Name) {
-      const registerUsed = registerController.getPairedRegister(op2);
+    if (temporalRegex.test(op2?.toString() ?? '')) {
+      let registerUsed: Register | undefined = registerController.getPairedRegister(op2);
+      if(!registerUsed){
+        registerUsed = pairs.find((pair) => pair[0].id.startsWith(op1.id))?.[1];
+      }
       if (registerUsed) {
         currentTuple[2] = registerUsed.toString();
       }
@@ -51,33 +60,34 @@ export function Optimize(tuples: Quad[]) {
       continue;
     }
 
-    const destString = dest.id;
-    if (dest?.componentName !== TemporalValue.Name) {
+    const destString = dest.toString();
+    const result = temporalRegex.exec(destString);
+    if (!result) {
       newTuples.push(currentTuple);
       continue;
     }
-
-    const pairedRegister = registerController.getPairedRegister(destString)
-
-    // const pairedRegister = registerController.getPairedRegister(destString);
-    // if (pairedRegister) {
-    //   const newQuadruple = [...currentTuple];
-    //   newQuadruple[3] = dest.toString().replace(temporalRegex, pairedRegister.toString());
-    //   // @ts-ignore
-    //   newTuples.push(newQuadruple);
-    //   continue;
-    // }
-    // const lastUsed = lastUsage(destString, i);
-    // const lastUsedReservation = lastUsed === -1 ? 0 : lastUsed - i;
-    // const newPairedRegister = registerController.reserveRegister(dest, lastUsedReservation);
-    // if (!newPairedRegister) {
-    //   throw new Error('No registers available');
-    // }
-    // const newQuadruple = [...currentTuple];
-    // newQuadruple[3] = dest.toString().replace(temporalRegex, newPairedRegister.toString());
-    // // @ts-ignore
-    // newTuples.push(newQuadruple);
-    // registerController.tick();
+    const foundDest = result[0];
+    const foundTemp = new TemporalValue();
+    foundTemp.id = foundDest.replace('T{', '').replace('}', '');
+    const pairedRegister = registerController.getPairedRegister(foundTemp);
+    if (pairedRegister) {
+      const newQuadruple = [...currentTuple];
+      newQuadruple[3] = dest.toString().replace(temporalRegex, pairedRegister.toString());
+      // @ts-ignore
+      newTuples.push(newQuadruple);
+      continue;
+    }
+    const lastUsed = lastUsage(foundTemp, i);
+    const lastUsedReservation = lastUsed === -1 ? 0 : lastUsed - i;
+    const newPairedRegister = registerController.reserveRegister(dest, lastUsedReservation);
+    if (!newPairedRegister) {
+      throw new Error('No registers available');
+    }
+    const newQuadruple = [...currentTuple];
+    newQuadruple[3] = dest.toString().replace(temporalRegex, newPairedRegister.toString());
+    // @ts-ignore
+    newTuples.push(newQuadruple);
+    registerController.tick();
   }
   const returnTuples = newTuples.map((tuple) => {
     const [op, op1, op2, dest] = tuple;

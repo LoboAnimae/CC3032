@@ -1,10 +1,8 @@
-    class A { someMethod(a: Int, b: Int): Int { a + b };};
+
 class Main {
-    x: Int <- 1;
-    a: A <- new A;
-    b: Int <- 1;
-    c: Int <- 2;
-    main(): Int {
-            a.someMethod(b, c)  
-    };
+    e: Int <- 3 + 2 * 5 - 3 / 2;
+
+    main(): Int { {
+        e;
+    } };
 };
