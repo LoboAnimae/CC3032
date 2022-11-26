@@ -22,6 +22,7 @@ class Main {
     y: Int <- 3;
     doSomething(x: Int): Int { x };
     main(): Int { {
+        WHILE x < y LOOP x <- x + 1 POOL;
         x;
         IF 1 = 2 
         THEN { 1; } 

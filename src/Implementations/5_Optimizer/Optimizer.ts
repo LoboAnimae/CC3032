@@ -4,7 +4,7 @@ import { Quad } from "../4_Intermediate/Instructions";
 import { RegisterManager, Register } from "./RegisterManager";
 
 export function Optimize(tuples: Quad[]) {
-  const registerController = new RegisterManager(100);
+  const registerController = new RegisterManager(10);
   const newTuples: Quad[] = [];
   const temporalRegex = /T\{.{3}\}/;
 
@@ -44,14 +44,69 @@ export function Optimize(tuples: Quad[]) {
     const currentTuple = tuples[i];
     const [_op, op1, op2, dest] = currentTuple;
 
+    if(op1 != null && op1.toString().includes('while') && op1.toString().includes('end'))
+    {
+      let whileRegs = [];
+      for(let j = newTuples.length - 1; j >= 0; j--)      {
+        
+        if(newTuples[j][3] != null && newTuples[j][3].toString().includes('while') && newTuples[j][1].toString().includes('$t') && newTuples[j][2].toString().includes('$t'))
+        {
+          whileRegs.push(newTuples[j][1].toString())
+          whileRegs.push(newTuples[j][2].toString())
+        }
+        if(newTuples[j][1] != null && newTuples[j][1].toString().includes('while'))
+        {
+          break;
+        }
+      }
+      for(let j = newTuples.length - 1; j >= 0; j--)
+      {
+        try
+        {
+          if(newTuples[j + 1][1] != null && newTuples[j + 1][1].toString().includes('while') && newTuples[j + 1][1].toString().includes('end'))
+          {
+            for(let l = 0; l < registerController.registers.length; l++)
+            {
+              if(registerController.registers[l].toString() == newTuples[j][1].toString())
+              {
+                registerController.registers[l].reserveUntil(0)
+              }
+            }
+            registerController.pairs.pop()
+            break;
+          }
+        }catch(e){}
+
+        if(newTuples[j][3] != null && newTuples[j][3].toString().includes('$t'))
+        {
+          for(let k = 0; k < whileRegs.length; k++)
+          {
+            if(newTuples[j][3].toString() != whileRegs[k])
+            {
+              if(newTuples[j][3].toString() == registerController.pairs[registerController.pairs.length - 1][1].toString())
+              {
+                for(let l = 0; l < registerController.registers.length; l++)
+                {
+                  if(registerController.registers[l].toString() == newTuples[j][3].toString())
+                  {
+                    registerController.registers[l].reserveUntil(0)
+                  }
+                }
+                registerController.pairs.pop()
+              }
+            }
+          }
+        }
+      }
+    }
+
+
+
     if(op1 == 0)
     {
       currentTuple[1] = '$zero'
     }
 
-    if(currentTuple[3]){
-      console.log('stop')
-    }
     try
     {
       if (temporalRegex.test(op1.toString())) {
@@ -75,9 +130,6 @@ export function Optimize(tuples: Quad[]) {
       }
       if (registerUsed) {
         currentTuple[2] = registerUsed.toString();
-      }
-      else{
-        console.log('ni idea')
       }
     }
 
@@ -193,19 +245,13 @@ export function Optimize(tuples: Quad[]) {
 
             for(let j = pairs.length - 1; j >= 0; j--)
             {
-              console.log(registerController.pairs[j][1].toString() + ' ' + registerController.pairs[j][0].toString())
-              console.log(j)
-              console.log('holi')
               if(registerController.pairs[j][1].toString() != propReg)
               {
                 registerController.pairs.pop();
-                console.log('wasd')
               }
               else
               {
                 newTuples.push(["=", currentTuple[1], null, propReg]);
-                //currentTuple[1] = propReg;
-                //newTuples.push(currentTuple);
                 break;
               }
             }
