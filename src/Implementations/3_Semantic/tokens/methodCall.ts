@@ -38,7 +38,7 @@ export function visitMethodCall(visitor: YaplVisitor, ctx: MethodCallContext): P
   }
 
   if (!referencedMethod) {
-    visitor.addError(ctx, `Method '${Color.scope(methodName.text)}' is not defined in class '${Color.class(methodType?.text ?? referencedClass.componentName)}'`);
+    visitor.addError(ctx, `Method '${Color.scope(methodName.text)}' is not defined in class '${Color.class(methodType?.text ?? referencedClass?.componentName)}'`);
     return [new ErrorType()];
   }
 
