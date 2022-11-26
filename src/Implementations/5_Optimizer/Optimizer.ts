@@ -181,7 +181,7 @@ export function Optimize(tuples: Quad[]) {
             }
           }
           newTuples.push(['+', '$sp', spMem, '$sp'])
-          newTuples.push(['', 'jr $ra', null, null])
+          newTuples.push(['jr', '$ra', null, null])
         }
         else
         {
@@ -373,7 +373,109 @@ export function Optimize(tuples: Quad[]) {
     registerController.tick();
   }
   const returnTuples = newTuples.map((tuple) => {
-    const [op, op1, op2, dest] = tuple;
+    let [op, op1, op2, dest] = tuple;
+    if(op == '-')
+    {
+      if(op1.toString() == '$sp' && dest.toString() == '$sp')
+      {
+        op = 'addi'
+        op2 = op2 * - 1
+        dest = dest.toString() + ','
+        if(op2 == null){}
+        else
+        {
+          op1 = op1.toString() + ','
+        }
+      }      
+      else
+      {
+        op = 'sub'
+      }
+    }
+    if(op == '=')
+    {      
+      if(dest.toString().includes('$') || dest.toString().includes('x'))
+      {
+        op = 'add'
+        dest = dest.toString() + ','
+        if(op2 == null){}
+        else
+        {
+          op1 = op1.toString() + ','
+        }
+      }
+      if(dest.toString().includes('($sp)'))
+      {
+        op = 'sw'
+      }
+      if(op == 'add' && !op1.toString().includes('$'))
+      {
+        op == 'addi'
+      }
+    }
+    if(op == '+')
+    {
+      if(op1 != null)
+      {        
+        if(dest.toString().includes('$'))
+        {
+          op = 'add'
+        }
+        if(op1.toString() == '$sp' && dest.toString() == '$sp')
+        {
+          op = 'addi'
+        }
+        dest = dest.toString() + ','
+        if(op2 == null){}
+        else
+        {
+          op1 = op1.toString() + ','
+        }
+        if(op == 'add' && !op1.toString().includes('$'))
+        {
+          op == 'addi'
+        }
+      }
+    }
+    if(op == '*')
+    {
+      op = 'mul'
+      dest = dest.toString() + ','
+      if(op2 == null){}
+      else
+      {
+        op1 = op1.toString() + ','
+      }
+    }
+    if(op == '/')
+    {
+      op = 'div'
+      dest = dest.toString() + ','
+    }
+    if(op == '==')
+    {
+      op = 'beq'
+    }
+    if(op == '<')
+    {
+      op = 'blt'
+    }
+    if(op == '>')
+    {
+      op = 'bgt '
+    }
+    if(op == '<=')
+    {
+      op = 'ble'
+    }
+    if(op == '>=')
+    {
+      op = 'bge'
+    }
+    if(op == '!=')
+    {
+      op = 'bne'
+    }
     return [op, op1?.toString() ?? 'null', op2?.toString() ?? 'null', dest?.toString() ?? 'null'];
   });
   return returnTuples;

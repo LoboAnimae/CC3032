@@ -58,8 +58,81 @@ function main(input: string): IResult {
     optimizedTuples.push(...Optimize(allQuads));
   }
 
-  for (let i = 0; i < optimizedTuples.length; i++){
-    console.log(optimizedTuples[i])
+  for (let i = 0; i < optimizedTuples.length; i++)
+  {
+    let [op, op1, op2, dest] = optimizedTuples[i];
+
+    if(op1.includes('Begin Property') || op1.includes('End Property'))
+    {
+      op = '#'
+    }
+
+    if(op == null || op == 'null')
+    {
+      op = ''
+    }
+    if(op1 == null || op1 == 'null')
+    {
+      op1 = ''
+      
+    }
+    if(op2 == null || op2 == 'null')
+    {
+      if(op1 == '$zero')
+      {
+        op2 = '0'
+      }
+      else
+      {
+        op2 = ''
+      }
+    }
+    if(dest == null || dest == 'null')
+    {
+      dest = ''
+    }
+    let line = '';
+    if(op1 == '$zero' && op2 == '0')
+    {
+      op1 = op1 + ','
+    }
+    if(op == 'add')
+    {
+      if(dest.includes('v')&& (op2 == 'null' || op2 == null || op2 == ''))
+      {
+        op = 'li'
+      }
+      if(dest.includes('a') && (op2 == 'null' || op2 == null || op2 == ''))
+      {
+        op = 'li'
+      }
+    }
+    if(dest.includes('($t') && dest.includes(')'))
+    {
+      let dest_spl = dest.split(' + ')
+      let memsp = dest_spl[1].split(')')[0]
+      dest = memsp + dest_spl[0] + ')'
+    }
+
+    if(dest.includes('($sp)'))
+    {
+      dest = dest.replace(',', '')
+      op1 = op1 + ', '
+      line = op + ' '  + ' ' + op1 + ' ' + op2 + dest
+    }
+    else
+    {
+      if(op == 'add')
+      {
+        if(op1.indexOf('$') == -1)
+        {
+          op = 'addi'
+        }
+      }
+      line = op + ' ' + dest + ' ' + op1 + ' ' + op2
+    }
+    console.log(line)
+    //console.log(optimizedTuples[i])
   }
   return { errors: [] };
 }
